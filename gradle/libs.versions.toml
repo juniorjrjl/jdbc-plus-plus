@@ -1,0 +1,12 @@
+[versions]
+javapoetVersion = "0.15.0"
+autoserviceVersion = "1.1.1"
+jspecifyVersion = "1.0.0"
+
+[libraries]
+#annotation processing
+autoservice = { group = "com.google.auto.service", name = "auto-service", version.ref = "autoserviceVersion" }
+
+#implementation
+javapoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javapoetVersion" }
+jspecify = { group = "org.jspecify", name =  "jspecify", version.ref = "jspecifyVersion" }
