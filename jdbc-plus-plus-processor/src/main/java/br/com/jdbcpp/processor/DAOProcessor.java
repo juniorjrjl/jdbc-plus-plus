@@ -7,13 +7,18 @@ import br.com.jdbcpp.processor.dto.DAOImplInfo;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.ReadMethodInfoFactory;
 import br.com.jdbcpp.processor.dto.method.WriteMethodInfoFactory;
+import br.com.jdbcpp.processor.dto.parameter.ClassParamInfoFactory;
 import br.com.jdbcpp.processor.dto.parameter.ParameterInfoDelegator;
+import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfoFactory;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
 import br.com.jdbcpp.processor.exception.JDBCPlusPlusProcessorException;
 import br.com.jdbcpp.processor.service.DAOGenerator;
 import br.com.jdbcpp.processor.service.delete.DeleteMethodGenerator;
 import br.com.jdbcpp.processor.service.insert.InsertMethodGenerator;
+import br.com.jdbcpp.processor.service.select.SelectCollectionMethodGenerator;
 import br.com.jdbcpp.processor.service.select.SelectMethodGeneratorFactory;
+import br.com.jdbcpp.processor.service.select.SelectOptionalMethodGenerator;
+import br.com.jdbcpp.processor.service.select.SelectSingleMethodGenerator;
 import br.com.jdbcpp.processor.service.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.service.select.result.SelectResultSimpleResult;
 import br.com.jdbcpp.processor.service.select.result.SelectResultUsingConstructor;
@@ -21,9 +26,11 @@ import br.com.jdbcpp.processor.service.select.result.SelectResultUsingSetter;
 import br.com.jdbcpp.processor.service.update.UpdateMethodGenerator;
 import com.google.auto.service.AutoService;
 import com.palantir.javapoet.JavaFile;
+import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -37,6 +44,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.WARNING;
@@ -45,24 +53,19 @@ import static javax.tools.Diagnostic.Kind.WARNING;
 @AutoService(Processor.class)
 public class DAOProcessor extends AbstractProcessor {
 
-    private static final SelectResultSetDelegator SELECT_RESULT_SET_DELEGATOR = new SelectResultSetDelegator(
-            new SelectResultUsingConstructor(),
-            new SelectResultUsingSetter(),
-            new SelectResultSimpleResult()
-    );
-
-    private final DAOGenerator daoGenerator;
     private final Types types;
+    private final Messager messager;
+    private final Filer filer;
+    @Nullable
+    private DAOGenerator daoGeneratorCache;
+    @Nullable
+    private ParameterInfoDelegator parameterInfoDelegatorCache;
 
     public DAOProcessor(){
         super();
-        this.daoGenerator = new DAOGenerator(
-                new SelectMethodGeneratorFactory(processingEnv.getTypeUtils(), SELECT_RESULT_SET_DELEGATOR),
-                new InsertMethodGenerator(),
-                new UpdateMethodGenerator(),
-                new DeleteMethodGenerator()
-        );
         this.types = processingEnv.getTypeUtils();
+        this.messager = processingEnv.getMessager();
+        this.filer = processingEnv.getFiler();
     }
 
     @Override
@@ -71,8 +74,6 @@ public class DAOProcessor extends AbstractProcessor {
         final var daoInterfaces = roundEnv.getElementsAnnotatedWith(DAO.class)
                 .stream()
                 .toList();
-
-        final var messager = processingEnv.getMessager();
 
         if (daoInterfaces.isEmpty()) {
             messager.printMessage(WARNING, "None DAOs found to generate");
@@ -108,16 +109,19 @@ public class DAOProcessor extends AbstractProcessor {
                 }
             }
 
+            final var daoGenerator = buildDAOGenerator();
             daoImplInfos.add(daoImplInfoBuilder.methods(methodsInfo).build());
             final var javaFiles = daoImplInfos.stream().map(daoGenerator::build).toList();
-            javaFiles.forEach(f -> writeClass(f, processingEnv.getFiler()));
+            javaFiles.forEach(this::writeClass);
         }
 
         return true;
     }
 
     private MethodInfo buildMethodInfo(final ExecutableElement method) throws JDBCPlusPlusProcessorException {
-        final var params = ParameterInfoDelegator.create(
+        final var parameterInfoDelegator = buildParameterInfoDelegator();
+
+        final var params = parameterInfoDelegator.create(
                 method.getSimpleName().toString(),
                 method.getParameters(),
                 types
@@ -135,11 +139,44 @@ public class DAOProcessor extends AbstractProcessor {
                 });
     }
 
-    private void writeClass(final JavaFile javaFile, final Filer filer){
+    private ParameterInfoDelegator buildParameterInfoDelegator() {
+        if (isNull(parameterInfoDelegatorCache)) {
+            parameterInfoDelegatorCache =  new ParameterInfoDelegator(
+                    new SimpleParamInfoFactory(),
+                    new ClassParamInfoFactory()
+            );
+        }
+        return this.parameterInfoDelegatorCache;
+    }
+
+    private DAOGenerator buildDAOGenerator() {
+        if (isNull(daoGeneratorCache)) {
+            final var selectResultSetDelegator = new SelectResultSetDelegator(
+                    new SelectResultUsingConstructor(),
+                    new SelectResultUsingSetter(),
+                    new SelectResultSimpleResult()
+            );
+            final var selectMethodGeneratorFactory = new SelectMethodGeneratorFactory(
+                    this.types,
+                    new SelectCollectionMethodGenerator(this.types, selectResultSetDelegator),
+                    new SelectOptionalMethodGenerator(this.types, selectResultSetDelegator),
+                    new SelectSingleMethodGenerator(this.types, selectResultSetDelegator)
+            );
+            this.daoGeneratorCache = new DAOGenerator(
+                    selectMethodGeneratorFactory,
+                    new InsertMethodGenerator(),
+                    new UpdateMethodGenerator(),
+                    new DeleteMethodGenerator()
+            );
+        }
+        return daoGeneratorCache;
+    }
+
+    private void writeClass(final JavaFile javaFile){
         try {
             javaFile.writeTo(filer);
         }catch (IOException ex){
-            processingEnv.getMessager().printMessage(ERROR, ex.getMessage());
+            messager.printMessage(ERROR, ex.getMessage());
         }
     }
 

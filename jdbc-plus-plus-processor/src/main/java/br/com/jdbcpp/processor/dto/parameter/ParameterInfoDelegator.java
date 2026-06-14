@@ -13,9 +13,16 @@ import java.util.Objects;
 
 public final class ParameterInfoDelegator {
 
-    private ParameterInfoDelegator() {}
+    private final SimpleParamInfoFactory simpleParamInfoFactory;
+    private final ClassParamInfoFactory classParamInfoFactory;
 
-    public static List<ParamInfo> create(final String methodName,
+    public ParameterInfoDelegator(final SimpleParamInfoFactory simpleParamInfoFactory,
+                                   final ClassParamInfoFactory classParamInfoFactory) {
+        this.simpleParamInfoFactory = simpleParamInfoFactory;
+        this.classParamInfoFactory = classParamInfoFactory;
+    }
+
+    public List<ParamInfo> create(final String methodName,
                                          final List<? extends VariableElement> params,
                                          final Types types){
         if (params.isEmpty()) {
@@ -41,7 +48,7 @@ public final class ParameterInfoDelegator {
 
         if (classTypesAmount == 1){
             final var param = params.getFirst();
-            return ClassParamInfoFactory.create(param, types);
+            return classParamInfoFactory.create(param, types);
         }
 
         if ((params.stream()
@@ -57,7 +64,7 @@ public final class ParameterInfoDelegator {
         }
 
 
-        return SimpleParamInfoFactory.create(params, types);
+        return simpleParamInfoFactory.create(params, types);
     }
 
 }

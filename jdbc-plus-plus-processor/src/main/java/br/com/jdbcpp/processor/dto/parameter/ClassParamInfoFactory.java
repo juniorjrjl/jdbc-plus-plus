@@ -1,9 +1,12 @@
 package br.com.jdbcpp.processor.dto.parameter;
 
+import br.com.jdbcpp.api.InputParam;
 import br.com.jdbcpp.processor.util.ArrayUtil;
 import br.com.jdbcpp.processor.util.CollectionUtil;
+import br.com.jdbcpp.processor.util.StringUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 import com.palantir.javapoet.TypeName;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -13,23 +16,23 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.Objects.nonNull;
 
-public final class ClassParamInfoFactory extends AbstractParamInfoFactory {
+public final class ClassParamInfoFactory {
 
-    private ClassParamInfoFactory() {}
-
-    public static List<ParamInfo> create(final VariableElement param,
-                                         final Types types) {
+    public List<ParamInfo> create(final VariableElement param,
+                                  final Types types) {
         final var paramName = param.getSimpleName().toString();
         final var paramTypeMirror = param.asType();
-        return buildClass(types, paramTypeMirror, paramName);
+        final var paramInfo = buildClass(types, paramTypeMirror, paramName);
+        return List.of(paramInfo);
     }
 
-    private static List<ParamInfo> buildClass(final Types types,
-                                              final TypeMirror paramTypeMirror,
-                                              final String paramName) {
+    private static ParamInfo buildClass(final Types types,
+                                        final TypeMirror paramTypeMirror,
+                                        final String paramName) {
         final var collectionType = CollectionUtil.getCollectionElementType(paramTypeMirror);
         final var arrayType = ArrayUtil.getArrayElementType(paramTypeMirror);
         final TypeName typeContainer;
@@ -46,13 +49,12 @@ public final class ClassParamInfoFactory extends AbstractParamInfoFactory {
             typeContainer = null;
         }
         nestedProperties = extractFieldsFromType(typeElement, types);
-        return List.of(
-                new ClassParamInfo(
-                        paramName,
-                        TypeName.get(paramTypeMirror),
-                        typeContainer,
-                        nestedProperties
-                )
+        return new ClassParamInfo(
+                paramName,
+                TypeName.get(paramTypeMirror),
+                typeContainer,
+                nestedProperties,
+                TypeUtil.isRecord(paramTypeMirror, types)
         );
     }
 
@@ -89,14 +91,43 @@ public final class ClassParamInfoFactory extends AbstractParamInfoFactory {
         if (TypeUtil.isSimpleType(collectionType, types)) {
             return buildSimpleParamInfo(types, field, TypeName.get(collectionType));
         } else {
-            final var classInfo = buildClass(types, collectionType, field.getSimpleName().toString()).getFirst();
-            return new ClassParamInfo(
-                    classInfo.getName(),
-                    classInfo.getType(),
-                    TypeName.get(collectionType),
-                    ((ClassParamInfo)classInfo).getNestedProperties()
-            );
+            return buildClass(types, collectionType, field.getSimpleName().toString());
         }
+    }
+
+    private static ParamInfo buildSimpleParamInfo(final Types types,
+                                                    final VariableElement param,
+                                                    @Nullable
+                                                    final TypeName collectionType) {
+        final var paramName = param.getSimpleName().toString();
+        return Optional.ofNullable(param.getAnnotation(InputParam.class))
+                .map(i -> {
+                    final String convertMethod;
+                    if (TypeUtil.isEnum(param.asType(), types)) {
+                        convertMethod = switch (i.strategy()){
+                            case STRING -> String.format("%s.toString()", paramName);
+                            case ORDINAL -> String.format("%s.ordinal()", paramName);
+                            case CUSTOM_METHOD -> String.format("%s.%s", paramName, i.strategy());
+                        };
+                    } else {
+                        convertMethod = i.value().isBlank() ? paramName : i.value();
+                    }
+                    return new SimpleParamInfo(
+                            paramName,
+                            TypeName.get(param.asType()),
+                            collectionType,
+                            i.statementField().isBlank() ?
+                                    StringUtil.camelToSnakeCase(paramName) :
+                                    i.statementField(),
+                            convertMethod
+                    );
+                }).orElseGet(() -> new SimpleParamInfo(
+                        paramName,
+                        TypeName.get(param.asType()),
+                        collectionType,
+                        StringUtil.camelToSnakeCase(paramName),
+                        paramName
+                ));
     }
 
 }

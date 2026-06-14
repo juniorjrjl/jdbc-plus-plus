@@ -19,10 +19,10 @@ public class UpdateMethodGenerator {
                         final var stmt = connection.createStatement())
                         """);
         final var builder = updateMethod.getParams().stream()
-                .filter(p -> p.type().equals(updateMethod.getReturnType()))
+                .filter(p -> p.getType().equals(updateMethod.getReturnType()))
                 .findFirst()
                 .map(p -> methodBuilder.addStatement("stmt.executeUpdate(statement);")
-                                .addStatement("return $N", p.name()))
+                                .addStatement("return $N", p.getName()))
                 .orElseGet(() -> {
                     if (updateMethod.isReturnRowsAffected()){
                         return methodBuilder.addStatement("return stmt.executeUpdate(statement);");

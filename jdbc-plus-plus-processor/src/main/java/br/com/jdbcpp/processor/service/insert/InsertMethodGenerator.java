@@ -19,10 +19,10 @@ public class InsertMethodGenerator {
                         final var stmt = connection.createStatement())
                         """);
         final var builder = insertMethod.getParams().stream()
-                .filter(p -> p.type().equals(insertMethod.getReturnType()))
+                .filter(p -> p.getType().equals(insertMethod.getReturnType()))
                 .findFirst()
                 .map(p -> methodBuilder.addStatement("stmt.executeUpdate(statement);")
-                        .addStatement("return $N", p.name()))
+                        .addStatement("return $N", p.getName()))
                 .orElseGet(() -> {
                     if (insertMethod.isReturnRowsAffected()){
                         return methodBuilder.addStatement("return stmt.executeUpdate(statement);");
