@@ -3,7 +3,6 @@ package br.com.jdbcpp.processor.service.select;
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
 import br.com.jdbcpp.processor.service.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.util.CollectionUtil;
-import br.com.jdbcpp.processor.util.TypeUtil;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 

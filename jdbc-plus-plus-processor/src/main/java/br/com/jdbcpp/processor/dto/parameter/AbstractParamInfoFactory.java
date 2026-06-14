@@ -24,12 +24,12 @@ public abstract sealed class AbstractParamInfoFactory permits ClassParamInfoFact
                     final String convertMethod;
                     if (TypeUtil.isEnum(param.asType(), types)) {
                         convertMethod = switch (i.strategy()){
-                            case STRING -> "toString()";
-                            case ORDINAL -> "ordinal()";
-                            case CUSTOM_METHOD -> i.value();
+                            case STRING -> String.format("%s.toString()", paramName);
+                            case ORDINAL -> String.format("%s.ordinal()", paramName);
+                            case CUSTOM_METHOD -> String.format("%s.%s", paramName, i.strategy());
                         };
                     } else {
-                        convertMethod = i.value().isBlank() ? null : i.value();
+                        convertMethod = i.value().isBlank() ? paramName : i.value();
                     }
                     return new SimpleParamInfo(
                             paramName,
@@ -44,8 +44,9 @@ public abstract sealed class AbstractParamInfoFactory permits ClassParamInfoFact
                         paramName,
                         TypeName.get(param.asType()),
                         collectionType,
-                        StringUtil.camelToSnakeCase(paramName))
-                );
+                        StringUtil.camelToSnakeCase(paramName),
+                        paramName
+                        ));
     }
 
 }

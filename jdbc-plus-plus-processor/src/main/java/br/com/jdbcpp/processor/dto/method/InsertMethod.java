@@ -2,6 +2,7 @@ package br.com.jdbcpp.processor.dto.method;
 
 
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
+import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
@@ -13,7 +14,7 @@ public non-sealed class InsertMethod extends MethodInfo{
     public InsertMethod(final String name,
                         final TypeMirror returnType,
                         final List<ParamInfo> params,
-                        final String statement,
+                        final StatementInfo statement,
                         final boolean returnRowsAffected) {
         super(name, returnType, params, statement);
         this.returnRowsAffected = returnRowsAffected;

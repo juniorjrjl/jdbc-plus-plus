@@ -6,6 +6,7 @@ import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SetterStrategy;
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
+import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
@@ -21,7 +22,7 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
     public SelectMethodInfo(final String name,
                             final TypeMirror returnType,
                             final List<ParamInfo> params,
-                            final String statement,
+                            final StatementInfo statement,
                             final List<SelectReturnStrategy<?>> strategies,
                             final ResultBuildStrategyType strategyType) {
         super(name, returnType, params, statement);
@@ -33,7 +34,7 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
     public SelectMethodInfo(final String name,
                             final TypeMirror returnType,
                             final List<ParamInfo> params,
-                            final String statement,
+                            final StatementInfo statement,
                             final SelectReturnStrategy<?> strategy){
         super(name, returnType, params, statement);
         this.returnTypeMirror = returnType;

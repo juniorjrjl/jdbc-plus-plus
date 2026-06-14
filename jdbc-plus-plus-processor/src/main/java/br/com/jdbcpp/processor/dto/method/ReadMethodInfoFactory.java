@@ -6,6 +6,7 @@ import br.com.jdbcpp.api.ResultBuildStrategyType;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
+import br.com.jdbcpp.processor.dto.statement.StatementInfoFactory;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
 import br.com.jdbcpp.processor.util.BuildConstructorStrategy;
 import br.com.jdbcpp.processor.util.BuildSetterStrategy;
@@ -64,7 +65,14 @@ public final class ReadMethodInfoFactory {
         final var strategies = strategyType == CONSTRUCTOR ?
                 BuildConstructorStrategy.generateStrategyInfo(typeElement, types, methodName) :
                 BuildSetterStrategy.generateStrategyInfo(typeElement, types);
-        return new SelectMethodInfo(methodName, returnType, params, query.value(), strategies, strategyType);
+        return new SelectMethodInfo(
+                methodName,
+                returnType,
+                params,
+                StatementInfoFactory.create(query.value()),
+                strategies,
+                strategyType
+        );
     }
 
     private static SelectMethodInfo simpleSelectResult(final ExecutableElement method,
@@ -77,7 +85,13 @@ public final class ReadMethodInfoFactory {
                 .map(TypeName::get)
                 .orElse(null);
         final SelectReturnStrategy<SimpleResultStrategy> strategy = new SimpleResultStrategy(type, genericType);
-        return new SelectMethodInfo(method.getSimpleName().toString(), returnType, params, query.value(), strategy);
+        return new SelectMethodInfo(
+                method.getSimpleName().toString(),
+                returnType,
+                params,
+                StatementInfoFactory.create(query.value()),
+                strategy
+        );
     }
 
     private static boolean needStrategyToSelectReturn(final TypeMirror returnType, final Types types) {

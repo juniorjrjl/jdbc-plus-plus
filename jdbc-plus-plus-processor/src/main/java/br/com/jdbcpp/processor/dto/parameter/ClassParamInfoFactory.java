@@ -21,7 +21,7 @@ public final class ClassParamInfoFactory extends AbstractParamInfoFactory {
     private ClassParamInfoFactory() {}
 
     public static List<ParamInfo> create(final VariableElement param,
-                                          final Types types) {
+                                         final Types types) {
         final var paramName = param.getSimpleName().toString();
         final var paramTypeMirror = param.asType();
         return buildClass(types, paramTypeMirror, paramName);

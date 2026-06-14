@@ -2,6 +2,7 @@ package br.com.jdbcpp.processor.dto.method;
 
 import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
+import br.com.jdbcpp.processor.dto.statement.StatementInfoFactory;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
 import com.palantir.javapoet.TypeName;
 
@@ -27,7 +28,7 @@ public final class WriteMethodInfoFactory {
                 method.getSimpleName().toString(),
                 method.getReturnType(),
                 params,
-                command.value(),
+                StatementInfoFactory.create(command.value()),
                 command.returnRowsAffected()
         );
         if (!deleteMethod.isReturnRowsAffected() && deleteMethod.getReturnType().equals(TypeName.VOID)) {
@@ -52,7 +53,7 @@ public final class WriteMethodInfoFactory {
                 method.getSimpleName().toString(),
                 method.getReturnType(),
                 params,
-                command.value(),
+                StatementInfoFactory.create(command.value()),
                 command.returnRowsAffected()
         );
 
@@ -73,7 +74,7 @@ public final class WriteMethodInfoFactory {
                 method.getSimpleName().toString(),
                 method.getReturnType(),
                 params,
-                command.value(),
+                StatementInfoFactory.create(command.value()),
                 command.returnRowsAffected()
         );
 

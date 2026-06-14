@@ -1,6 +1,7 @@
 package br.com.jdbcpp.processor.dto.method;
 
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
+import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
@@ -11,12 +12,12 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
     protected final String name;
     protected final TypeName returnType;
     protected final List<ParamInfo> params;
-    protected final String statement;
+    protected final StatementInfo statement;
 
     protected MethodInfo(final String name,
                       final TypeMirror returnType,
                       final List<ParamInfo> params,
-                      final String statement) {
+                      final StatementInfo statement) {
         this.name = name;
         this.returnType = TypeName.get(returnType);
         this.params = params;
@@ -35,7 +36,7 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
         return params;
     }
 
-    public String getStatement() {
+    public StatementInfo getStatement() {
         return statement;
     }
 

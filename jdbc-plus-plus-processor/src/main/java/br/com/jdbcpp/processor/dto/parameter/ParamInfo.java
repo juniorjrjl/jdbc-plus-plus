@@ -7,6 +7,7 @@ public abstract class ParamInfo {
 
     private final String name;
     private final TypeName type;
+    @Nullable
     private final TypeName containerType;
 
     protected ParamInfo(final String name,
