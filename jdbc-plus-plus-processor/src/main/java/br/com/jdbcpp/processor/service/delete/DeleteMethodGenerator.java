@@ -1,7 +1,6 @@
 package br.com.jdbcpp.processor.service.delete;
 
 import br.com.jdbcpp.processor.dto.method.DeleteMethod;
-import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import com.palantir.javapoet.MethodSpec;
 
 import java.sql.SQLException;
