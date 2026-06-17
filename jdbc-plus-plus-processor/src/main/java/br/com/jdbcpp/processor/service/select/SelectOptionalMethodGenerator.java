@@ -9,11 +9,15 @@ import java.sql.SQLException;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-public class SelectOptionalMethodGenerator extends SelectMethodGenerator{
+public class SelectOptionalMethodGenerator {
+
+    protected final Types types;
+    protected final SelectResultSetDelegator selectResultSetDelegator;
 
     public SelectOptionalMethodGenerator(final Types types,
                                          final SelectResultSetDelegator selectResultSetDelegator) {
-        super(types, selectResultSetDelegator);
+        this.types = types;
+        this.selectResultSetDelegator = selectResultSetDelegator;
     }
 
     public MethodSpec build(final SelectMethodInfo selectMethodInfo) {

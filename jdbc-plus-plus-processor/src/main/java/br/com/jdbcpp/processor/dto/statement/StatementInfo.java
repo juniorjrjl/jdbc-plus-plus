@@ -7,12 +7,21 @@ public record StatementInfo(
         List<StatementParam> params
 ) {
 
+    public StatementInfo {
+        sql = List.copyOf(sql);
+        params = List.copyOf(params);
+    }
+
     public boolean sqlNotSplit() {
         return sql.size() == 1;
     }
 
-    public String fullSql() {
+    public String getNoSplitFullSQL() {
         return sql.getFirst();
+    }
+
+    public boolean sqlWithoutParams() {
+        return params.isEmpty();
     }
 
 }

@@ -5,6 +5,10 @@ public final class StringUtil {
     private  StringUtil() {
     }
 
+    public static String toQuotedString(final String value) {
+        return "\"" + value + "\"";
+    }
+
     public static String camelToSnakeCase(final String value) {
         return value
                 .replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2")

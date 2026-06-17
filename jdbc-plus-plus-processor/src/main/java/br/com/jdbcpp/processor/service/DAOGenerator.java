@@ -7,26 +7,41 @@ import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
 import br.com.jdbcpp.processor.dto.method.UpdateMethod;
 import br.com.jdbcpp.processor.service.delete.DeleteMethodGenerator;
 import br.com.jdbcpp.processor.service.insert.InsertMethodGenerator;
-import br.com.jdbcpp.processor.service.select.SelectMethodGeneratorFactory;
+import br.com.jdbcpp.processor.service.select.SelectCollectionMethodGenerator;
+import br.com.jdbcpp.processor.service.select.SelectOptionalMethodGenerator;
+import br.com.jdbcpp.processor.service.select.SelectSingleMethodGenerator;
 import br.com.jdbcpp.processor.service.update.UpdateMethodGenerator;
+import br.com.jdbcpp.processor.util.CollectionUtil;
+import br.com.jdbcpp.processor.util.TypeUtil;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.TypeSpec;
+
+import javax.lang.model.util.Types;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 public class DAOGenerator {
 
-    private final SelectMethodGeneratorFactory selectFactory;
+    private final Types types;
+    private final SelectCollectionMethodGenerator selectCollectionMethodGenerator;
+    private final SelectOptionalMethodGenerator selectOptionalMethodGenerator;
+    private final SelectSingleMethodGenerator selectSingleMethodGenerator;
     private final InsertMethodGenerator insertMethodGenerator;
     private final UpdateMethodGenerator updateMethodGenerator;
     private final DeleteMethodGenerator deleteMethodGenerator;
 
-    public DAOGenerator(final SelectMethodGeneratorFactory selectFactory,
+    public DAOGenerator(final Types types,
+                        final SelectCollectionMethodGenerator selectCollectionMethodGenerator,
+                        final SelectOptionalMethodGenerator selectOptionalMethodGenerator,
+                        final SelectSingleMethodGenerator selectSingleMethodGenerator,
                         final InsertMethodGenerator insertMethodGenerator,
                         final UpdateMethodGenerator updateMethodGenerator,
                         final DeleteMethodGenerator deleteMethodGenerator) {
-        this.selectFactory = selectFactory;
+        this.types = types;
+        this.selectCollectionMethodGenerator = selectCollectionMethodGenerator;
+        this.selectOptionalMethodGenerator = selectOptionalMethodGenerator;
+        this.selectSingleMethodGenerator = selectSingleMethodGenerator;
         this.insertMethodGenerator = insertMethodGenerator;
         this.updateMethodGenerator = updateMethodGenerator;
         this.deleteMethodGenerator = deleteMethodGenerator;
@@ -45,8 +60,16 @@ public class DAOGenerator {
             final var method = switch (m){
                 case InsertMethod insertMethod ->
                         insertMethodGenerator.build(insertMethod);
-                case SelectMethodInfo selectMethodInfo ->
-                        selectFactory.create(selectMethodInfo).build(selectMethodInfo);
+                case SelectMethodInfo selectMethodInfo ->{
+                    if (CollectionUtil.isCollectionType(selectMethodInfo.getReturnTypeMirror(), types)) {
+                        yield selectCollectionMethodGenerator.build(selectMethodInfo);
+                    }
+
+                    if (TypeUtil.isOptionalType(selectMethodInfo.getReturnTypeMirror(), types)) {
+                        yield selectOptionalMethodGenerator.build(selectMethodInfo);
+                    }
+                    yield selectSingleMethodGenerator.build(selectMethodInfo);
+                }
                 case UpdateMethod updateMethod ->
                         updateMethodGenerator.build(updateMethod);
                 case DeleteMethod deleteMethod ->

@@ -2,6 +2,7 @@ package br.com.jdbcpp.processor.service.select.result;
 
 import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
+import br.com.jdbcpp.processor.util.JDBCUtil;
 import br.com.jdbcpp.processor.util.StringUtil;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
@@ -10,7 +11,7 @@ import javax.lang.model.type.TypeMirror;
 import java.util.List;
 import java.util.Optional;
 
-public class SelectResultUsingConstructor extends SelectResultSet<ConstructorStrategy> {
+public class SelectResultUsingConstructor {
 
     public void build(final List<ConstructorStrategy> strategies,
                       final String objectResultName,
@@ -20,13 +21,13 @@ public class SelectResultUsingConstructor extends SelectResultSet<ConstructorStr
         final var constructorCode = new StringBuilder("final var $L = new $T(");
         for (int i = 0; i < strategies.size(); i++) {
             final var strategy = strategies.get(i);
-            final var resultSetGetter = getResultSetGetter(
+            final var resultSetGetter = JDBCUtil.getResultSetGetter(
                     strategy.getType(),
                     Optional.ofNullable(strategy.getResultSetIndex())
                             .map(String::valueOf)
                             .orElseGet(() ->{
                                 final var columnName = StringUtil.camelToSnakeCase(strategy.getName());
-                                return toQuotedString(columnName);
+                                return StringUtil.toQuotedString(columnName);
                             }),
                     resultSetVar);
             builder.addStatement("final var $L = $L", strategy.getName(), resultSetGetter);

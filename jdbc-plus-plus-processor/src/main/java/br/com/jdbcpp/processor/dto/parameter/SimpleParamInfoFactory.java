@@ -55,6 +55,7 @@ public final class SimpleParamInfoFactory {
                     return new SimpleParamInfo(
                             paramName,
                             TypeName.get(param.asType()),
+                            TypeUtil.isEnum(param.asType(), types),
                             collectionType,
                             i.statementField().isBlank() ?
                                     StringUtil.camelToSnakeCase(paramName) :
@@ -64,6 +65,7 @@ public final class SimpleParamInfoFactory {
                 }).orElseGet(() -> new SimpleParamInfo(
                         paramName,
                         TypeName.get(param.asType()),
+                        TypeUtil.isEnum(param.asType(), types),
                         collectionType,
                         StringUtil.camelToSnakeCase(paramName),
                         paramName

@@ -5,10 +5,10 @@ import org.jspecify.annotations.Nullable;
 
 public abstract class ParamInfo {
 
-    private final String name;
-    private final TypeName type;
+    protected final String name;
+    protected final TypeName type;
     @Nullable
-    private final TypeName containerType;
+    protected final TypeName containerType;
 
     protected ParamInfo(final String name,
                         final TypeName type,

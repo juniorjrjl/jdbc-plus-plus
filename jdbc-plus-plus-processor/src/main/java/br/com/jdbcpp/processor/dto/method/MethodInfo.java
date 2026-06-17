@@ -1,6 +1,8 @@
 package br.com.jdbcpp.processor.dto.method;
 
+import br.com.jdbcpp.processor.dto.parameter.ClassParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
+import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import com.palantir.javapoet.TypeName;
 
@@ -38,6 +40,17 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
 
     public StatementInfo getStatement() {
         return statement;
+    }
+
+    public boolean useClassParam(){
+        return params.getFirst() instanceof ClassParamInfo;
+    }
+
+    public List<SimpleParamInfo> getSimpleParams() {
+        return params.stream()
+                .filter(SimpleParamInfo.class::isInstance)
+                .map(p -> (SimpleParamInfo) p)
+                .toList();
     }
 
 }

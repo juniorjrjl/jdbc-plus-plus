@@ -1,6 +1,7 @@
 package br.com.jdbcpp.processor.service.select.result;
 
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
+import br.com.jdbcpp.processor.util.JDBCUtil;
 import br.com.jdbcpp.processor.util.StringUtil;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
@@ -9,9 +10,8 @@ import javax.lang.model.type.TypeMirror;
 import java.util.List;
 import java.util.Optional;
 
-public class SelectResultSimpleResult extends SelectResultSet<SimpleResultStrategy>{
+public class SelectResultSimpleResult {
 
-    @Override
     public void build(final List<SimpleResultStrategy> strategies,
                       final String objectResultName,
                       final TypeMirror returnType,
@@ -19,13 +19,13 @@ public class SelectResultSimpleResult extends SelectResultSet<SimpleResultStrate
                       final MethodSpec.Builder builder) {
         builder.addStatement("final var $L = new $T()", objectResultName, TypeName.get(returnType));
         final var strategy = strategies.getFirst();
-        final var resultSetGetter = getResultSetGetter(
+        final var resultSetGetter = JDBCUtil.getResultSetGetter(
                 strategy.getType(),
                 Optional.ofNullable(strategy.getResultSetIndex())
                         .map(String::valueOf)
                         .orElseGet(() ->{
                             final var columnName = StringUtil.camelToSnakeCase(strategy.getName());
-                            return toQuotedString(columnName);
+                            return StringUtil.toQuotedString(columnName);
                         }),
                 resultSetVar);
         builder.addStatement("$L = $L", objectResultName, resultSetGetter);

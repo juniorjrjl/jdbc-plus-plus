@@ -1,6 +1,7 @@
 package br.com.jdbcpp.processor.service.delete;
 
 import br.com.jdbcpp.processor.dto.method.DeleteMethod;
+import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import com.palantir.javapoet.MethodSpec;
 
 import java.sql.SQLException;
@@ -19,14 +20,14 @@ public class DeleteMethodGenerator {
                         final var stmt = connection.createStatement())
                         """);
         if (deleteMethod.isReturnRowsAffected()){
-            methodBuilder.addStatement("return stmt.executeUpdate(statement);");
+            methodBuilder.addStatement("return stmt.executeUpdate(statement)");
         } else {
-            methodBuilder.addStatement("stmt.executeUpdate(statement);");
+            methodBuilder.addStatement("stmt.executeUpdate(statement)");
         }
 
         return methodBuilder
                 .addStatement("} catch (final $T e) {", SQLException.class)
-                .addStatement("throw e;")
+                .addStatement("throw e")
                 .endControlFlow()
                 .build();
     }

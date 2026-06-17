@@ -16,7 +16,6 @@ import br.com.jdbcpp.processor.service.DAOGenerator;
 import br.com.jdbcpp.processor.service.delete.DeleteMethodGenerator;
 import br.com.jdbcpp.processor.service.insert.InsertMethodGenerator;
 import br.com.jdbcpp.processor.service.select.SelectCollectionMethodGenerator;
-import br.com.jdbcpp.processor.service.select.SelectMethodGeneratorFactory;
 import br.com.jdbcpp.processor.service.select.SelectOptionalMethodGenerator;
 import br.com.jdbcpp.processor.service.select.SelectSingleMethodGenerator;
 import br.com.jdbcpp.processor.service.select.result.SelectResultSetDelegator;
@@ -156,14 +155,11 @@ public class DAOProcessor extends AbstractProcessor {
                     new SelectResultUsingSetter(),
                     new SelectResultSimpleResult()
             );
-            final var selectMethodGeneratorFactory = new SelectMethodGeneratorFactory(
+            this.daoGeneratorCache = new DAOGenerator(
                     this.types,
                     new SelectCollectionMethodGenerator(this.types, selectResultSetDelegator),
                     new SelectOptionalMethodGenerator(this.types, selectResultSetDelegator),
-                    new SelectSingleMethodGenerator(this.types, selectResultSetDelegator)
-            );
-            this.daoGeneratorCache = new DAOGenerator(
-                    selectMethodGeneratorFactory,
+                    new SelectSingleMethodGenerator(this.types, selectResultSetDelegator),
                     new InsertMethodGenerator(),
                     new UpdateMethodGenerator(),
                     new DeleteMethodGenerator()

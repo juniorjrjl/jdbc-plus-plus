@@ -12,12 +12,16 @@ import java.sql.SQLException;
 import static java.util.Objects.nonNull;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-public class SelectCollectionMethodGenerator extends SelectMethodGenerator{
+public class SelectCollectionMethodGenerator {
 
-    public SelectCollectionMethodGenerator(final Types types,
-                                           final SelectResultSetDelegator selectResultSetDelegator) {
-        super(types, selectResultSetDelegator);
+    private final Types types;
+    private final SelectResultSetDelegator selectResultSetDelegator;
+
+    public SelectCollectionMethodGenerator(final Types types, final SelectResultSetDelegator selectResultSetDelegator) {
+        this.types = types;
+        this.selectResultSetDelegator = selectResultSetDelegator;
     }
+
 
     public MethodSpec build(final SelectMethodInfo selectMethodInfo) {
         final var returnType = selectMethodInfo.getReturnType();

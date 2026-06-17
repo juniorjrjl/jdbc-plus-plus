@@ -135,4 +135,11 @@ public final class TypeUtil {
         return typeElement.getKind() == ElementKind.RECORD;
     }
 
+    public static String getSimpleClassName(final String qualifiedName){
+        final var lastDotIndex = qualifiedName.lastIndexOf(".");
+        return lastDotIndex == -1 ?
+                qualifiedName :
+                qualifiedName.substring(lastDotIndex + 1);
+    }
+
 }
