@@ -5,7 +5,9 @@ import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 
 import javax.lang.model.type.TypeMirror;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public non-sealed class UpdateMethod extends MethodInfo{
 
@@ -16,7 +18,16 @@ public non-sealed class UpdateMethod extends MethodInfo{
                         final List<ParamInfo> params,
                         final StatementInfo statement,
                         final boolean returnRowsAffected) {
-        super(name, returnType, params, statement);
+        super(name, returnType, params, Collections.emptyMap(), statement);
+        this.returnRowsAffected = returnRowsAffected;
+    }
+
+    public UpdateMethod(final String name,
+                        final TypeMirror returnType,
+                        final Map<String, List<ParamInfo>> classPropertyMap,
+                        final StatementInfo statement,
+                        final boolean returnRowsAffected) {
+        super(name, returnType, Collections.emptyList(), classPropertyMap, statement);
         this.returnRowsAffected = returnRowsAffected;
     }
 

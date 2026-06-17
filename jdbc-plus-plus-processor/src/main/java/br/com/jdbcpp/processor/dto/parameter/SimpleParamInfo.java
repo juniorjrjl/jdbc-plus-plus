@@ -5,7 +5,7 @@ import org.jspecify.annotations.Nullable;
 
 import static java.util.Objects.nonNull;
 
-public class SimpleParamInfo extends ParamInfo {
+public non-sealed class SimpleParamInfo extends ParamInfo {
 
     private final boolean customEnum;
     private final String queryParamName;

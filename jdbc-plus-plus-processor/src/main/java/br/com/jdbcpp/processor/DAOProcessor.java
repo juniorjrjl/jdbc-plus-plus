@@ -7,7 +7,10 @@ import br.com.jdbcpp.processor.dto.DAOImplInfo;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.ReadMethodInfoFactory;
 import br.com.jdbcpp.processor.dto.method.WriteMethodInfoFactory;
+import br.com.jdbcpp.processor.dto.parameter.ClassParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.ClassParamInfoFactory;
+import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
+import br.com.jdbcpp.processor.dto.parameter.ParamPathExtractor;
 import br.com.jdbcpp.processor.dto.parameter.ParameterInfoDelegator;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfoFactory;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
@@ -39,7 +42,10 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Types;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -126,11 +132,16 @@ public class DAOProcessor extends AbstractProcessor {
                 types
         );
 
+        final Map<String, List<ParamInfo>> classPropertyMap =
+                (params.size() == 1 && params.getFirst() instanceof ClassParamInfo classParamInfo) ?
+                ParamPathExtractor.build(classParamInfo) :
+                Collections.emptyMap();
+
         final var commandOptional = Optional.ofNullable(method.getAnnotation(Command.class))
-                .map(command -> WriteMethodInfoFactory.create(method, params, command));
+                .map(command -> WriteMethodInfoFactory.create(method, params, classPropertyMap, command));
 
         return Optional.ofNullable(method.getAnnotation(Query.class))
-                .map(query -> ReadMethodInfoFactory.create(method, params, query, types))
+                .map(query -> ReadMethodInfoFactory.create(method, params, classPropertyMap, query, types))
                 .or(() -> commandOptional)
                 .orElseThrow(() -> {
                     final var message = String.format("Fail to get info from method %s", method.getSimpleName());

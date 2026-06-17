@@ -8,6 +8,7 @@ import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
+import java.util.Map;
 
 public final class WriteMethodInfoFactory {
 
@@ -15,22 +16,34 @@ public final class WriteMethodInfoFactory {
 
     public static MethodInfo create(final ExecutableElement method,
                                     final List<ParamInfo> params,
+                                    final Map<String, List<ParamInfo>> classPropertyMap,
                                     final Command command) throws InvalidMethodSignature{
         return switch (command.commandType()) {
-            case INSERT -> getInsertMethod(method, params, command);
-            case UPDATE -> getUpdateMethod(method, params, command);
-            case DELETE -> getDeleteMethod(method, params, command);
+            case INSERT -> getInsertMethod(method, params, classPropertyMap, command);
+            case UPDATE -> getUpdateMethod(method, params, classPropertyMap, command);
+            case DELETE -> getDeleteMethod(method, params, classPropertyMap, command);
         };
     }
 
-    private static DeleteMethod getDeleteMethod(final ExecutableElement method, final List<ParamInfo> params, final Command command) {
-        final var deleteMethod = new DeleteMethod(
-                method.getSimpleName().toString(),
-                method.getReturnType(),
-                params,
-                StatementInfoFactory.create(command.value()),
-                command.returnRowsAffected()
-        );
+    private static DeleteMethod getDeleteMethod(final ExecutableElement method,
+                                                final List<ParamInfo> params,
+                                                final Map<String, List<ParamInfo>> classPropertyMap,
+                                                final Command command) {
+        final var deleteMethod = classPropertyMap.isEmpty() ?
+                new DeleteMethod(
+                        method.getSimpleName().toString(),
+                        method.getReturnType(),
+                        params,
+                        StatementInfoFactory.create(command.value()),
+                        command.returnRowsAffected()
+                ) :
+                new DeleteMethod(
+                        method.getSimpleName().toString(),
+                        method.getReturnType(),
+                        classPropertyMap,
+                        StatementInfoFactory.create(command.value()),
+                        command.returnRowsAffected()
+                );
         if (!deleteMethod.isReturnRowsAffected() && deleteMethod.getReturnType().equals(TypeName.VOID)) {
             final var message = String.format("A method DELETE %s must be void or return rows affected", method.getSimpleName());
             throw new InvalidMethodSignature(message);
@@ -48,14 +61,23 @@ public final class WriteMethodInfoFactory {
 
     private static UpdateMethod getUpdateMethod(final ExecutableElement method,
                                                 final List<ParamInfo> params,
+                                                final Map<String, List<ParamInfo>> classPropertyMap,
                                                 final Command command) {
-        final var updateMethod = new UpdateMethod(
-                method.getSimpleName().toString(),
-                method.getReturnType(),
-                params,
-                StatementInfoFactory.create(command.value()),
-                command.returnRowsAffected()
-        );
+        final var updateMethod = classPropertyMap.isEmpty() ?
+                new UpdateMethod(
+                        method.getSimpleName().toString(),
+                        method.getReturnType(),
+                        params,
+                        StatementInfoFactory.create(command.value()),
+                        command.returnRowsAffected()
+                ) :
+                new UpdateMethod(
+                        method.getSimpleName().toString(),
+                        method.getReturnType(),
+                        classPropertyMap,
+                        StatementInfoFactory.create(command.value()),
+                        command.returnRowsAffected()
+                );
 
         validateRowsAffected(
                 method.getSimpleName().toString(),
@@ -69,14 +91,23 @@ public final class WriteMethodInfoFactory {
 
     private static InsertMethod getInsertMethod(final ExecutableElement method,
                                                 final List<ParamInfo> params,
+                                                final Map<String, List<ParamInfo>> classPropertyMap,
                                                 final Command command) {
-        final var insertMethod = new InsertMethod(
-                method.getSimpleName().toString(),
-                method.getReturnType(),
-                params,
-                StatementInfoFactory.create(command.value()),
-                command.returnRowsAffected()
-        );
+        final var insertMethod = classPropertyMap.isEmpty() ?
+                new InsertMethod(
+                        method.getSimpleName().toString(),
+                        method.getReturnType(),
+                        params,
+                        StatementInfoFactory.create(command.value()),
+                        command.returnRowsAffected()
+                ) :
+                new InsertMethod(
+                        method.getSimpleName().toString(),
+                        method.getReturnType(),
+                        classPropertyMap,
+                        StatementInfoFactory.create(command.value()),
+                        command.returnRowsAffected()
+                );
 
         validateRowsAffected(
                 method.getSimpleName().toString(),

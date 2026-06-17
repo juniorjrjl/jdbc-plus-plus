@@ -5,7 +5,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-public class ClassParamInfo extends ParamInfo{
+public non-sealed class  ClassParamInfo extends ParamInfo{
 
     private final List<ParamInfo> nestedProperties;
     private final boolean recordClass;

@@ -3,7 +3,7 @@ package br.com.jdbcpp.processor.dto.parameter;
 import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
-public abstract class ParamInfo {
+public abstract sealed class ParamInfo permits SimpleParamInfo, ClassParamInfo{
 
     protected final String name;
     protected final TypeName type;

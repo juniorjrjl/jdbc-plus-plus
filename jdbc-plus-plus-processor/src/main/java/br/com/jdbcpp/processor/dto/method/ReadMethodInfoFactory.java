@@ -21,6 +21,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static br.com.jdbcpp.api.ResultBuildStrategyType.CONSTRUCTOR;
@@ -35,6 +36,7 @@ public final class ReadMethodInfoFactory {
 
     public static MethodInfo create(final ExecutableElement method,
                                     final List<ParamInfo> params,
+                                    final Map<String, List<ParamInfo>> classPropertyMap,
                                     final Query query,
                                     final Types types) {
         final var returnType = method.getReturnType();
@@ -47,14 +49,15 @@ public final class ReadMethodInfoFactory {
         }
 
         if (!needStrategyToSelectReturn(returnType, types)) {
-            return simpleSelectResult(method, params, query, returnType);
+            return simpleSelectResult(method, params, classPropertyMap, query, returnType);
         }
 
-        return objectSelectResult(method, params, query, types, returnType);
+        return objectSelectResult(method, params, classPropertyMap, query, types, returnType);
     }
 
     private static SelectMethodInfo objectSelectResult(final ExecutableElement method,
                                                        final List<ParamInfo> params,
+                                                       final Map<String, List<ParamInfo>> classPropertyMap,
                                                        final Query query,
                                                        final Types types,
                                                        final TypeMirror returnType) {
@@ -65,18 +68,28 @@ public final class ReadMethodInfoFactory {
         final var strategies = strategyType == CONSTRUCTOR ?
                 BuildConstructorStrategy.generateStrategyInfo(typeElement, types, methodName) :
                 BuildSetterStrategy.generateStrategyInfo(typeElement, types);
-        return new SelectMethodInfo(
-                methodName,
-                returnType,
-                params,
-                StatementInfoFactory.create(query.value()),
-                strategies,
-                strategyType
-        );
+        return classPropertyMap.isEmpty() ?
+                new SelectMethodInfo(
+                    methodName,
+                    returnType,
+                    params,
+                    StatementInfoFactory.create(query.value()),
+                    strategies,
+                    strategyType
+                ) :
+                new SelectMethodInfo(
+                        methodName,
+                        returnType,
+                        classPropertyMap,
+                        StatementInfoFactory.create(query.value()),
+                        strategies,
+                        strategyType
+                );
     }
 
     private static SelectMethodInfo simpleSelectResult(final ExecutableElement method,
                                                        final List<ParamInfo> params,
+                                                       final Map<String, List<ParamInfo>> classPropertyMap,
                                                        final Query query,
                                                        final TypeMirror returnType) {
         final var type = TypeName.get(returnType);
@@ -85,13 +98,21 @@ public final class ReadMethodInfoFactory {
                 .map(TypeName::get)
                 .orElse(null);
         final SelectReturnStrategy<SimpleResultStrategy> strategy = new SimpleResultStrategy(type, genericType);
-        return new SelectMethodInfo(
-                method.getSimpleName().toString(),
-                returnType,
-                params,
-                StatementInfoFactory.create(query.value()),
-                strategy
-        );
+        return classPropertyMap.isEmpty() ?
+                new SelectMethodInfo(
+                        method.getSimpleName().toString(),
+                        returnType,
+                        params,
+                        StatementInfoFactory.create(query.value()),
+                        strategy
+                ) :
+                new SelectMethodInfo(
+                        method.getSimpleName().toString(),
+                        returnType,
+                        classPropertyMap,
+                        StatementInfoFactory.create(query.value()),
+                        strategy
+                );
     }
 
     private static boolean needStrategyToSelectReturn(final TypeMirror returnType, final Types types) {

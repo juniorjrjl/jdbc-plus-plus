@@ -8,20 +8,24 @@ import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
+import java.util.Map;
 
 public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, SelectMethodInfo, UpdateMethod {
 
     protected final String name;
     protected final TypeName returnType;
     protected final List<ParamInfo> params;
+    protected final Map<String, List<ParamInfo>> classPropertyMap;
     protected final StatementInfo statement;
 
     protected MethodInfo(final String name,
-                      final TypeMirror returnType,
-                      final List<ParamInfo> params,
-                      final StatementInfo statement) {
+                         final TypeMirror returnType,
+                         final List<ParamInfo> params,
+                         final Map<String, List<ParamInfo>> classPropertyMap,
+                         final StatementInfo statement) {
         this.name = name;
         this.returnType = TypeName.get(returnType);
+        this.classPropertyMap = classPropertyMap;
         this.params = params;
         this.statement = statement;
     }
@@ -43,7 +47,7 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
     }
 
     public boolean useClassParam(){
-        return params.getFirst() instanceof ClassParamInfo;
+        return !classPropertyMap.isEmpty();
     }
 
     public List<SimpleParamInfo> getSimpleParams() {

@@ -9,7 +9,9 @@ import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 
 import javax.lang.model.type.TypeMirror;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static br.com.jdbcpp.api.ResultBuildStrategyType.SIMPLE_RESULT;
 
@@ -25,7 +27,19 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             final StatementInfo statement,
                             final List<SelectReturnStrategy<?>> strategies,
                             final ResultBuildStrategyType strategyType) {
-        super(name, returnType, params, statement);
+        super(name, returnType, params, Collections.emptyMap(), statement);
+        this.returnTypeMirror = returnType;
+        this.strategies = strategies;
+        this.strategyType = strategyType;
+    }
+
+    public SelectMethodInfo(final String name,
+                            final TypeMirror returnType,
+                            final Map<String, List<ParamInfo>> classPropertyMap,
+                            final StatementInfo statement,
+                            final List<SelectReturnStrategy<?>> strategies,
+                            final ResultBuildStrategyType strategyType) {
+        super(name, returnType, Collections.emptyList(), classPropertyMap, statement);
         this.returnTypeMirror = returnType;
         this.strategies = strategies;
         this.strategyType = strategyType;
@@ -36,7 +50,18 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             final List<ParamInfo> params,
                             final StatementInfo statement,
                             final SelectReturnStrategy<?> strategy){
-        super(name, returnType, params, statement);
+        super(name, returnType, params, Collections.emptyMap(), statement);
+        this.returnTypeMirror = returnType;
+        this.strategies = List.of(strategy);
+        this.strategyType = SIMPLE_RESULT;
+    }
+
+    public SelectMethodInfo(final String name,
+                            final TypeMirror returnType,
+                            final Map<String, List<ParamInfo>> classPropertyMap,
+                            final StatementInfo statement,
+                            final SelectReturnStrategy<?> strategy){
+        super(name, returnType, Collections.emptyList(), classPropertyMap, statement);
         this.returnTypeMirror = returnType;
         this.strategies = List.of(strategy);
         this.strategyType = SIMPLE_RESULT;
