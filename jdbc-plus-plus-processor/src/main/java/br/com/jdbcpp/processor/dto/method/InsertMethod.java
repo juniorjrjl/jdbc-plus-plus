@@ -6,7 +6,6 @@ import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

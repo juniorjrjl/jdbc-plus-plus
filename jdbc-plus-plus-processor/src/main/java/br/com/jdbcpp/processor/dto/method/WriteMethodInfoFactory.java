@@ -3,19 +3,13 @@ package br.com.jdbcpp.processor.dto.method;
 import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfoFactory;
-import br.com.jdbcpp.processor.dto.statement.StatementParam;
-import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
-import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeed;
 import br.com.jdbcpp.processor.util.MethodValidatorUtil;
-import br.com.jdbcpp.processor.util.StringUtil;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.element.ExecutableElement;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public final class WriteMethodInfoFactory {
 

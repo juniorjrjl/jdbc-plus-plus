@@ -1,6 +1,5 @@
 package br.com.jdbcpp.processor.dto.method;
 
-import br.com.jdbcpp.processor.dto.parameter.ClassParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
