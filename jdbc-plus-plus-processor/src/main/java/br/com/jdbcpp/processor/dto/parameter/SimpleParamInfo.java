@@ -9,17 +9,15 @@ public non-sealed class SimpleParamInfo extends ParamInfo {
 
     private final boolean customEnum;
     private final String queryParamName;
-    private final String convertMethod;
 
     public SimpleParamInfo(final String name,
                            final TypeName type,
                            final boolean customEnum,
                            final String queryParamName,
                            final String convertMethod) {
-        super(name, type, null);
+        super(name, type, null, convertMethod);
         this.customEnum = customEnum;
         this.queryParamName = queryParamName;
-        this.convertMethod = convertMethod;
     }
 
     public SimpleParamInfo(final String name,
@@ -29,10 +27,9 @@ public non-sealed class SimpleParamInfo extends ParamInfo {
                            final TypeName containerType,
                            final String queryParamName,
                            final String convertMethod) {
-        super(name, type, containerType);
+        super(name, type, containerType, convertMethod);
         this.customEnum = customEnum;
         this.queryParamName = queryParamName;
-        this.convertMethod = convertMethod;
     }
 
     public boolean isCustomEnum() {
@@ -41,10 +38,6 @@ public non-sealed class SimpleParamInfo extends ParamInfo {
 
     public String getQueryParamName() {
         return queryParamName;
-    }
-
-    public String getConvertMethod() {
-        return convertMethod;
     }
 
     @Override

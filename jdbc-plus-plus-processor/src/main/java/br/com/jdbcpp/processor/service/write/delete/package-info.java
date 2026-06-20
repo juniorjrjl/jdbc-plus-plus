@@ -1,4 +1,4 @@
 @NullMarked
-package br.com.jdbcpp.processor.service.delete;
+package br.com.jdbcpp.processor.service.write.delete;
 
 import org.jspecify.annotations.NullMarked;

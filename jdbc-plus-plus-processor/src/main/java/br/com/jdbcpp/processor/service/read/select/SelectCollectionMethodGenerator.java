@@ -1,18 +1,17 @@
-package br.com.jdbcpp.processor.service.select;
+package br.com.jdbcpp.processor.service.read.select;
 
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
-import br.com.jdbcpp.processor.service.select.result.SelectResultSetDelegator;
+import br.com.jdbcpp.processor.service.read.ReadSQLStatementMethod;
+import br.com.jdbcpp.processor.service.read.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 
 import javax.lang.model.util.Types;
-import java.sql.SQLException;
 
 import static java.util.Objects.nonNull;
-import static javax.lang.model.element.Modifier.PUBLIC;
 
-public class SelectCollectionMethodGenerator {
+public class SelectCollectionMethodGenerator extends ReadSQLStatementMethod<SelectMethodInfo> {
 
     private final Types types;
     private final SelectResultSetDelegator selectResultSetDelegator;
@@ -22,24 +21,17 @@ public class SelectCollectionMethodGenerator {
         this.selectResultSetDelegator = selectResultSetDelegator;
     }
 
-
-    public MethodSpec build(final SelectMethodInfo selectMethodInfo) {
-        final var returnType = selectMethodInfo.getReturnType();
-        final var returnTypeMirror = selectMethodInfo.getReturnTypeMirror();
+    @Override
+    protected void buildResultSetRead(final SelectMethodInfo methodInfo,
+                                                    final MethodSpec.Builder methodBuilder,
+                                                    final String statementVar) {
+        final var returnType = methodInfo.getReturnType();
+        final var returnTypeMirror = methodInfo.getReturnTypeMirror();
+        final var isInterface = CollectionUtil.isCollectionInterface(returnTypeMirror, types);
+        final var collectionImpl = CollectionUtil.getCollectionImplementation(returnTypeMirror, types);
         final var elementType = CollectionUtil.getCollectionElementType(returnTypeMirror);
         final var elementTypeName = nonNull(elementType) ? elementType.toString() : "Object";
-        final var collectionImpl = CollectionUtil.getCollectionImplementation(returnTypeMirror, types);
-        final var isInterface = CollectionUtil.isCollectionInterface(returnTypeMirror, types);
-
-        final var methodBuilder = MethodSpec.methodBuilder(selectMethodInfo.getName())
-                .addModifiers(PUBLIC)
-                .returns(returnType)
-                .addStatement("final var statement = $S", selectMethodInfo.getStatement())
-                .beginControlFlow("""
-                        try(final var connection = dataSource.getConnection();
-                        final var stmt = connection.createStatement()
-                        final var rs = stmt.executeQuery(statement))
-                        """);
+        methodBuilder.beginControlFlow("final var rs = $N.executeQuery(statement)", statementVar);
 
         if (isInterface) {
             methodBuilder.addStatement("final $T result = new $T<>()", returnType, ClassName.bestGuess(collectionImpl));
@@ -50,7 +42,7 @@ public class SelectCollectionMethodGenerator {
                 .addStatement("final var model = new $T()", ClassName.bestGuess(elementTypeName));
 
         selectResultSetDelegator.build(
-                selectMethodInfo,
+                methodInfo,
                 "model",
                 "rs",
                 methodBuilder);
@@ -58,11 +50,7 @@ public class SelectCollectionMethodGenerator {
         methodBuilder.addStatement("result.add(model)")
                 .endControlFlow()
                 .addStatement("return result;")
-                .nextControlFlow(" catch (final $T e) ", SQLException.class)
-                .addStatement("throw e;")
                 .endControlFlow();
-
-        return methodBuilder.build();
     }
 
 }

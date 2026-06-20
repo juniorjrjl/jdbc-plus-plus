@@ -47,7 +47,7 @@ public final class SimpleParamInfoFactory {
                         convertMethod = switch (i.strategy()){
                             case STRING -> String.format("%s.toString()", paramName);
                             case ORDINAL -> String.format("%s.ordinal()", paramName);
-                            case CUSTOM_METHOD -> String.format("%s.%s", paramName, i.strategy());
+                            case CUSTOM_ENUM_METHOD -> String.format("%s.%s", paramName, i.strategy());
                         };
                     } else {
                         convertMethod = i.value().isBlank() ? paramName : i.value();

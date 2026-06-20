@@ -15,8 +15,9 @@ public non-sealed class  ClassParamInfo extends ParamInfo{
                           @Nullable
                           final TypeName containerType,
                           final List<ParamInfo> nestedProperties,
-                          final boolean recordClass) {
-        super(name, type, containerType);
+                          final boolean recordClass,
+                          final String convertMethod) {
+        super(name, type, containerType, convertMethod);
         this.nestedProperties = nestedProperties;
         this.recordClass = recordClass;
     }

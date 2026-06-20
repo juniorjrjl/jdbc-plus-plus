@@ -11,6 +11,7 @@ import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
 import br.com.jdbcpp.processor.util.BuildConstructorStrategy;
 import br.com.jdbcpp.processor.util.BuildSetterStrategy;
 import br.com.jdbcpp.processor.util.CollectionUtil;
+import br.com.jdbcpp.processor.util.MethodValidatorUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
@@ -48,11 +49,17 @@ public final class ReadMethodInfoFactory {
             throw new InvalidMethodSignature(message);
         }
 
-        if (!needStrategyToSelectReturn(returnType, types)) {
-            return simpleSelectResult(method, params, classPropertyMap, query, returnType);
-        }
+        final MethodInfo methodInfo = needStrategyToSelectReturn(returnType, types) ?
+                objectSelectResult(method, params, classPropertyMap, query, types, returnType):
+                simpleSelectResult(method, params, classPropertyMap, query, returnType);
+        MethodValidatorUtil.validateParams(
+                methodInfo.getName(),
+                params,
+                classPropertyMap,
+                methodInfo.getStatement().params()
+        );
 
-        return objectSelectResult(method, params, classPropertyMap, query, types, returnType);
+        return methodInfo;
     }
 
     private static SelectMethodInfo objectSelectResult(final ExecutableElement method,

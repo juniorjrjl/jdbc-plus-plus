@@ -1,4 +1,4 @@
-package br.com.jdbcpp.processor.service.select.result;
+package br.com.jdbcpp.processor.service.read.select.result;
 
 import br.com.jdbcpp.processor.dto.result.SetterStrategy;
 import br.com.jdbcpp.processor.util.JDBCUtil;

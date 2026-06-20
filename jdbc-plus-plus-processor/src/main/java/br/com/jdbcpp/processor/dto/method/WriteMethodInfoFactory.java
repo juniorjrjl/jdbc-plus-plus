@@ -3,12 +3,19 @@ package br.com.jdbcpp.processor.dto.method;
 import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfoFactory;
+import br.com.jdbcpp.processor.dto.statement.StatementParam;
+import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
+import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeed;
+import br.com.jdbcpp.processor.util.MethodValidatorUtil;
+import br.com.jdbcpp.processor.util.StringUtil;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.element.ExecutableElement;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class WriteMethodInfoFactory {
 
@@ -18,11 +25,18 @@ public final class WriteMethodInfoFactory {
                                     final List<ParamInfo> params,
                                     final Map<String, List<ParamInfo>> classPropertyMap,
                                     final Command command) throws InvalidMethodSignature{
-        return switch (command.commandType()) {
+        final var methodInfo = switch (command.commandType()) {
             case INSERT -> getInsertMethod(method, params, classPropertyMap, command);
             case UPDATE -> getUpdateMethod(method, params, classPropertyMap, command);
             case DELETE -> getDeleteMethod(method, params, classPropertyMap, command);
         };
+        MethodValidatorUtil.validateParams(
+                methodInfo.getName(),
+                params,
+                classPropertyMap,
+                methodInfo.getStatement().params()
+        );
+        return methodInfo;
     }
 
     private static DeleteMethod getDeleteMethod(final ExecutableElement method,
@@ -45,15 +59,16 @@ public final class WriteMethodInfoFactory {
                         command.returnRowsAffected()
                 );
         if (!deleteMethod.isReturnRowsAffected() && deleteMethod.getReturnType().equals(TypeName.VOID)) {
-            final var message = String.format("A method DELETE %s must be void or return rows affected", method.getSimpleName());
+            final var message = String.format("A method DELETE %s must return void or return rows affected", method.getSimpleName());
             throw new InvalidMethodSignature(message);
         }
 
-        validateRowsAffected(
+        MethodValidatorUtil.validateReturn(
                 method.getSimpleName().toString(),
                 command.returnRowsAffected(),
                 deleteMethod.getReturnType(),
-                "DELETE"
+                "DELETE",
+                List.of(TypeName.VOID)
         );
 
         return deleteMethod;
@@ -79,11 +94,15 @@ public final class WriteMethodInfoFactory {
                         command.returnRowsAffected()
                 );
 
-        validateRowsAffected(
+        final List<TypeName> validReturns = params.size() > 1 ?
+                List.of(TypeName.VOID) :
+                List.of(TypeName.VOID, params.getFirst().getType());
+        MethodValidatorUtil.validateReturn(
                 method.getSimpleName().toString(),
                 command.returnRowsAffected(),
                 updateMethod.getReturnType(),
-                "UPDATE"
+                "UPDATE",
+                validReturns
         );
 
         return updateMethod;
@@ -109,24 +128,19 @@ public final class WriteMethodInfoFactory {
                         command.returnRowsAffected()
                 );
 
-        validateRowsAffected(
+        final List<TypeName> validReturns = params.size() > 1 ?
+                List.of(TypeName.VOID) :
+                List.of(TypeName.VOID, params.getFirst().getType());
+        MethodValidatorUtil.validateReturn(
                 method.getSimpleName().toString(),
                 command.returnRowsAffected(),
                 insertMethod.getReturnType(),
-                "INSERT"
+                "INSERT",
+                validReturns
         );
 
         return  insertMethod;
     }
 
-    private static void validateRowsAffected(final String method,
-                                             final boolean returnRowsAffected,
-                                             final TypeName returnType,
-                                             final String operation) {
-        if (returnRowsAffected && !(returnType.equals(TypeName.LONG) || returnType.equals(TypeName.INT))) {
-            final var message = String.format("A method %s %s must return int or long when return rows affected", operation, method);
-            throw new InvalidMethodSignature(message);
-        }
-    }
 
 }

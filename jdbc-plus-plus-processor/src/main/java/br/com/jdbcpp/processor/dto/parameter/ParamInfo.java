@@ -9,14 +9,17 @@ public abstract sealed class ParamInfo permits SimpleParamInfo, ClassParamInfo{
     protected final TypeName type;
     @Nullable
     protected final TypeName containerType;
+    private final String convertMethod;
 
     protected ParamInfo(final String name,
                         final TypeName type,
                         @Nullable
-                        final TypeName containerType) {
+                        final TypeName containerType,
+                        final String convertMethod) {
         this.name = name;
         this.type = type;
         this.containerType = containerType;
+        this.convertMethod = convertMethod;
     }
 
     public String getName() {
@@ -30,6 +33,10 @@ public abstract sealed class ParamInfo permits SimpleParamInfo, ClassParamInfo{
     @Nullable
     public TypeName getContainerType() {
         return containerType;
+    }
+
+    public String getConvertMethod() {
+        return convertMethod;
     }
 
     public abstract boolean isNested();

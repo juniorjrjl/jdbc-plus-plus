@@ -5,12 +5,12 @@ import br.com.jdbcpp.processor.dto.method.DeleteMethod;
 import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
 import br.com.jdbcpp.processor.dto.method.UpdateMethod;
-import br.com.jdbcpp.processor.service.delete.DeleteMethodGenerator;
-import br.com.jdbcpp.processor.service.insert.InsertMethodGenerator;
-import br.com.jdbcpp.processor.service.select.SelectCollectionMethodGenerator;
-import br.com.jdbcpp.processor.service.select.SelectOptionalMethodGenerator;
-import br.com.jdbcpp.processor.service.select.SelectSingleMethodGenerator;
-import br.com.jdbcpp.processor.service.update.UpdateMethodGenerator;
+import br.com.jdbcpp.processor.service.write.delete.DeleteMethodGenerator;
+import br.com.jdbcpp.processor.service.write.insert.InsertMethodGenerator;
+import br.com.jdbcpp.processor.service.read.select.SelectCollectionMethodGenerator;
+import br.com.jdbcpp.processor.service.read.select.SelectOptionalMethodGenerator;
+import br.com.jdbcpp.processor.service.read.select.SelectSingleMethodGenerator;
+import br.com.jdbcpp.processor.service.write.update.UpdateMethodGenerator;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 import com.palantir.javapoet.ClassName;
@@ -57,25 +57,26 @@ public class DAOGenerator {
                 .addSuperinterface(daoInterface);
 
         daoImplInfo.methods().forEach(m -> {
-            final var method = switch (m){
+            final var connectionCall = "connection.getConnection()";
+            final var builder = switch (m){
                 case InsertMethod insertMethod ->
-                        insertMethodGenerator.build(insertMethod);
+                        insertMethodGenerator.build(insertMethod, connectionCall);
                 case SelectMethodInfo selectMethodInfo ->{
                     if (CollectionUtil.isCollectionType(selectMethodInfo.getReturnTypeMirror(), types)) {
-                        yield selectCollectionMethodGenerator.build(selectMethodInfo);
+                        yield selectCollectionMethodGenerator.build(selectMethodInfo, connectionCall);
                     }
 
                     if (TypeUtil.isOptionalType(selectMethodInfo.getReturnTypeMirror(), types)) {
-                        yield selectOptionalMethodGenerator.build(selectMethodInfo);
+                        yield selectOptionalMethodGenerator.build(selectMethodInfo, connectionCall);
                     }
-                    yield selectSingleMethodGenerator.build(selectMethodInfo);
+                    yield selectSingleMethodGenerator.build(selectMethodInfo, connectionCall);
                 }
                 case UpdateMethod updateMethod ->
-                        updateMethodGenerator.build(updateMethod);
+                        updateMethodGenerator.build(updateMethod, connectionCall);
                 case DeleteMethod deleteMethod ->
-                        deleteMethodGenerator.build(deleteMethod);
+                        deleteMethodGenerator.build(deleteMethod, connectionCall);
             };
-            daoBuilder.addMethod(method);
+            daoBuilder.addMethod(builder.build());
         });
 
         return JavaFile.builder(daoImplInfo.packageName(), daoBuilder.build()).build();

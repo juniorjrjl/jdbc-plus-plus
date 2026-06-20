@@ -15,17 +15,18 @@ import br.com.jdbcpp.processor.dto.parameter.ParameterInfoDelegator;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfoFactory;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
 import br.com.jdbcpp.processor.exception.JDBCPlusPlusProcessorException;
+import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeed;
 import br.com.jdbcpp.processor.service.DAOGenerator;
-import br.com.jdbcpp.processor.service.delete.DeleteMethodGenerator;
-import br.com.jdbcpp.processor.service.insert.InsertMethodGenerator;
-import br.com.jdbcpp.processor.service.select.SelectCollectionMethodGenerator;
-import br.com.jdbcpp.processor.service.select.SelectOptionalMethodGenerator;
-import br.com.jdbcpp.processor.service.select.SelectSingleMethodGenerator;
-import br.com.jdbcpp.processor.service.select.result.SelectResultSetDelegator;
-import br.com.jdbcpp.processor.service.select.result.SelectResultSimpleResult;
-import br.com.jdbcpp.processor.service.select.result.SelectResultUsingConstructor;
-import br.com.jdbcpp.processor.service.select.result.SelectResultUsingSetter;
-import br.com.jdbcpp.processor.service.update.UpdateMethodGenerator;
+import br.com.jdbcpp.processor.service.write.delete.DeleteMethodGenerator;
+import br.com.jdbcpp.processor.service.write.insert.InsertMethodGenerator;
+import br.com.jdbcpp.processor.service.read.select.SelectCollectionMethodGenerator;
+import br.com.jdbcpp.processor.service.read.select.SelectOptionalMethodGenerator;
+import br.com.jdbcpp.processor.service.read.select.SelectSingleMethodGenerator;
+import br.com.jdbcpp.processor.service.read.select.result.SelectResultSetDelegator;
+import br.com.jdbcpp.processor.service.read.select.result.SelectResultSimpleResult;
+import br.com.jdbcpp.processor.service.read.select.result.SelectResultUsingConstructor;
+import br.com.jdbcpp.processor.service.read.select.result.SelectResultUsingSetter;
+import br.com.jdbcpp.processor.service.write.update.UpdateMethodGenerator;
 import com.google.auto.service.AutoService;
 import com.palantir.javapoet.JavaFile;
 import org.jspecify.annotations.Nullable;
@@ -43,7 +44,6 @@ import javax.lang.model.util.Types;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -106,9 +106,11 @@ public class DAOProcessor extends AbstractProcessor {
             }
 
             for(final var method: methods){
-                try{
+                try {
                     final var methodInfo = buildMethodInfo(method);
                     methodsInfo.add(methodInfo);
+                } catch (final MoreParamsThanStatementNeed e){
+                    messager.printMessage(WARNING, e.getMessage());
                 } catch (final JDBCPlusPlusProcessorException e) {
                     messager.printMessage(ERROR, e.getMessage());
                 }
