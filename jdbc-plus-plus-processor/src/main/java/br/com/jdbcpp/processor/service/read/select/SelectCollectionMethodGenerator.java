@@ -1,8 +1,8 @@
 package br.com.jdbcpp.processor.service.read.select;
 
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
-import br.com.jdbcpp.processor.service.read.ReadSQLStatementMethod;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultSetDelegator;
+import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
@@ -11,20 +11,24 @@ import javax.lang.model.util.Types;
 
 import static java.util.Objects.nonNull;
 
-public class SelectCollectionMethodGenerator extends ReadSQLStatementMethod<SelectMethodInfo> {
+public class SelectCollectionMethodGenerator {
 
     private final Types types;
     private final SelectResultSetDelegator selectResultSetDelegator;
+    private final StatementBuilder statementBuilder;
 
-    public SelectCollectionMethodGenerator(final Types types, final SelectResultSetDelegator selectResultSetDelegator) {
+    public SelectCollectionMethodGenerator(final Types types,
+                                           final SelectResultSetDelegator selectResultSetDelegator,
+                                           final StatementBuilder statementBuilder) {
         this.types = types;
         this.selectResultSetDelegator = selectResultSetDelegator;
+        this.statementBuilder = statementBuilder;
     }
 
-    @Override
-    protected void buildResultSetRead(final SelectMethodInfo methodInfo,
-                                                    final MethodSpec.Builder methodBuilder,
+    public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
                                                     final String statementVar) {
+        final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName());
+        statementBuilder.build(methodBuilder, methodInfo, "conn");
         final var returnType = methodInfo.getReturnType();
         final var returnTypeMirror = methodInfo.getReturnTypeMirror();
         final var isInterface = CollectionUtil.isCollectionInterface(returnTypeMirror, types);
@@ -47,7 +51,7 @@ public class SelectCollectionMethodGenerator extends ReadSQLStatementMethod<Sele
                 "rs",
                 methodBuilder);
 
-        methodBuilder.addStatement("result.add(model)")
+        return methodBuilder.addStatement("result.add(model)")
                 .endControlFlow()
                 .addStatement("return result;")
                 .endControlFlow();

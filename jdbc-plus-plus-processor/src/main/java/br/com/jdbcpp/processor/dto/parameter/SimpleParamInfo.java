@@ -45,8 +45,4 @@ public non-sealed class SimpleParamInfo extends ParamInfo {
         return false;
     }
 
-    public boolean hasContainer(){
-        return nonNull(containerType);
-    }
-
 }

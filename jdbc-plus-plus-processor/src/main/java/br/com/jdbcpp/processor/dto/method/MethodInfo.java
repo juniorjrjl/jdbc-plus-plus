@@ -56,4 +56,12 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
                 .toList();
     }
 
+    public Map<String, List<ParamInfo>> getClassPropertyMap() {
+        return classPropertyMap;
+    }
+
+    public boolean unParameterizedStatement() {
+        return params.isEmpty() && classPropertyMap.isEmpty();
+    }
+
 }

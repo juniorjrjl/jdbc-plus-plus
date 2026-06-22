@@ -1,27 +1,30 @@
 package br.com.jdbcpp.processor.service.read.select;
 
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
-import br.com.jdbcpp.processor.service.read.ReadSQLStatementMethod;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultSetDelegator;
+import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import com.palantir.javapoet.MethodSpec;
 
 import javax.lang.model.util.Types;
 
-public class SelectOptionalMethodGenerator extends ReadSQLStatementMethod<SelectMethodInfo> {
+public class SelectOptionalMethodGenerator {
 
     protected final Types types;
     protected final SelectResultSetDelegator selectResultSetDelegator;
+    private final StatementBuilder statementBuilder;
 
     public SelectOptionalMethodGenerator(final Types types,
-                                         final SelectResultSetDelegator selectResultSetDelegator) {
+                                         final SelectResultSetDelegator selectResultSetDelegator,
+                                         final StatementBuilder statementBuilder) {
         this.types = types;
         this.selectResultSetDelegator = selectResultSetDelegator;
+        this.statementBuilder = statementBuilder;
     }
 
-    @Override
-    protected void buildResultSetRead(final SelectMethodInfo methodInfo,
-                                      final MethodSpec.Builder methodBuilder,
-                                      final String statementVar) {
+    public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
+                                       final String statementVar) {
+        final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName());
+        statementBuilder.build(methodBuilder, methodInfo, "conn");
         methodBuilder.beginControlFlow("final var rs = $N.executeQuery(statement)", statementVar)
                 .beginControlFlow("if (rs.next())");
         selectResultSetDelegator.build(
@@ -29,13 +32,12 @@ public class SelectOptionalMethodGenerator extends ReadSQLStatementMethod<Select
                 "model",
                 "rs",
                 methodBuilder);
-        methodBuilder.addStatement("return $T.of(model)", java.util.Optional.class)
+        return methodBuilder.addStatement("return $T.of(model)", java.util.Optional.class)
                 .nextControlFlow("else")
                 .addStatement("return $T.empty()", java.util.Optional.class)
                 .endControlFlow()
                 .addStatement("return $T.empty()", java.util.Optional.class)
                 .endControlFlow();
-
     }
 
 }

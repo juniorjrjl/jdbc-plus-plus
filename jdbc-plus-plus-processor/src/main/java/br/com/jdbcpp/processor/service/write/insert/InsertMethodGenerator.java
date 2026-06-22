@@ -1,17 +1,23 @@
 package br.com.jdbcpp.processor.service.write.insert;
 
 import br.com.jdbcpp.processor.dto.method.InsertMethod;
-import br.com.jdbcpp.processor.service.write.WriteSQLStatementMethod;
+import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import com.palantir.javapoet.MethodSpec;
 
 import java.sql.SQLException;
 
-public class InsertMethodGenerator extends WriteSQLStatementMethod<InsertMethod> {
+public class InsertMethodGenerator {
 
-    @Override
-    protected MethodSpec.Builder buildBaseBody(final InsertMethod methodInfo,
-                                               final MethodSpec.Builder methodBuilder,
-                                               final String statementVar) {
+    private final StatementBuilder statementBuilder;
+
+    public InsertMethodGenerator(final StatementBuilder statementBuilder){
+        this.statementBuilder = statementBuilder;
+    }
+
+    public MethodSpec.Builder build(final InsertMethod methodInfo,
+                                    final String statementVar) {
+        final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName());
+        statementBuilder.build(methodBuilder, methodInfo, "conn");
         final var builder = methodInfo.getParams().stream()
                 .filter(p -> p.getType().equals(methodInfo.getReturnType()))
                 .findFirst()

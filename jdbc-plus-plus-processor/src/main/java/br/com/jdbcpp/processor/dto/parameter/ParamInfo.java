@@ -3,6 +3,8 @@ package br.com.jdbcpp.processor.dto.parameter;
 import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
+import static java.util.Objects.nonNull;
+
 public abstract sealed class ParamInfo permits SimpleParamInfo, ClassParamInfo{
 
     protected final String name;
@@ -40,5 +42,9 @@ public abstract sealed class ParamInfo permits SimpleParamInfo, ClassParamInfo{
     }
 
     public abstract boolean isNested();
+
+    public boolean hasContainer(){
+        return nonNull(containerType);
+    }
 
 }

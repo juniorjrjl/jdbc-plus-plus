@@ -17,8 +17,6 @@ import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
 import br.com.jdbcpp.processor.exception.JDBCPlusPlusProcessorException;
 import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeed;
 import br.com.jdbcpp.processor.service.DAOGenerator;
-import br.com.jdbcpp.processor.service.write.delete.DeleteMethodGenerator;
-import br.com.jdbcpp.processor.service.write.insert.InsertMethodGenerator;
 import br.com.jdbcpp.processor.service.read.select.SelectCollectionMethodGenerator;
 import br.com.jdbcpp.processor.service.read.select.SelectOptionalMethodGenerator;
 import br.com.jdbcpp.processor.service.read.select.SelectSingleMethodGenerator;
@@ -26,6 +24,9 @@ import br.com.jdbcpp.processor.service.read.select.result.SelectResultSetDelegat
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultSimpleResult;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultUsingConstructor;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultUsingSetter;
+import br.com.jdbcpp.processor.service.statement.StatementBuilder;
+import br.com.jdbcpp.processor.service.write.delete.DeleteMethodGenerator;
+import br.com.jdbcpp.processor.service.write.insert.InsertMethodGenerator;
 import br.com.jdbcpp.processor.service.write.update.UpdateMethodGenerator;
 import com.google.auto.service.AutoService;
 import com.palantir.javapoet.JavaFile;
@@ -163,6 +164,7 @@ public class DAOProcessor extends AbstractProcessor {
 
     private DAOGenerator buildDAOGenerator() {
         if (isNull(daoGeneratorCache)) {
+            final var statementBuilder = new StatementBuilder();
             final var selectResultSetDelegator = new SelectResultSetDelegator(
                     new SelectResultUsingConstructor(),
                     new SelectResultUsingSetter(),
@@ -170,12 +172,12 @@ public class DAOProcessor extends AbstractProcessor {
             );
             this.daoGeneratorCache = new DAOGenerator(
                     this.types,
-                    new SelectCollectionMethodGenerator(this.types, selectResultSetDelegator),
-                    new SelectOptionalMethodGenerator(this.types, selectResultSetDelegator),
-                    new SelectSingleMethodGenerator(this.types, selectResultSetDelegator),
-                    new InsertMethodGenerator(),
-                    new UpdateMethodGenerator(),
-                    new DeleteMethodGenerator()
+                    new SelectCollectionMethodGenerator(this.types, selectResultSetDelegator, statementBuilder),
+                    new SelectOptionalMethodGenerator(this.types, selectResultSetDelegator, statementBuilder),
+                    new SelectSingleMethodGenerator(this.types, selectResultSetDelegator, statementBuilder),
+                    new InsertMethodGenerator(statementBuilder),
+                    new UpdateMethodGenerator(statementBuilder),
+                    new DeleteMethodGenerator(statementBuilder)
             );
         }
         return daoGeneratorCache;
