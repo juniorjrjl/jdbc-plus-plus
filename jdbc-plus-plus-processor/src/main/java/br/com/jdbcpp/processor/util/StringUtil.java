@@ -2,8 +2,6 @@ package br.com.jdbcpp.processor.util;
 
 import java.util.regex.Pattern;
 
-import static java.util.Objects.isNull;
-
 public final class StringUtil {
 
     private  StringUtil() {

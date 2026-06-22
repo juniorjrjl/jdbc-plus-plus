@@ -8,8 +8,7 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 
 import javax.lang.model.util.Types;
-
-import static java.util.Objects.nonNull;
+import java.sql.SQLException;
 
 public class SelectCollectionMethodGenerator {
 
@@ -26,34 +25,56 @@ public class SelectCollectionMethodGenerator {
     }
 
     public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
-                                                    final String statementVar) {
+                                    final String connectionCall) {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName());
-        statementBuilder.build(methodBuilder, methodInfo, "conn");
+        final var statementVar = "stmt";
+        final var resultSetVar = "rs";
+
+        statementBuilder.build(
+                methodBuilder,
+                methodInfo,
+                "conn",
+                connectionCall,
+                statementVar,
+                resultSetVar
+        );
+
+        if (!methodInfo.unParameterizedStatement()) {
+            methodBuilder.beginControlFlow("try (final var $N = $N.executeQuery())", resultSetVar, statementVar);
+        }
+
         final var returnType = methodInfo.getReturnType();
         final var returnTypeMirror = methodInfo.getReturnTypeMirror();
         final var isInterface = CollectionUtil.isCollectionInterface(returnTypeMirror, types);
         final var collectionImpl = CollectionUtil.getCollectionImplementation(returnTypeMirror, types);
-        final var elementType = CollectionUtil.getCollectionElementType(returnTypeMirror);
-        final var elementTypeName = nonNull(elementType) ? elementType.toString() : "Object";
-        methodBuilder.beginControlFlow("final var rs = $N.executeQuery(statement)", statementVar);
 
         if (isInterface) {
             methodBuilder.addStatement("final $T result = new $T<>()", returnType, ClassName.bestGuess(collectionImpl));
         } else {
             methodBuilder.addStatement("final var result = new $T<>()", ClassName.bestGuess(collectionImpl));
         }
-        methodBuilder.beginControlFlow("while (rs.next())")
-                .addStatement("final var model = new $T()", ClassName.bestGuess(elementTypeName));
+
+        methodBuilder.beginControlFlow("while ($N.next())", resultSetVar);
 
         selectResultSetDelegator.build(
                 methodInfo,
                 "model",
-                "rs",
-                methodBuilder);
+                resultSetVar,
+                methodBuilder
+        );
 
-        return methodBuilder.addStatement("result.add(model)")
-                .endControlFlow()
-                .addStatement("return result;")
+        methodBuilder.addStatement("result.add(model)")
+                .endControlFlow();
+
+        methodBuilder.addStatement("return result");
+
+        if (!methodInfo.unParameterizedStatement()) {
+            methodBuilder.endControlFlow();
+        }
+
+        return methodBuilder
+                .nextControlFlow("catch (final $T e)", SQLException.class)
+                .addStatement("throw e")
                 .endControlFlow();
     }
 

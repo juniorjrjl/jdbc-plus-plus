@@ -15,13 +15,27 @@ public class DeleteMethodGenerator {
     }
 
     public MethodSpec.Builder build(final DeleteMethod methodInfo,
-                                      final String statementVar) {
+                                    final String connectionCall) {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName());
-        statementBuilder.build(methodBuilder, methodInfo, "conn");
+        final var statementVar = "stmt";
+        statementBuilder.build(
+                methodBuilder,
+                methodInfo,
+                "conn",
+                connectionCall,
+                statementVar,
+                "rs"
+        );
+        final var statementCommandVar = statementBuilder.getStatementCommandVar();
+        final var executeCall = methodInfo.unParameterizedStatement() ?
+                "$N.executeUpdate(" + statementCommandVar + ")" :
+                "$N.executeUpdate()";
+
+
         if (methodInfo.isReturnRowsAffected()){
-            methodBuilder.addStatement("return $N.executeUpdate(statement)", statementVar);
+            methodBuilder.addStatement("return " + executeCall, statementVar);
         } else {
-            methodBuilder.addStatement("$N.executeUpdate(statement)", statementVar);
+            methodBuilder.addStatement(executeCall, statementVar);
         }
 
         return methodBuilder

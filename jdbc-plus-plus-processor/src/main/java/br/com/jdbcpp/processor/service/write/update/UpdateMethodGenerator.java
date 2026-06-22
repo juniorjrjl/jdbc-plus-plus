@@ -15,23 +15,38 @@ public class UpdateMethodGenerator {
     }
 
     public MethodSpec.Builder build(final UpdateMethod methodInfo,
-                                    final String statementVar) {
+                                    final String connectionCall) {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName());
-        statementBuilder.build(methodBuilder, methodInfo, "conn");
-        final var builder = methodInfo.getParams().stream()
+        final var statementVar = "stmt";
+        statementBuilder.build(
+                methodBuilder,
+                methodInfo,
+                "conn",
+                connectionCall,
+                statementVar,
+                "rs"
+        );
+        final var statementCommandVar = statementBuilder.getStatementCommandVar();
+        final String executeCall = methodInfo.unParameterizedStatement()
+                ? "$N.executeUpdate(" + statementCommandVar + ")"
+                : "$N.executeUpdate()";
+
+        methodInfo.getParams().stream()
                 .filter(p -> p.getType().equals(methodInfo.getReturnType()))
                 .findFirst()
-                .map(p -> methodBuilder.addStatement("$N.executeUpdate(statement);", statementVar)
-                        .addStatement("return $N", p.getName()))
+                .map(p -> {
+                    methodBuilder.addStatement(executeCall, statementVar);
+                    return methodBuilder.addStatement("return $N", p.getName());
+                })
                 .orElseGet(() -> {
                     if (methodInfo.isReturnRowsAffected()){
-                        return methodBuilder.addStatement("return $N.executeUpdate(statement);", statementVar);
+                        return methodBuilder.addStatement("return " + executeCall, statementVar);
                     } else {
-                        return methodBuilder.addStatement("$N.executeUpdate(statement);", statementVar);
+                        return methodBuilder.addStatement(executeCall, statementVar);
                     }
                 });
-        return builder
-                .addStatement("} catch (final $T e) {", SQLException.class)
+        return methodBuilder
+                .nextControlFlow(" catch (final $T e) ", SQLException.class)
                 .addStatement("throw e;")
                 .endControlFlow();
     }

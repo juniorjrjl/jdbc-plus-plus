@@ -3,8 +3,6 @@ package br.com.jdbcpp.processor.dto.parameter;
 import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
-import static java.util.Objects.nonNull;
-
 public non-sealed class SimpleParamInfo extends ParamInfo {
 
     private final boolean customEnum;

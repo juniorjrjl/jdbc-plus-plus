@@ -3,11 +3,9 @@ package br.com.jdbcpp.processor.service.statement;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
-import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import br.com.jdbcpp.processor.util.JDBCUtil;
 import com.palantir.javapoet.MethodSpec;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -15,13 +13,30 @@ import static java.util.Objects.isNull;
 
 public class StatementBuilder {
 
+    private static final String STATEMENT_COMMAND_VAR = "statement";
+
+    public String getStatementCommandVar() {
+        return STATEMENT_COMMAND_VAR;
+    }
+
     public void build(final MethodSpec.Builder methodBuilder,
                       final MethodInfo methodInfo,
-                      final String connectionCall) {
+                      final String connectionVar,
+                      final String connectionCall,
+                      final String statementVar,
+                      final String resultSetVar) {
         final var statement = methodInfo.getStatement();
         final var readMethod = methodInfo instanceof SelectMethodInfo;
         if (methodInfo.unParameterizedStatement()){
-            buildStatement(methodBuilder, statement.getNoSplitFullSQL(), connectionCall, readMethod);
+            buildStatement(
+                    methodBuilder,
+                    statement.getNoSplitFullSQL(),
+                    connectionVar,
+                    connectionCall,
+                    statementVar,
+                    resultSetVar,
+                    readMethod
+            );
             return;
         }
 
@@ -42,46 +57,75 @@ public class StatementBuilder {
                                 .toList()
                 );
 
-        buildPreparedStatement(methodBuilder, statement, statementResolver, connectionCall, readMethod);
+        buildPreparedStatement(
+                methodBuilder,
+                statement,
+                statementResolver,
+                connectionVar,
+                connectionCall,
+                statementVar
+        );
     }
 
-    @Nullable
-    private String buildStatement(final MethodSpec.Builder methodBuilder,
-                                  final String statement,
-                                  final String connectionCall,
-                                  final boolean readMethod){
-        methodBuilder.addStatement("final var statement = $S", statement);
+    private void buildStatement(final MethodSpec.Builder methodBuilder,
+                                final String statement,
+                                final String connectionVar,
+                                final String connectionCall,
+                                final String statementVar,
+                                final String resultSetVar,
+                                final boolean readMethod){
+        methodBuilder.addStatement("final var $N = $S", STATEMENT_COMMAND_VAR, statement);
         if (readMethod) {
-            final var statementVar = "stmt";
             methodBuilder.beginControlFlow("""
-                        try(final var conn = $N;
-                        final var $N = conn.createStatement();
-                        final var rs = stmt.executeQuery(statement))
-                        """, statementVar, connectionCall);
-            return statementVar;
+                        try(final var $N = $N;
+                        final var $N = $N.createStatement();
+                        final var $N = $N.executeQuery(statement))
+                        """,
+                    connectionVar,
+                    connectionCall,
+                    statementVar,
+                    connectionVar,
+                    resultSetVar,
+                    statementVar
+            );
+            return;
         }
         methodBuilder.beginControlFlow("""
-                        try(final var conn = $L;
-                        final var stmt = conn.createStatement())
-                        """, connectionCall);
-        return null;
+                        try(final var $N = $N;
+                        final var $N = $N.createStatement())
+                        """,
+                connectionVar,
+                connectionCall,
+                statementVar,
+                connectionVar);
     }
 
     private void buildPreparedStatement(final MethodSpec.Builder methodBuilder,
                                         final StatementInfo statementInfo,
                                         final StatementResolver statementResolver,
+                                        final String connectionVar,
                                         final String connectionCall,
-                                        final boolean readMethod){
+                                        final String statementVar){
         if (statementInfo.sqlNotSplit()){
-            methodBuilder.addStatement("final var statement = $S", statementInfo.getNoSplitFullSQL());
+            methodBuilder.addStatement(
+                    "final var $N = $S",
+                    STATEMENT_COMMAND_VAR,
+                    statementInfo.getNoSplitFullSQL()
+            );
         } else {
             statementResolver.buildCollectionSizes(methodBuilder, statementInfo.sql());
-            methodBuilder.addStatement("final var statement = preStatement.toString()");
+            methodBuilder.addStatement("final var $N = preStatement.toString()", STATEMENT_COMMAND_VAR);
         }
         methodBuilder.beginControlFlow("""
-                    try (final var conn = $L;
-                    final var pstmt = conn.prepareStatement(statement))
-                    """, connectionCall)
+                    try (final var $N = $N;
+                    final var $N = $N.prepareStatement($N))
+                    """,
+                        connectionVar,
+                        connectionCall,
+                        statementVar,
+                        connectionVar,
+                        STATEMENT_COMMAND_VAR
+                )
                 .addStatement("var paramIndex = 1");
         for(final var param: statementInfo.params()){
             final var leafParam = statementResolver.getParamInfo(param.name());
@@ -92,8 +136,8 @@ public class StatementBuilder {
                         path,
                         leafParam.getType(),
                         leafParam.getConvertMethod(),
-                        ((SimpleParamInfo) leafParam).isCustomEnum(),
-                        "pstmt",
+                        leafParam.isCustomEnum(),
+                        statementVar,
                         "paramIndex++"
                 );
                 methodBuilder.addStatement(stmtSetter);
@@ -103,8 +147,8 @@ public class StatementBuilder {
                         "x",
                         leafParam.getType(),
                         leafParam.getConvertMethod(),
-                        ((SimpleParamInfo) leafParam).isCustomEnum(),
-                        "pstmt",
+                        leafParam.isCustomEnum(),
+                        statementVar,
                         "paramIndex++"
                 );
                 methodBuilder.addStatement(stmtSetter);
