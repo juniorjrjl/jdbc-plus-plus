@@ -3,7 +3,7 @@ package br.com.jdbcpp.processor.util;
 import br.com.jdbcpp.processor.dto.ParamKind;
 import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
-import br.com.jdbcpp.processor.exception.InvalidSelectResultMapping;
+import br.com.jdbcpp.processor.exception.InvalidSelectResultMappingException;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.element.ElementKind;
@@ -27,7 +27,7 @@ public final class BuildConstructorStrategy {
 
     public static List<SelectReturnStrategy<?>> generateStrategyInfo(final TypeElement typeElement,
                                                                      final Types types,
-                                                                     final String methodName) throws InvalidSelectResultMapping {
+                                                                     final String methodName) throws InvalidSelectResultMappingException {
 
         final List<SelectReturnStrategy<?>> strategies = new ArrayList<>();
         final var constructors = typeElement.getEnclosedElements().stream()
@@ -40,7 +40,7 @@ public final class BuildConstructorStrategy {
                     "For use constructor strategy, a class %s must have a constructor",
                     typeElement.getQualifiedName()
             );
-            throw new InvalidSelectResultMapping(message);
+            throw new InvalidSelectResultMappingException(message);
         }
 
         final var canonicalConstructor = constructors.stream()
@@ -52,7 +52,7 @@ public final class BuildConstructorStrategy {
                             typeElement.getQualifiedName(),
                             methodName
                     );
-                    return new InvalidSelectResultMapping(message);
+                    return new InvalidSelectResultMappingException(message);
                 });
 
         final var parameters = canonicalConstructor.getParameters();
@@ -61,7 +61,7 @@ public final class BuildConstructorStrategy {
                     "For use constructor strategy, a class %s must have constructor with parameters",
                     typeElement.getQualifiedName()
             );
-            throw new InvalidSelectResultMapping(message);
+            throw new InvalidSelectResultMappingException(message);
         }
 
         for (int i = 0; i < parameters.size(); i++) {

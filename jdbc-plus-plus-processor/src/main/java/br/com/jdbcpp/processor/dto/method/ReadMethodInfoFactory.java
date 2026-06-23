@@ -7,7 +7,7 @@ import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
 import br.com.jdbcpp.processor.dto.statement.StatementInfoFactory;
-import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
+import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.util.BuildConstructorStrategy;
 import br.com.jdbcpp.processor.util.BuildSetterStrategy;
 import br.com.jdbcpp.processor.util.CollectionUtil;
@@ -46,7 +46,7 @@ public final class ReadMethodInfoFactory {
                     "Method %s is annotated with @Query but returns void",
                     method.getSimpleName()
             );
-            throw new InvalidMethodSignature(message);
+            throw new InvalidMethodSignatureException(message);
         }
 
         final MethodInfo methodInfo = needStrategyToSelectReturn(returnType, types) ?

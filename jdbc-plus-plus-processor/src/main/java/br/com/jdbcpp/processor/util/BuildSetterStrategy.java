@@ -4,7 +4,7 @@ import br.com.jdbcpp.api.PropStrategy;
 import br.com.jdbcpp.processor.dto.ParamKind;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SetterStrategy;
-import br.com.jdbcpp.processor.exception.InvalidSelectResultMapping;
+import br.com.jdbcpp.processor.exception.InvalidSelectResultMappingException;
 import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
@@ -60,7 +60,7 @@ public final class BuildSetterStrategy {
                             fieldName,
                             typeElement.getQualifiedName()
                     );
-                    throw new InvalidSelectResultMapping(message);
+                    throw new InvalidSelectResultMappingException(message);
                 }
 
                 final var paramKind = determineParamKind(fieldType, types);
@@ -94,7 +94,7 @@ public final class BuildSetterStrategy {
                     "No fields found in result class %s",
                     typeElement.getQualifiedName()
             );
-            throw new InvalidSelectResultMapping(message);
+            throw new InvalidSelectResultMappingException(message);
         }
 
         if (fields.stream().map(f -> f.getAnnotation(PropStrategy.class))
@@ -113,7 +113,7 @@ public final class BuildSetterStrategy {
                     "A class %s must have a minimum result set index of 0",
                     typeElement.getQualifiedName()
             );
-            throw new InvalidSelectResultMapping(message);
+            throw new InvalidSelectResultMappingException(message);
         }
 
         final var max = Collections.min(rsIndexes);
@@ -123,7 +123,7 @@ public final class BuildSetterStrategy {
                     "A result set not using sequential numbers in class %s",
                     typeElement.getQualifiedName()
             );
-            throw new InvalidSelectResultMapping(message);
+            throw new InvalidSelectResultMappingException(message);
         }
 
         return true;

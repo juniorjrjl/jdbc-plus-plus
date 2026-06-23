@@ -13,9 +13,10 @@ import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.ParamPathExtractor;
 import br.com.jdbcpp.processor.dto.parameter.ParameterInfoDelegator;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfoFactory;
-import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
+import br.com.jdbcpp.processor.exception.InvalidDAOException;
+import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.exception.JDBCPlusPlusProcessorException;
-import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeed;
+import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
 import br.com.jdbcpp.processor.service.DAOGenerator;
 import br.com.jdbcpp.processor.service.read.select.SelectCollectionMethodGenerator;
 import br.com.jdbcpp.processor.service.read.select.SelectOptionalMethodGenerator;
@@ -38,10 +39,15 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -60,6 +66,7 @@ import static javax.tools.Diagnostic.Kind.WARNING;
 public class DAOProcessor extends AbstractProcessor {
 
     private final Types types;
+    private final Elements elements;
     private final Messager messager;
     private final Filer filer;
     @Nullable
@@ -70,6 +77,7 @@ public class DAOProcessor extends AbstractProcessor {
     public DAOProcessor(){
         super();
         this.types = processingEnv.getTypeUtils();
+        this.elements = processingEnv.getElementUtils();
         this.messager = processingEnv.getMessager();
         this.filer = processingEnv.getFiler();
     }
@@ -77,24 +85,30 @@ public class DAOProcessor extends AbstractProcessor {
     @Override
     public boolean process(final Set<? extends TypeElement> annotations,
                            final RoundEnvironment roundEnv) {
-        final var daoInterfaces = roundEnv.getElementsAnnotatedWith(DAO.class)
+        final var mappedDAOs = roundEnv.getElementsAnnotatedWith(DAO.class)
                 .stream()
                 .toList();
 
-        if (daoInterfaces.isEmpty()) {
+        if (mappedDAOs.isEmpty()) {
             messager.printMessage(WARNING, "None DAOs found to generate");
             return true;
+        }
+
+        try {
+            isValidDAO(mappedDAOs, elements, types);
+        }catch (final JDBCPlusPlusProcessorException e){
+            messager.printMessage(ERROR, e.getMessage());
         }
 
         final var elementUtils = processingEnv.getElementUtils();
 
         final List<DAOImplInfo> daoImplInfos = new ArrayList<>();
         final List<MethodInfo> methodsInfo = new ArrayList<>();
-        for (final var daoInterface : daoInterfaces) {
-            final var packageName = elementUtils.getPackageOf(daoInterface).toString();
-            final var className = elementUtils.getTypeElement(daoInterface.toString()).toString();
+        for (final var mappedDAO : mappedDAOs) {
+            final var packageName = elementUtils.getPackageOf(mappedDAO).toString();
+            final var className = elementUtils.getTypeElement(mappedDAO.toString()).toString();
             final var daoImplInfoBuilder = DAOImplInfo.builder().name(className).packageName(packageName);
-            final var methods = ElementFilter.methodsIn(daoInterface.getEnclosedElements()).stream()
+            final var methods = ElementFilter.methodsIn(mappedDAO.getEnclosedElements()).stream()
                     .filter(m -> nonNull(m.getAnnotation(Query.class)) || nonNull(m.getAnnotation(Command.class)))
                     .toList();
 
@@ -110,7 +124,7 @@ public class DAOProcessor extends AbstractProcessor {
                 try {
                     final var methodInfo = buildMethodInfo(method);
                     methodsInfo.add(methodInfo);
-                } catch (final MoreParamsThanStatementNeed e){
+                } catch (final MoreParamsThanStatementNeedException e){
                     messager.printMessage(WARNING, e.getMessage());
                 } catch (final JDBCPlusPlusProcessorException e) {
                     messager.printMessage(ERROR, e.getMessage());
@@ -124,6 +138,56 @@ public class DAOProcessor extends AbstractProcessor {
         }
 
         return true;
+    }
+
+    private void isValidDAO(final List<? extends Element> mappedDAOs,
+                            final Elements elements,
+                            final Types types) {
+        final var dataSourceCanonicalName = DataSource.class.getCanonicalName();
+        final var dataSourceElement = Optional.ofNullable(elements.getTypeElement(dataSourceCanonicalName))
+                .map(TypeElement::asType)
+                .orElseThrow();
+        for(final var mappedDAO: mappedDAOs){
+            final var className = elements.getTypeElement(mappedDAO.toString()).toString();
+            if (mappedDAO.getKind() == ElementKind.INTERFACE){
+                continue;
+            }
+            if (mappedDAO.getKind() == ElementKind.CLASS){
+                if (!mappedDAO.getModifiers().contains(Modifier.ABSTRACT)) {
+                    final var message = String.format(
+                            "Invalid DAO %s: A DAO annotation is used on a abstract classes or interfaces",
+                            className
+                    );
+                    throw new InvalidDAOException(message);
+                }
+                mappedDAO.getEnclosedElements().stream()
+                        .filter(e -> e.getModifiers().containsAll(List.of(Modifier.PROTECTED, Modifier.FINAL)))
+                        .filter(e -> types.isSameType(e.asType(), dataSourceElement))
+                        .findFirst()
+                        .orElseThrow(() -> {
+                            final var message = String.format(
+                                    "Invalid DAO %s: For DAO abstract classes a protected final field of type DataSource is required",
+                                    className
+                            );
+                            return new InvalidDAOException(message);
+                        });
+                if (mappedDAO.getEnclosedElements().stream()
+                        .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
+                        .map(ExecutableElement.class::cast)
+                        .filter(e -> e.getModifiers().contains(Modifier.PUBLIC) || e.getModifiers().contains(Modifier.PROTECTED))
+                        .filter(c -> c.getParameters().stream()
+                                .anyMatch(p -> p.asType().equals(dataSourceElement)))
+                        .count() != 1){
+                    final var message = String.format(
+                            "Invalid DAO %s: For DAO abstract classes is required exactly one constructor with a param type %s",
+                            dataSourceCanonicalName,
+                            className
+                            );
+                    throw new InvalidDAOException(message);
+                }
+
+            }
+        }
     }
 
     private MethodInfo buildMethodInfo(final ExecutableElement method) throws JDBCPlusPlusProcessorException {
@@ -148,7 +212,7 @@ public class DAOProcessor extends AbstractProcessor {
                 .or(() -> commandOptional)
                 .orElseThrow(() -> {
                     final var message = String.format("Fail to get info from method %s", method.getSimpleName());
-                    return new InvalidMethodSignature(message);
+                    return new InvalidMethodSignatureException(message);
                 });
     }
 

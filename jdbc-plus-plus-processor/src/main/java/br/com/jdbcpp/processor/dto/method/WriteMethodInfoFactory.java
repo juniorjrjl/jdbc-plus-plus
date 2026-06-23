@@ -3,7 +3,7 @@ package br.com.jdbcpp.processor.dto.method;
 import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfoFactory;
-import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
+import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.util.MethodValidatorUtil;
 import com.palantir.javapoet.TypeName;
 
@@ -18,7 +18,7 @@ public final class WriteMethodInfoFactory {
     public static MethodInfo create(final ExecutableElement method,
                                     final List<ParamInfo> params,
                                     final Map<String, List<ParamInfo>> classPropertyMap,
-                                    final Command command) throws InvalidMethodSignature{
+                                    final Command command) throws InvalidMethodSignatureException {
         final var methodInfo = switch (command.commandType()) {
             case INSERT -> getInsertMethod(method, params, classPropertyMap, command);
             case UPDATE -> getUpdateMethod(method, params, classPropertyMap, command);
@@ -54,7 +54,7 @@ public final class WriteMethodInfoFactory {
                 );
         if (!deleteMethod.isReturnRowsAffected() && deleteMethod.getReturnType().equals(TypeName.VOID)) {
             final var message = String.format("A method DELETE %s must return void or return rows affected", method.getSimpleName());
-            throw new InvalidMethodSignature(message);
+            throw new InvalidMethodSignatureException(message);
         }
 
         MethodValidatorUtil.validateReturn(

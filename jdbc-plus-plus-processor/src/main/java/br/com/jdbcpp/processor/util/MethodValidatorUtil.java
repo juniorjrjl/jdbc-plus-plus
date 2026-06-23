@@ -3,8 +3,8 @@ package br.com.jdbcpp.processor.util;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementParam;
 import br.com.jdbcpp.processor.exception.InvalidInputParamException;
-import br.com.jdbcpp.processor.exception.InvalidMethodSignature;
-import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeed;
+import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
+import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
 import com.palantir.javapoet.TypeName;
 
 import java.util.HashSet;
@@ -28,7 +28,7 @@ public final class MethodValidatorUtil {
                         operation,
                         method
                 );
-                throw new InvalidMethodSignature(message);
+                throw new InvalidMethodSignatureException(message);
             }
         } else {
             if (validReturns.contains(returnType)) {
@@ -39,7 +39,7 @@ public final class MethodValidatorUtil {
                         """,
                         method
                 );
-                throw new InvalidMethodSignature(message);
+                throw new InvalidMethodSignatureException(message);
             }
         }
     }
@@ -79,7 +79,7 @@ public final class MethodValidatorUtil {
                     methodNane,
                     missingInStatement
             );
-            throw new MoreParamsThanStatementNeed(message);
+            throw new MoreParamsThanStatementNeedException(message);
         }
     }
 
