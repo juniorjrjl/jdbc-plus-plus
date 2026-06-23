@@ -1,5 +1,6 @@
 package br.com.jdbcpp.processor.dto;
 
+import br.com.jdbcpp.processor.dto.constructor.ConstructorInfo;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import org.jspecify.annotations.Nullable;
 
@@ -10,6 +11,8 @@ import static java.util.Objects.requireNonNull;
 public record DAOImplInfo(
         String name,
         String packageName,
+        @Nullable
+        ConstructorInfo constructor,
         List<MethodInfo> methods
 ) {
 
@@ -23,6 +26,8 @@ public record DAOImplInfo(
         @Nullable
         private String packageName;
         @Nullable
+        private ConstructorInfo constructor;
+        @Nullable
         private List<MethodInfo> methods;
 
         public DAOImplInfoBuilder name(final String name) {
@@ -35,6 +40,11 @@ public record DAOImplInfo(
             return this;
         }
 
+        public DAOImplInfoBuilder constructor(@Nullable final ConstructorInfo constructor) {
+            this.constructor = constructor;
+            return this;
+        }
+
         public DAOImplInfoBuilder methods(final List<MethodInfo> methods) {
             this.methods = methods;
             return this;
@@ -44,6 +54,7 @@ public record DAOImplInfo(
             return new DAOImplInfo(
                     requireNonNull(name, "name is required"),
                     requireNonNull(packageName, "packageName is required"),
+                    constructor,
                     requireNonNull(methods, "methods is required")
             );
         }

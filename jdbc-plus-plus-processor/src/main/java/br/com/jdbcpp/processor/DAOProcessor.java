@@ -4,6 +4,8 @@ import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.api.DAO;
 import br.com.jdbcpp.api.Query;
 import br.com.jdbcpp.processor.dto.DAOImplInfo;
+import br.com.jdbcpp.processor.dto.constructor.ConstructorInfo;
+import br.com.jdbcpp.processor.dto.constructor.ConstructorParamInfo;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.ReadMethodInfoFactory;
 import br.com.jdbcpp.processor.dto.method.WriteMethodInfoFactory;
@@ -29,8 +31,12 @@ import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import br.com.jdbcpp.processor.service.write.delete.DeleteMethodGenerator;
 import br.com.jdbcpp.processor.service.write.insert.InsertMethodGenerator;
 import br.com.jdbcpp.processor.service.write.update.UpdateMethodGenerator;
+import br.com.jdbcpp.processor.util.ArrayUtil;
+import br.com.jdbcpp.processor.util.CollectionUtil;
 import com.google.auto.service.AutoService;
+import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.JavaFile;
+import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -44,6 +50,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -58,17 +65,19 @@ import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.WARNING;
 
 @SupportedAnnotationTypes("br.com.jdbcpp.api.DAOMethod")
 @AutoService(Processor.class)
 public class DAOProcessor extends AbstractProcessor {
 
+    private static final String DATA_SOURCE_CANONICAL_NAME = DataSource.class.getCanonicalName();
+
     private final Types types;
     private final Elements elements;
     private final Messager messager;
     private final Filer filer;
+    private final TypeMirror dataSourceElement;
     @Nullable
     private DAOGenerator daoGeneratorCache;
     @Nullable
@@ -80,6 +89,9 @@ public class DAOProcessor extends AbstractProcessor {
         this.elements = processingEnv.getElementUtils();
         this.messager = processingEnv.getMessager();
         this.filer = processingEnv.getFiler();
+        this.dataSourceElement = Optional.ofNullable(elements.getTypeElement(DATA_SOURCE_CANONICAL_NAME))
+                .map(TypeElement::asType)
+                .orElseThrow();
     }
 
     @Override
@@ -94,12 +106,6 @@ public class DAOProcessor extends AbstractProcessor {
             return true;
         }
 
-        try {
-            isValidDAO(mappedDAOs, elements, types);
-        }catch (final JDBCPlusPlusProcessorException e){
-            messager.printMessage(ERROR, e.getMessage());
-        }
-
         final var elementUtils = processingEnv.getElementUtils();
 
         final List<DAOImplInfo> daoImplInfos = new ArrayList<>();
@@ -112,12 +118,20 @@ public class DAOProcessor extends AbstractProcessor {
                     .filter(m -> nonNull(m.getAnnotation(Query.class)) || nonNull(m.getAnnotation(Command.class)))
                     .toList();
 
+            try {
+                final var constructor = isValidDAO(mappedDAO, elements, types);
+                final var constructorInfo = buildConstructorInfo(constructor);
+                daoImplInfoBuilder.constructor(constructorInfo);
+            } catch (final InvalidDAOException e){
+                messager.printError(e.getMessage(), e.getElement());
+            }
+
             if (methods.isEmpty()) {
                 final var message = String.format(
                         "DAO interface %s must have at least one method annotated with @Query or @Commnad",
                         className
                 );
-                messager.printMessage(ERROR, message);
+                messager.printError(message, mappedDAO);
             }
 
             for(final var method: methods){
@@ -125,9 +139,9 @@ public class DAOProcessor extends AbstractProcessor {
                     final var methodInfo = buildMethodInfo(method);
                     methodsInfo.add(methodInfo);
                 } catch (final MoreParamsThanStatementNeedException e){
-                    messager.printMessage(WARNING, e.getMessage());
+                    messager.printWarning(e.getMessage(), method);
                 } catch (final JDBCPlusPlusProcessorException e) {
-                    messager.printMessage(ERROR, e.getMessage());
+                    messager.printError(e.getMessage(), method);
                 }
             }
 
@@ -140,53 +154,74 @@ public class DAOProcessor extends AbstractProcessor {
         return true;
     }
 
-    private void isValidDAO(final List<? extends Element> mappedDAOs,
+    @Nullable
+    private ConstructorInfo buildConstructorInfo(@Nullable final ExecutableElement constructor) {
+        if (isNull(constructor)) {
+            return null;
+        }
+        final var params = constructor.getParameters()
+                .stream()
+                .map(p -> {
+                    TypeName type = TypeName.get(p.asType());
+                    if (ArrayUtil.isArray(p.asType())){
+                        type = ArrayTypeName.of(TypeName.get(p.asType()));
+                    } else if (CollectionUtil.isCollectionType(p.asType(), types)){
+                        type = TypeName.get(types.erasure(p.asType()));
+                    }
+                    return new ConstructorParamInfo(
+                            p.getSimpleName().toString(),
+                            type
+                    );
+                })
+                .toList();
+        return new ConstructorInfo(params);
+    }
+
+    @Nullable
+    private ExecutableElement isValidDAO(final Element mappedDAO,
                             final Elements elements,
                             final Types types) {
-        final var dataSourceCanonicalName = DataSource.class.getCanonicalName();
-        final var dataSourceElement = Optional.ofNullable(elements.getTypeElement(dataSourceCanonicalName))
-                .map(TypeElement::asType)
-                .orElseThrow();
-        for(final var mappedDAO: mappedDAOs){
-            final var className = elements.getTypeElement(mappedDAO.toString()).toString();
-            if (mappedDAO.getKind() == ElementKind.INTERFACE){
-                continue;
-            }
-            if (mappedDAO.getKind() == ElementKind.CLASS){
-                if (!mappedDAO.getModifiers().contains(Modifier.ABSTRACT)) {
-                    final var message = String.format(
-                            "Invalid DAO %s: A DAO annotation is used on a abstract classes or interfaces",
-                            className
-                    );
-                    throw new InvalidDAOException(message);
-                }
-                mappedDAO.getEnclosedElements().stream()
-                        .filter(e -> e.getModifiers().containsAll(List.of(Modifier.PROTECTED, Modifier.FINAL)))
-                        .filter(e -> types.isSameType(e.asType(), dataSourceElement))
-                        .findFirst()
-                        .orElseThrow(() -> {
-                            final var message = String.format(
-                                    "Invalid DAO %s: For DAO abstract classes a protected final field of type DataSource is required",
-                                    className
-                            );
-                            return new InvalidDAOException(message);
-                        });
-                if (mappedDAO.getEnclosedElements().stream()
-                        .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
-                        .map(ExecutableElement.class::cast)
-                        .filter(e -> e.getModifiers().contains(Modifier.PUBLIC) || e.getModifiers().contains(Modifier.PROTECTED))
-                        .filter(c -> c.getParameters().stream()
-                                .anyMatch(p -> p.asType().equals(dataSourceElement)))
-                        .count() != 1){
-                    final var message = String.format(
-                            "Invalid DAO %s: For DAO abstract classes is required exactly one constructor with a param type %s",
-                            dataSourceCanonicalName,
-                            className
-                            );
-                    throw new InvalidDAOException(message);
-                }
+        final var className = elements.getTypeElement(mappedDAO.toString()).toString();
+        if (mappedDAO.getKind() == ElementKind.INTERFACE){
+            return null;
+        }
 
+        if (mappedDAO.getKind() == ElementKind.CLASS){
+            if (!mappedDAO.getModifiers().contains(Modifier.ABSTRACT)) {
+                final var message = String.format(
+                        "Invalid DAO %s: A DAO annotation is used on a abstract classes or interfaces",
+                        className
+                );
+                throw new InvalidDAOException(message, mappedDAO);
             }
+            mappedDAO.getEnclosedElements().stream()
+                    .filter(e -> e.getModifiers().containsAll(List.of(Modifier.PROTECTED, Modifier.FINAL)))
+                    .filter(e -> types.isSameType(e.asType(), dataSourceElement))
+                    .findFirst()
+                    .orElseThrow(() -> {
+                        final var message = String.format(
+                                "Invalid DAO %s: For DAO abstract classes a protected final field of type DataSource is required",
+                                className
+                        );
+                        return new InvalidDAOException(message, mappedDAO);
+                    });
+            return mappedDAO.getEnclosedElements().stream()
+                    .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
+                    .map(ExecutableElement.class::cast)
+                    .filter(e -> e.getModifiers().contains(Modifier.PUBLIC) || e.getModifiers().contains(Modifier.PROTECTED))
+                    .filter(c -> c.getParameters().stream()
+                            .anyMatch(p -> p.asType().equals(dataSourceElement)))
+                    .findFirst()
+                    .orElseThrow(() -> {
+                        final var message = String.format(
+                                "Invalid DAO %s: For DAO abstract classes is required exactly one constructor with a param type %s",
+                                DATA_SOURCE_CANONICAL_NAME,
+                                className
+                        );
+                        return new InvalidDAOException(message, mappedDAO);
+                    });
+        } else {
+            return null;
         }
     }
 
@@ -251,7 +286,7 @@ public class DAOProcessor extends AbstractProcessor {
         try {
             javaFile.writeTo(filer);
         }catch (IOException ex){
-            messager.printMessage(ERROR, ex.getMessage());
+            messager.printError(ex.getMessage());
         }
     }
 
