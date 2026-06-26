@@ -59,7 +59,7 @@ public class UpdateMethodGenerator {
 
         return methodBuilder
                 .nextControlFlow(" catch (final $T e) ", SQLException.class)
-                .addStatement("throw e;")
+                .addStatement("throw e")
                 .endControlFlow();
     }
 }

@@ -100,8 +100,6 @@ public class DAOProcessor extends AbstractProcessor {
 
         final var elementUtils = processingEnv.getElementUtils();
 
-        final List<DAOImplInfo> daoImplInfos = new ArrayList<>();
-        final List<MethodInfo> methodsInfo = new ArrayList<>();
         for (final var mappedDAO : mappedDAOs) {
             final var packageName = elementUtils.getPackageOf(mappedDAO).toString();
             final var className = elementUtils.getTypeElement(mappedDAO.toString()).toString();
@@ -126,6 +124,7 @@ public class DAOProcessor extends AbstractProcessor {
                 messager.printError(message, mappedDAO);
             }
 
+            final List<MethodInfo> methodsInfo = new ArrayList<>();
             for(final var method: methods){
                 try {
                     final var methodInfo = buildMethodInfo(method, types);
@@ -138,9 +137,9 @@ public class DAOProcessor extends AbstractProcessor {
             }
 
             final var daoGenerator = buildDAOGenerator(types);
-            daoImplInfos.add(daoImplInfoBuilder.methods(methodsInfo).build());
-            final var javaFiles = daoImplInfos.stream().map(daoGenerator::build).toList();
-            javaFiles.forEach(f -> writeClass(f, messager, filer));
+            final var daoImplInfo = daoImplInfoBuilder.methods(methodsInfo).build();
+            final var javaFile = daoGenerator.build(daoImplInfo);
+            writeClass(javaFile, messager, filer);
         }
 
         return true;

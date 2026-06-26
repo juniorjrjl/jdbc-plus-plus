@@ -69,7 +69,7 @@ public final class WriteMethodInfoFactory {
                 command.returnRowsAffected()
         );
 
-        final List<TypeName> validReturns = params.size() > 1 ?
+        final List<TypeName> validReturns = classPropertyMap.isEmpty() ?
                 List.of(TypeName.VOID) :
                 List.of(TypeName.VOID, params.getFirst().getType());
         MethodValidatorUtil.validateReturn(
