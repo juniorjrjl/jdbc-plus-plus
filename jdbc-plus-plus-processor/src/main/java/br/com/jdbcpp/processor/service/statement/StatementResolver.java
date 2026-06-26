@@ -11,6 +11,6 @@ public interface StatementResolver {
 
     SimpleParamInfo getParamInfo(final String queryParamName);
 
-    List<String> buildCollectionSizes(final MethodSpec.Builder methodBuilder, final List<String> sql);
+    void buildCollectionSizes(final MethodSpec.Builder methodBuilder, final List<String> sql);
 
 }

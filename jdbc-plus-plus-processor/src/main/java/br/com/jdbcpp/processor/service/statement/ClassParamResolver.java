@@ -49,7 +49,7 @@ public class ClassParamResolver implements StatementResolver{
     }
 
     @Override
-    public List<String> buildCollectionSizes(final MethodSpec.Builder methodBuilder,
+    public void buildCollectionSizes(final MethodSpec.Builder methodBuilder,
                                              final List<String> sql) {
         final List<String> paramsAmountName = new ArrayList<>();
         for (final var listParam : collectionParams){
@@ -77,7 +77,6 @@ public class ClassParamResolver implements StatementResolver{
             methodBuilder.addStatement(preStatementAppend, sqlStatement.removeFirst());
         }
         methodBuilder.addStatement(preStatementAppend, sqlStatement.removeFirst());
-        return paramsAmountName;
     }
 
 }
