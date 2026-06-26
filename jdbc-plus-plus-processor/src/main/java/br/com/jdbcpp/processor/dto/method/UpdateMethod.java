@@ -5,7 +5,6 @@ import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 
 import javax.lang.model.type.TypeMirror;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 

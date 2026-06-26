@@ -67,7 +67,6 @@ import java.util.Set;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static javax.lang.model.SourceVersion.RELEASE_21;
-import static javax.tools.Diagnostic.Kind.WARNING;
 
 @SupportedAnnotationTypes("br.com.jdbcpp.api.DAO")
 @AutoService(Processor.class)
