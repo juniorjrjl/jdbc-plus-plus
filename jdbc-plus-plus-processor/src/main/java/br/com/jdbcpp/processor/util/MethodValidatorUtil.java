@@ -31,7 +31,7 @@ public final class MethodValidatorUtil {
                 throw new InvalidMethodSignatureException(message);
             }
         } else {
-            if (validReturns.contains(returnType)) {
+            if (!validReturns.contains(returnType)) {
                 final var message = String.format("""
                         A method %s, without rowsAffected result has invalid config, use a follow configurations:
                          - for INSERT or UPDATE: return void or received class;

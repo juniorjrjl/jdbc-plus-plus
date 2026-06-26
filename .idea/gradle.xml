@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/jdbc-plus-plus-api" />
             <option value="$PROJECT_DIR$/jdbc-plus-plus-processor" />
+            <option value="$PROJECT_DIR$/jdbc-plus-plus-sample" />
           </set>
         </option>
         <option name="myGradleHome" value="" />

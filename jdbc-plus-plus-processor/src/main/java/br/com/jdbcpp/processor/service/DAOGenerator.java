@@ -58,8 +58,8 @@ public class DAOGenerator {
     }
 
     public JavaFile build(final DAOImplInfo daoImplInfo) {
-        final var daoParent = ClassName.get(daoImplInfo.packageName(), daoImplInfo.name());
-        final var implSimpleName = daoImplInfo.name() + "Impl";
+        final var daoParent = ClassName.bestGuess(daoImplInfo.name());
+        final var implSimpleName = daoParent.simpleName() + "Impl";
         final var daoBuilder = TypeSpec.classBuilder(implSimpleName).addModifiers(PUBLIC);
 
         if (isNull(daoImplInfo.constructor())) {

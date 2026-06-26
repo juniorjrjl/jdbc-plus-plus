@@ -45,6 +45,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -65,44 +66,36 @@ import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static javax.lang.model.SourceVersion.RELEASE_21;
 import static javax.tools.Diagnostic.Kind.WARNING;
 
-@SupportedAnnotationTypes("br.com.jdbcpp.api.DAOMethod")
+@SupportedAnnotationTypes("br.com.jdbcpp.api.DAO")
 @AutoService(Processor.class)
+@SupportedSourceVersion(RELEASE_21)
 public class DAOProcessor extends AbstractProcessor {
 
     private static final String DATA_SOURCE_CANONICAL_NAME = DataSource.class.getCanonicalName();
 
-    private final Types types;
-    private final Elements elements;
-    private final Messager messager;
-    private final Filer filer;
-    private final TypeMirror dataSourceElement;
     @Nullable
     private DAOGenerator daoGeneratorCache;
     @Nullable
     private ParameterInfoDelegator parameterInfoDelegatorCache;
 
-    public DAOProcessor(){
-        super();
-        this.types = processingEnv.getTypeUtils();
-        this.elements = processingEnv.getElementUtils();
-        this.messager = processingEnv.getMessager();
-        this.filer = processingEnv.getFiler();
-        this.dataSourceElement = Optional.ofNullable(elements.getTypeElement(DATA_SOURCE_CANONICAL_NAME))
-                .map(TypeElement::asType)
-                .orElseThrow();
-    }
-
     @Override
     public boolean process(final Set<? extends TypeElement> annotations,
                            final RoundEnvironment roundEnv) {
+        final var types = processingEnv.getTypeUtils();
+        final var elements = processingEnv.getElementUtils();
+        final var messager = processingEnv.getMessager();
+        final var filer = processingEnv.getFiler();
+        final var dataSourceElement = Optional.ofNullable(elements.getTypeElement(DATA_SOURCE_CANONICAL_NAME))
+                .map(TypeElement::asType)
+                .orElseThrow();
         final var mappedDAOs = roundEnv.getElementsAnnotatedWith(DAO.class)
                 .stream()
                 .toList();
 
         if (mappedDAOs.isEmpty()) {
-            messager.printMessage(WARNING, "None DAOs found to generate");
             return true;
         }
 
@@ -119,8 +112,8 @@ public class DAOProcessor extends AbstractProcessor {
                     .toList();
 
             try {
-                final var constructor = isValidDAO(mappedDAO, elements, types);
-                final var constructorInfo = buildConstructorInfo(constructor);
+                final var constructor = isValidDAO(mappedDAO, elements, types, dataSourceElement);
+                final var constructorInfo = buildConstructorInfo(constructor, types);
                 daoImplInfoBuilder.constructor(constructorInfo);
             } catch (final InvalidDAOException e){
                 messager.printError(e.getMessage(), e.getElement());
@@ -136,7 +129,7 @@ public class DAOProcessor extends AbstractProcessor {
 
             for(final var method: methods){
                 try {
-                    final var methodInfo = buildMethodInfo(method);
+                    final var methodInfo = buildMethodInfo(method, types);
                     methodsInfo.add(methodInfo);
                 } catch (final MoreParamsThanStatementNeedException e){
                     messager.printWarning(e.getMessage(), method);
@@ -145,17 +138,19 @@ public class DAOProcessor extends AbstractProcessor {
                 }
             }
 
-            final var daoGenerator = buildDAOGenerator();
+            final var daoGenerator = buildDAOGenerator(types);
             daoImplInfos.add(daoImplInfoBuilder.methods(methodsInfo).build());
             final var javaFiles = daoImplInfos.stream().map(daoGenerator::build).toList();
-            javaFiles.forEach(this::writeClass);
+            javaFiles.forEach(f -> writeClass(f, messager, filer));
         }
 
         return true;
     }
 
     @Nullable
-    private ConstructorInfo buildConstructorInfo(@Nullable final ExecutableElement constructor) {
+    private ConstructorInfo buildConstructorInfo(@Nullable
+                                                 final ExecutableElement constructor,
+                                                 final Types types){
         if (isNull(constructor)) {
             return null;
         }
@@ -179,8 +174,9 @@ public class DAOProcessor extends AbstractProcessor {
 
     @Nullable
     private ExecutableElement isValidDAO(final Element mappedDAO,
-                            final Elements elements,
-                            final Types types) {
+                                         final Elements elements,
+                                         final Types types,
+                                         final TypeMirror dataSourceElement) {
         final var className = elements.getTypeElement(mappedDAO.toString()).toString();
         if (mappedDAO.getKind() == ElementKind.INTERFACE){
             return null;
@@ -225,7 +221,8 @@ public class DAOProcessor extends AbstractProcessor {
         }
     }
 
-    private MethodInfo buildMethodInfo(final ExecutableElement method) throws JDBCPlusPlusProcessorException {
+    private MethodInfo buildMethodInfo(final ExecutableElement method,
+                                       final Types types) throws JDBCPlusPlusProcessorException {
         final var parameterInfoDelegator = buildParameterInfoDelegator();
 
         final var params = parameterInfoDelegator.create(
@@ -261,7 +258,7 @@ public class DAOProcessor extends AbstractProcessor {
         return this.parameterInfoDelegatorCache;
     }
 
-    private DAOGenerator buildDAOGenerator() {
+    private DAOGenerator buildDAOGenerator(final Types types) {
         if (isNull(daoGeneratorCache)) {
             final var statementBuilder = new StatementBuilder();
             final var selectResultSetDelegator = new SelectResultSetDelegator(
@@ -270,10 +267,10 @@ public class DAOProcessor extends AbstractProcessor {
                     new SelectResultSimpleResult()
             );
             this.daoGeneratorCache = new DAOGenerator(
-                    this.types,
-                    new SelectCollectionMethodGenerator(this.types, selectResultSetDelegator, statementBuilder),
-                    new SelectOptionalMethodGenerator(this.types, selectResultSetDelegator, statementBuilder),
-                    new SelectSingleMethodGenerator(this.types, selectResultSetDelegator, statementBuilder),
+                    types,
+                    new SelectCollectionMethodGenerator(types, selectResultSetDelegator, statementBuilder),
+                    new SelectOptionalMethodGenerator(types, selectResultSetDelegator, statementBuilder),
+                    new SelectSingleMethodGenerator(types, selectResultSetDelegator, statementBuilder),
                     new InsertMethodGenerator(statementBuilder),
                     new UpdateMethodGenerator(statementBuilder),
                     new DeleteMethodGenerator(statementBuilder)
@@ -282,7 +279,7 @@ public class DAOProcessor extends AbstractProcessor {
         return daoGeneratorCache;
     }
 
-    private void writeClass(final JavaFile javaFile){
+    private void writeClass(final JavaFile javaFile, final Messager messager, final Filer filer){
         try {
             javaFile.writeTo(filer);
         }catch (IOException ex){

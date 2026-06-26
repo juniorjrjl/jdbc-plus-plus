@@ -6,6 +6,9 @@ import com.palantir.javapoet.MethodSpec;
 
 import java.sql.SQLException;
 
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PUBLIC;
+
 public class DeleteMethodGenerator {
 
     private final StatementBuilder statementBuilder;
@@ -16,7 +19,13 @@ public class DeleteMethodGenerator {
 
     public MethodSpec.Builder build(final DeleteMethod methodInfo,
                                     final String connectionCall) {
-        final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName());
+        final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
+                .addException(SQLException.class)
+                .addModifiers(PUBLIC)
+                .returns(methodInfo.getReturnType());
+
+        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(p.getType(), p.getName(), FINAL));
+
         final var statementVar = "stmt";
         statementBuilder.build(
                 methodBuilder,

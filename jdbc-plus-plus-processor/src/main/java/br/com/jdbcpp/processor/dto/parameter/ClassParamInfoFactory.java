@@ -140,7 +140,7 @@ public final class ClassParamInfoFactory {
                         TypeUtil.isEnum(param.asType(), types),
                         collectionType,
                         StringUtil.camelToSnakeCase(paramName),
-                        paramName
+                        findMethod(parentType, types, paramName, param.asType())
                 ));
     }
 
@@ -151,15 +151,45 @@ public final class ClassParamInfoFactory {
 
         final var typeElement = (TypeElement) types.asElement(typeMirror);
 
-        return typeElement.getEnclosedElements()
+        final var methods = typeElement.getEnclosedElements()
                 .stream()
                 .filter(e -> e.getKind() == ElementKind.METHOD)
                 .map(ExecutableElement.class::cast)
-                .filter(m -> m.getSimpleName().contentEquals(propertyName))
                 .filter(m -> m.getParameters().isEmpty())
                 .filter(m -> types.isSameType(m.getReturnType(), expectedReturnType))
-                .map(e -> e.getSimpleName().toString())
-                .findFirst()
+                .toList();
+
+        ExecutableElement recordMatch = null;
+        ExecutableElement javaBeanMatch = null;
+        ExecutableElement endsWithMatch = null;
+        for (final var method : methods) {
+            final var methodName = method.getSimpleName().toString();
+            final var capitalizedProperty = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
+            final var javaBeanGet = "get" + capitalizedProperty;
+            final var javaBeanIs = "is" + capitalizedProperty;
+
+            if (methodName.equalsIgnoreCase(propertyName)) {
+                recordMatch = method;
+                break;
+            }
+
+            if (methodName.equals(javaBeanGet) ||
+                    methodName.equals(javaBeanIs) ||
+                    methodName.equalsIgnoreCase("get" + propertyName)){
+                javaBeanMatch = method;
+            }
+
+            if (methodName.toLowerCase().endsWith(propertyName.toLowerCase())) {
+                endsWithMatch = method;
+            }
+        }
+
+        final var finalGetter = nonNull(recordMatch) ? recordMatch :
+                (nonNull(javaBeanMatch) ? javaBeanMatch : endsWithMatch);
+
+
+        return Optional.ofNullable(finalGetter)
+                .map(m -> m.getSimpleName().toString())
                 .orElseThrow(() -> {
                     final var message = String.format(
                             "A class %s has none valid public method to access property %s",

@@ -19,9 +19,9 @@ public final class ParamPathExtractor {
                               final List<ParamInfo> currentPath,
                               final Map<String, List<ParamInfo>> paths) {
 
-        currentPath.add(current);
         switch (current) {
-            case SimpleParamInfo simple -> paths.put(simple.getName(), List.copyOf(currentPath));
+            case SimpleParamInfo simple -> 
+                paths.put(simple.getName(), List.copyOf(currentPath));
 
             case ClassParamInfo clazz -> {
                 for (final var nested : clazz.getNestedProperties()) {

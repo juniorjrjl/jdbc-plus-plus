@@ -8,6 +8,7 @@ import br.com.jdbcpp.processor.util.TypeUtil;
 
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Types;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,8 +27,7 @@ public final class ParameterInfoDelegator {
                                          final List<? extends VariableElement> params,
                                          final Types types){
         if (params.isEmpty()) {
-            final var message = String.format("Method '%s' must have at least one parameter", methodName);
-            throw new InvalidInputParamException(message);
+            return Collections.emptyList();
         }
 
         final var classTypesAmount = params.stream()

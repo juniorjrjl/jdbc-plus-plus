@@ -9,6 +9,8 @@ import javax.lang.model.util.Types;
 import java.sql.SQLException;
 import java.util.Optional;
 
+import static javax.lang.model.element.Modifier.PUBLIC;
+
 public class SelectOptionalMethodGenerator {
 
     protected final Types types;
@@ -25,7 +27,9 @@ public class SelectOptionalMethodGenerator {
 
     public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
                                     final String connectionCall) {
-        final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName());
+        final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
+                .addException(SQLException.class)
+                .addModifiers(PUBLIC);
         final var statementVar = "stmt";
         final var resultSetVar = "rs";
         statementBuilder.build(

@@ -17,18 +17,10 @@ public non-sealed class DeleteMethod extends MethodInfo{
     public DeleteMethod(final String name,
                         final TypeMirror returnType,
                         final List<ParamInfo> params,
-                        final StatementInfo statement,
-                        final boolean returnRowsAffected) {
-        super(name, returnType, params, new HashMap<>(), statement);
-        this.returnRowsAffected = returnRowsAffected;
-    }
-
-    public DeleteMethod(final String name,
-                        final TypeMirror returnType,
                         final Map<String, List<ParamInfo>> classPropertyMap,
                         final StatementInfo statement,
                         final boolean returnRowsAffected) {
-        super(name, returnType, Collections.emptyList(), classPropertyMap, statement);
+        super(name, returnType, params, classPropertyMap, statement);
         this.returnRowsAffected = returnRowsAffected;
     }
 

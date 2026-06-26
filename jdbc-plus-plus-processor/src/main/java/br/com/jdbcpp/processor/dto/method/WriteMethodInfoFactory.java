@@ -37,26 +37,14 @@ public final class WriteMethodInfoFactory {
                                                 final List<ParamInfo> params,
                                                 final Map<String, List<ParamInfo>> classPropertyMap,
                                                 final Command command) {
-        final var deleteMethod = classPropertyMap.isEmpty() ?
-                new DeleteMethod(
-                        method.getSimpleName().toString(),
-                        method.getReturnType(),
-                        params,
-                        StatementInfoFactory.create(command.value()),
-                        command.returnRowsAffected()
-                ) :
-                new DeleteMethod(
-                        method.getSimpleName().toString(),
-                        method.getReturnType(),
-                        classPropertyMap,
-                        StatementInfoFactory.create(command.value()),
-                        command.returnRowsAffected()
-                );
-        if (!deleteMethod.isReturnRowsAffected() && deleteMethod.getReturnType().equals(TypeName.VOID)) {
-            final var message = String.format("A method DELETE %s must return void or return rows affected", method.getSimpleName());
-            throw new InvalidMethodSignatureException(message);
-        }
-
+        final var deleteMethod = new DeleteMethod(
+                method.getSimpleName().toString(),
+                method.getReturnType(),
+                params,
+                classPropertyMap,
+                StatementInfoFactory.create(command.value()),
+                command.returnRowsAffected()
+        );
         MethodValidatorUtil.validateReturn(
                 method.getSimpleName().toString(),
                 command.returnRowsAffected(),
@@ -72,21 +60,14 @@ public final class WriteMethodInfoFactory {
                                                 final List<ParamInfo> params,
                                                 final Map<String, List<ParamInfo>> classPropertyMap,
                                                 final Command command) {
-        final var updateMethod = classPropertyMap.isEmpty() ?
-                new UpdateMethod(
-                        method.getSimpleName().toString(),
-                        method.getReturnType(),
-                        params,
-                        StatementInfoFactory.create(command.value()),
-                        command.returnRowsAffected()
-                ) :
-                new UpdateMethod(
-                        method.getSimpleName().toString(),
-                        method.getReturnType(),
-                        classPropertyMap,
-                        StatementInfoFactory.create(command.value()),
-                        command.returnRowsAffected()
-                );
+        final var updateMethod = new UpdateMethod(
+                method.getSimpleName().toString(),
+                method.getReturnType(),
+                params,
+                classPropertyMap,
+                StatementInfoFactory.create(command.value()),
+                command.returnRowsAffected()
+        );
 
         final List<TypeName> validReturns = params.size() > 1 ?
                 List.of(TypeName.VOID) :
@@ -106,21 +87,14 @@ public final class WriteMethodInfoFactory {
                                                 final List<ParamInfo> params,
                                                 final Map<String, List<ParamInfo>> classPropertyMap,
                                                 final Command command) {
-        final var insertMethod = classPropertyMap.isEmpty() ?
-                new InsertMethod(
-                        method.getSimpleName().toString(),
-                        method.getReturnType(),
-                        params,
-                        StatementInfoFactory.create(command.value()),
-                        command.returnRowsAffected()
-                ) :
-                new InsertMethod(
-                        method.getSimpleName().toString(),
-                        method.getReturnType(),
-                        classPropertyMap,
-                        StatementInfoFactory.create(command.value()),
-                        command.returnRowsAffected()
-                );
+        final var insertMethod = new InsertMethod(
+                method.getSimpleName().toString(),
+                method.getReturnType(),
+                params,
+                classPropertyMap,
+                StatementInfoFactory.create(command.value()),
+                command.returnRowsAffected()
+        );
 
         final List<TypeName> validReturns = params.size() > 1 ?
                 List.of(TypeName.VOID) :
