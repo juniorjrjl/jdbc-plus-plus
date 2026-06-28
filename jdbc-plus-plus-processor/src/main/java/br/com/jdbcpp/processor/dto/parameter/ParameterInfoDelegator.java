@@ -32,9 +32,15 @@ public final class ParameterInfoDelegator {
 
         final var classTypesAmount = params.stream()
                 .filter(
-                        p -> TypeUtil.isNotSimpleType(p.asType(), types) ||
-                                CollectionUtil.isCollectionOfClass(p.asType(), types) ||
-                                ArrayUtil.isArrayOfClass(p.asType(), types)
+                        p -> {
+                            if (ArrayUtil.isArray(p.asType())){
+                                return ArrayUtil.isArrayOfClass(p.asType(), types);
+                            }
+                            if (CollectionUtil.isCollectionType(p.asType(), types)) {
+                                return  CollectionUtil.isCollectionOfClass(p.asType(), types);
+                            }
+                            return TypeUtil.isNotSimpleType(p.asType(), types);
+                        }
                 )
                 .count();
 

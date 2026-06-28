@@ -47,8 +47,8 @@ public class SimpleParamResolver implements StatementResolver{
                                              final List<String> sql) {
         final List<String> paramsAmountName = new ArrayList<>();
         for (final var listParam : collectionParams){
-            final var paramAmountName = listParam.getName() + "size";
-            if (listParam.getContainerType() instanceof ArrayTypeName){
+            final var paramAmountName = listParam.getName() + "Size";
+            if (listParam.getType() instanceof ArrayTypeName){
                 methodBuilder.addStatement("final var $N = $N.length", paramAmountName, listParam.getName());
             } else {
                 methodBuilder.addStatement("final var $N = $N.size()", paramAmountName, listParam.getName());
@@ -70,7 +70,9 @@ public class SimpleParamResolver implements StatementResolver{
             methodBuilder.addStatement(preStatementAppend, ")");
             methodBuilder.addStatement(preStatementAppend, sqlStatement.removeFirst());
         }
-        methodBuilder.addStatement(preStatementAppend, sqlStatement.removeFirst());
+        if (!sqlStatement.isEmpty()) {
+            methodBuilder.addStatement(preStatementAppend, sqlStatement.removeFirst());
+        }
     }
 
 }

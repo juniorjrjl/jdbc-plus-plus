@@ -41,6 +41,35 @@ public final class TypeUtil {
             java.time.ZonedDateTime.class.getCanonicalName()
     );
 
+    private static final Set<String> JDBC_COMPATIBLE_TYPES = Set.of(
+            String.class.getCanonicalName(),
+
+            Boolean.class.getCanonicalName(),
+            Byte.class.getCanonicalName(),
+            Character.class.getCanonicalName(),
+            Short.class.getCanonicalName(),
+            Integer.class.getCanonicalName(),
+            Long.class.getCanonicalName(),
+            Float.class.getCanonicalName(),
+            Double.class.getCanonicalName(),
+
+            java.math.BigDecimal.class.getCanonicalName(),
+            java.math.BigInteger.class.getCanonicalName(),
+
+            java.util.Date.class.getCanonicalName(),
+            java.util.UUID.class.getCanonicalName(),
+
+            java.time.Instant.class.getCanonicalName(),
+            java.time.LocalDate.class.getCanonicalName(),
+            java.time.LocalDateTime.class.getCanonicalName(),
+            java.time.LocalTime.class.getCanonicalName(),
+            java.time.OffsetDateTime.class.getCanonicalName(),
+            java.time.OffsetTime.class.getCanonicalName(),
+            java.time.ZonedDateTime.class.getCanonicalName(),
+            byte[].class.getCanonicalName(),
+            Byte[].class.getCanonicalName()
+    );
+
     private static final Set<String> OPTIONAL_TYPES = Set.of(
             java.util.Optional.class.getCanonicalName()
     );

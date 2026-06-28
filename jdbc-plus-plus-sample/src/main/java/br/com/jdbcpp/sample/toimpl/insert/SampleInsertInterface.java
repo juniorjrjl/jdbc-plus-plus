@@ -40,4 +40,5 @@ public interface SampleInsertInterface {
             """)
     UserClass insertClass(final UserClass userClass) throws SQLException;
 
+
 }

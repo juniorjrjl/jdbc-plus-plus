@@ -27,4 +27,7 @@ public interface SampleDeleteInterface {
     @Command(value = "DELETE FROM user where id = :id: and name = :name:;", commandType = DELETE)
     void deleteClass(final UserClass userClass) throws SQLException;
 
+    @Command(value = "DELETE FROM user where id in (:ids++:);", commandType = DELETE)
+    void deleteMany(final int[] ids) throws SQLException;
+
 }

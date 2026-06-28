@@ -2,6 +2,7 @@ package br.com.jdbcpp.processor.service.write.update;
 
 import br.com.jdbcpp.processor.dto.method.UpdateMethod;
 import br.com.jdbcpp.processor.service.statement.StatementBuilder;
+import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 
 import java.sql.SQLException;
@@ -50,7 +51,16 @@ public class UpdateMethodGenerator {
                         },
                         () -> {
                             if (methodInfo.isReturnRowsAffected()){
-                                methodBuilder.addStatement("return " + executeCall, statementVar);
+                                if (methodInfo.getReturnType().isBoxedPrimitive() &&
+                                        methodInfo.getReturnType().equals(ClassName.get(Long.class))){
+                                    methodBuilder.addStatement(
+                                            "return $T.valueOf(" + executeCall + ")",
+                                            Long.class,
+                                            statementVar
+                                    );
+                                } else {
+                                    methodBuilder.addStatement("return " + executeCall, statementVar);
+                                }
                             } else {
                                 methodBuilder.addStatement(executeCall, statementVar);
                             }

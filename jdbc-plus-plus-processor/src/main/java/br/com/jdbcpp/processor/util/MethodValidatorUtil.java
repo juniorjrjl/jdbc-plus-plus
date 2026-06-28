@@ -5,6 +5,7 @@ import br.com.jdbcpp.processor.dto.statement.StatementParam;
 import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
+import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.TypeName;
 
 import java.util.HashSet;
@@ -22,7 +23,10 @@ public final class MethodValidatorUtil {
                                        final String operation,
                                        final List<TypeName> validReturns) {
         if (returnRowsAffected){
-            if (!(returnType.equals(TypeName.LONG) || returnType.equals(TypeName.INT))) {
+            if (!(returnType.equals(TypeName.LONG)
+                    || returnType.equals(TypeName.INT)
+                    || returnType.equals(ClassName.get(Long.class))
+                    || returnType.equals(ClassName.get(Integer.class)))) {
                 final var message = String.format(
                         "A method %s (%s) is defined to return rows affected, but return is not int or long",
                         operation,
