@@ -3,6 +3,7 @@ package br.com.jdbcpp.api;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.Collection;
+import java.util.List;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
@@ -30,6 +31,6 @@ public @interface ResultBuildStrategy {
      *
      * @return the collection implementation class
      */
-    Class<? extends Collection<?>> collectionImplementationResult();
+    Class<? extends Collection> collectionImplementationResult() default  List.class;
 
 }

@@ -10,6 +10,7 @@ import com.palantir.javapoet.MethodSpec;
 import javax.lang.model.util.Types;
 import java.sql.SQLException;
 
+import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 public class SelectCollectionMethodGenerator {
@@ -30,7 +31,11 @@ public class SelectCollectionMethodGenerator {
                                     final String connectionCall) {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
                 .addException(SQLException.class)
-                .addModifiers(PUBLIC);
+                .addModifiers(PUBLIC)
+                .returns(methodInfo.getReturnType());
+
+        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(p.getType(), p.getName(), FINAL));
+
         final var statementVar = "stmt";
         final var resultSetVar = "rs";
 

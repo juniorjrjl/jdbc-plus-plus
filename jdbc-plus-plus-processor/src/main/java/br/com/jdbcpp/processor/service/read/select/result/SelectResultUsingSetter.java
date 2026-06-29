@@ -19,7 +19,7 @@ public class SelectResultUsingSetter {
                       final MethodSpec.Builder builder) {
         builder.addStatement("final var $L = new $T()", objectResultName, TypeName.get(returnType));
         for (final var strategy : strategies) {
-            final var resultSetGetter = JDBCUtil.getResultSetGetter(
+            JDBCUtil.getResultSetGetter(
                     strategy.getType(),
                     Optional.ofNullable(strategy.getResultSetIndex())
                             .map(String::valueOf)
@@ -27,8 +27,9 @@ public class SelectResultUsingSetter {
                                 final var columnName = StringUtil.camelToSnakeCase(strategy.getName());
                                 return StringUtil.toQuotedString(columnName);
                             }),
-                    resultSetVar);
-            builder.addStatement("$L.$L($L)", objectResultName, strategy.getMethodName(), resultSetGetter);
+                    resultSetVar,
+                    strategy.getName(),
+                    builder);
         }
     }
 

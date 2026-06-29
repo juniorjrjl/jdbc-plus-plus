@@ -1,5 +1,6 @@
 package br.com.jdbcpp.processor.util;
 
+import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 
 public final class JDBCUtil {
@@ -52,26 +53,29 @@ public final class JDBCUtil {
     }
 
     public static String getResultSetGetter(final TypeName type,
-                                            final String columnAccessor,
-                                            final String resultSetVar) {
+                                          final String columnAccessor,
+                                          final String resultSetVar,
+                                          final String varName,
+                                          final MethodSpec.Builder builder) {
         final String typeName = type.toString();
-        return switch (typeName) {
-            case "int" -> String.format("%s.getInt(%s)", resultSetVar, columnAccessor);
-            case "long" -> String.format("%s.getLong(%s)", resultSetVar, columnAccessor);
-            case "double" -> String.format("%s.getDouble(%s)", resultSetVar, columnAccessor);
-            case "float" -> String.format("%s.getFloat(%s)", resultSetVar, columnAccessor);
-            case "boolean" -> String.format("%s.getBoolean(%s)", resultSetVar, columnAccessor);
-            case "short" -> String.format("%s.getShort(%s)", resultSetVar, columnAccessor);
-            case "byte" -> String.format("%s.getByte(%s)", resultSetVar, columnAccessor);
-            case "java.lang.String" -> String.format("%s.getString(%s)", resultSetVar, columnAccessor);
-            case "java.math.BigDecimal" -> String.format("%s.getBigDecimal(%s)", resultSetVar, columnAccessor);
-            case "java.sql.Date" -> String.format("%s.getDate(%s)", resultSetVar, columnAccessor);
-            case "java.sql.Time" -> String.format("%s.getTime(%s)", resultSetVar, columnAccessor);
-            case "java.sql.Timestamp" -> String.format("%s.getTimestamp(%s)", resultSetVar, columnAccessor);
-            case "byte[]" -> String.format("%s.getBytes(%s)", resultSetVar, columnAccessor);
-            default -> String.format("%s.getObject(%s, %s.class)", resultSetVar, columnAccessor, TypeUtil.getSimpleClassName(typeName)
-            );
-        };
+        final var rsVarName = "rs"+ varName.substring(0, 1).toUpperCase() + varName.substring(1);
+        switch (typeName) {
+            case "int", "java.lang.Integer" -> builder.addStatement("final var $L = $L.getInt($L)", rsVarName, resultSetVar, columnAccessor);
+            case "long", "java.lang.Long" -> builder.addStatement("final var $L = $L.getLong($L)", rsVarName, resultSetVar, columnAccessor);
+            case "double", "java.lang.Double" -> builder.addStatement("final var $L = $L.getDouble($L)", rsVarName, resultSetVar, columnAccessor);
+            case "float", "java.lang.Float" -> builder.addStatement("final var $L = $L.getFloat($L)", rsVarName, resultSetVar, columnAccessor);
+            case "boolean", "java.lang.Boolean" -> builder.addStatement("final var $L = $L.getBoolean($L)", rsVarName, resultSetVar, columnAccessor);
+            case "short", "java.lang.Short" -> builder.addStatement("final var $L = $L.getShort($L)", rsVarName, resultSetVar, columnAccessor);
+            case "byte", "java.lang.Byte" -> builder.addStatement("final var $L = $L.getByte($L)", rsVarName, resultSetVar, columnAccessor);
+            case "java.lang.String" -> builder.addStatement("final var $L = $L.getString($L)", rsVarName, resultSetVar, columnAccessor);
+            case "java.math.BigDecimal" -> builder.addStatement("final var $L = $L.getBigDecimal($L)", rsVarName, resultSetVar, columnAccessor);
+            case "java.sql.Date" -> builder.addStatement("final var $L = $L.getDate($L)", rsVarName, resultSetVar, columnAccessor);
+            case "java.sql.Time" -> builder.addStatement("final var $L = $L.getTime($L)", rsVarName, resultSetVar, columnAccessor);
+            case "java.sql.Timestamp" -> builder.addStatement("final var $L = $L.getTimestamp($L)", rsVarName, resultSetVar, columnAccessor);
+            case "byte[]" -> builder.addStatement("final var $L = $L.getBytes($L)", rsVarName, resultSetVar, columnAccessor);
+            default -> builder.addStatement("final var $L = $L.getObject($L, $T.class)", rsVarName, resultSetVar, columnAccessor, type);
+        }
+        return rsVarName;
     }
 
 }

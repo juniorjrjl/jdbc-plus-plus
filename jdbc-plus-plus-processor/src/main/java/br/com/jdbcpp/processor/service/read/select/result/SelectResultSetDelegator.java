@@ -18,9 +18,9 @@ public final class SelectResultSetDelegator {
     }
 
     public void build(final SelectMethodInfo selectMethodInfo,
-                                    final String objectResultName,
-                                    final String resultSetVar,
-                                    final MethodSpec.Builder builder){
+                      final String objectResultName,
+                      final String resultSetVar,
+                      final MethodSpec.Builder builder){
         switch (selectMethodInfo.getStrategyType()){
             case CONSTRUCTOR -> constructor.build(
                     selectMethodInfo.getConstructorStrategies(),
