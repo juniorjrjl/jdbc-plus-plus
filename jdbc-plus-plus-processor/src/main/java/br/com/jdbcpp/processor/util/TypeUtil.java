@@ -171,4 +171,8 @@ public final class TypeUtil {
                 qualifiedName.substring(lastDotIndex + 1);
     }
 
+    public static boolean typeHasTypeParameter(final TypeElement type){
+        return type.getTypeParameters().isEmpty();
+    }
+
 }

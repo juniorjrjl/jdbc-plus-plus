@@ -18,6 +18,7 @@ import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
@@ -40,8 +41,8 @@ public final class ReadMethodInfoFactory {
                                     final Map<String, List<ParamInfo>> classPropertyMap,
                                     final Query query,
                                     final Types types) {
-        final var returnType = method.getReturnType();
-        if (returnType.getKind() == TypeKind.VOID) {
+
+        if (method.getReturnType().getKind() == TypeKind.VOID) {
             final var message = String.format(
                     "Method %s is annotated with @Query but returns void",
                     method.getSimpleName()
@@ -49,9 +50,17 @@ public final class ReadMethodInfoFactory {
             throw new InvalidMethodSignatureException(message);
         }
 
+        TypeMirror returnType = method.getReturnType();
+        TypeMirror returnContainerType = null;
+        if (method.getReturnType() instanceof DeclaredType returnTypeElement &&
+                !returnTypeElement.getTypeArguments().isEmpty()){
+            returnContainerType = method.getReturnType();
+            returnType = returnTypeElement.getTypeArguments().getFirst();
+        }
+
         final MethodInfo methodInfo = needStrategyToSelectReturn(returnType, types) ?
-                objectSelectResult(method, params, classPropertyMap, query, types, returnType):
-                simpleSelectResult(method, params, classPropertyMap, query, returnType);
+                objectSelectResult(method, params, classPropertyMap, query, types, returnType, returnContainerType):
+                simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType);
         MethodValidatorUtil.validateParams(
                 methodInfo.getName(),
                 params,
@@ -67,7 +76,9 @@ public final class ReadMethodInfoFactory {
                                                        final Map<String, List<ParamInfo>> classPropertyMap,
                                                        final Query query,
                                                        final Types types,
-                                                       final TypeMirror returnType) {
+                                                       final TypeMirror returnType,
+                                                       @Nullable
+                                                       final TypeMirror returnContainerType) {
         final var resultBuildStrategy = method.getAnnotation(ResultBuildStrategy.class);
         final var strategyType = determineStrategyType(types, returnType, resultBuildStrategy);
         final var typeElement = ((TypeElement) types.asElement(returnType));
@@ -82,7 +93,8 @@ public final class ReadMethodInfoFactory {
                 classPropertyMap,
                 StatementInfoFactory.create(query.value()),
                 strategies,
-                strategyType
+                strategyType,
+                isNull(returnContainerType) ? null : returnContainerType
         );
     }
 
@@ -90,7 +102,9 @@ public final class ReadMethodInfoFactory {
                                                        final List<ParamInfo> params,
                                                        final Map<String, List<ParamInfo>> classPropertyMap,
                                                        final Query query,
-                                                       final TypeMirror returnType) {
+                                                       final TypeMirror returnType,
+                                                       @Nullable
+                                                       final TypeMirror returnContainerType) {
         final var type = TypeName.get(returnType);
         final var genericType = Optional.ofNullable(CollectionUtil.getCollectionElementType(returnType))
                 .or(() -> Optional.ofNullable(TypeUtil.getOptionalType(returnType)))
@@ -103,7 +117,8 @@ public final class ReadMethodInfoFactory {
                 params,
                 classPropertyMap,
                 StatementInfoFactory.create(query.value()),
-                strategy
+                strategy,
+                isNull(returnContainerType) ? null : returnContainerType
         );
     }
 

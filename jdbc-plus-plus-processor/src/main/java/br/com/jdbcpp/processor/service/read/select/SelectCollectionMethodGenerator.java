@@ -6,6 +6,7 @@ import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.util.Types;
 import java.sql.SQLException;
@@ -32,7 +33,7 @@ public class SelectCollectionMethodGenerator {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
                 .addException(SQLException.class)
                 .addModifiers(PUBLIC)
-                .returns(methodInfo.getReturnType());
+                .returns(TypeName.get(methodInfo.getContainerReturnTypeMirror()));
 
         methodInfo.getParams().forEach(p -> methodBuilder.addParameter(p.getType(), p.getName(), FINAL));
 
@@ -52,13 +53,12 @@ public class SelectCollectionMethodGenerator {
             methodBuilder.beginControlFlow("try (final var $N = $N.executeQuery())", resultSetVar, statementVar);
         }
 
-        final var returnType = methodInfo.getReturnType();
-        final var returnTypeMirror = methodInfo.getReturnTypeMirror();
-        final var isInterface = CollectionUtil.isCollectionInterface(returnTypeMirror, types);
-        final var collectionImpl = CollectionUtil.getCollectionImplementation(returnTypeMirror, types);
+        final var containerReturnTypeMirror = methodInfo.getContainerReturnTypeMirror();
+        final var isInterface = CollectionUtil.isCollectionInterface(containerReturnTypeMirror, types);
+        final var collectionImpl = CollectionUtil.getCollectionImplementation(containerReturnTypeMirror, types);
 
         if (isInterface) {
-            methodBuilder.addStatement("final $T result = new $T<>()", returnType, ClassName.bestGuess(collectionImpl));
+            methodBuilder.addStatement("final $T result = new $T<>()", containerReturnTypeMirror, ClassName.bestGuess(collectionImpl));
         } else {
             methodBuilder.addStatement("final var result = new $T<>()", ClassName.bestGuess(collectionImpl));
         }

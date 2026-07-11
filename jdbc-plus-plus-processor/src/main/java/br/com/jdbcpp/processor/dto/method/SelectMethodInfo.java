@@ -7,6 +7,7 @@ import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SetterStrategy;
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
+import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
@@ -19,6 +20,8 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
     private final List<SelectReturnStrategy<?>> strategies;
     private final ResultBuildStrategyType strategyType;
     private final TypeMirror returnTypeMirror;
+    @Nullable
+    private final TypeMirror containerReturnTypeMirror;
 
     public SelectMethodInfo(final String name,
                             final TypeMirror returnType,
@@ -26,11 +29,14 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             final Map<String, List<ParamInfo>> classPropertyMap,
                             final StatementInfo statement,
                             final List<SelectReturnStrategy<?>> strategies,
-                            final ResultBuildStrategyType strategyType) {
+                            final ResultBuildStrategyType strategyType,
+                            @Nullable
+                            final TypeMirror containerReturnTypeMirror) {
         super(name, returnType, params, classPropertyMap, statement);
         this.returnTypeMirror = returnType;
         this.strategies = strategies;
         this.strategyType = strategyType;
+        this.containerReturnTypeMirror = containerReturnTypeMirror;
     }
 
     public SelectMethodInfo(final String name,
@@ -38,11 +44,14 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             final List<ParamInfo> params,
                             final Map<String, List<ParamInfo>> classPropertyMap,
                             final StatementInfo statement,
-                            final SelectReturnStrategy<?> strategy){
+                            final SelectReturnStrategy<?> strategy,
+                            @Nullable
+                            final TypeMirror containerReturnTypeMirror){
         super(name, returnType, params, classPropertyMap, statement);
         this.returnTypeMirror = returnType;
         this.strategies = List.of(strategy);
         this.strategyType = SIMPLE_RESULT;
+        this.containerReturnTypeMirror = containerReturnTypeMirror;
     }
 
     public ResultBuildStrategyType getStrategyType() {
@@ -75,5 +84,10 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
 
     public TypeMirror getReturnTypeMirror() {
         return returnTypeMirror;
+    }
+
+    @Nullable
+    public TypeMirror getContainerReturnTypeMirror() {
+        return containerReturnTypeMirror;
     }
 }

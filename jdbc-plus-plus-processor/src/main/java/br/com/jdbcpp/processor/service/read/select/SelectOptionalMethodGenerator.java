@@ -4,6 +4,7 @@ import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.util.Types;
 import java.sql.SQLException;
@@ -31,7 +32,7 @@ public class SelectOptionalMethodGenerator {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
                 .addException(SQLException.class)
                 .addModifiers(PUBLIC)
-                .returns(methodInfo.getReturnType());
+                .returns(TypeName.get(methodInfo.getContainerReturnTypeMirror()));
 
         methodInfo.getParams().forEach(p -> methodBuilder.addParameter(p.getType(), p.getName(), FINAL));
 

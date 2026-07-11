@@ -62,13 +62,14 @@ public class DAOGenerator {
         final var implSimpleName = daoParent.simpleName() + "Impl";
         final var daoBuilder = TypeSpec.classBuilder(implSimpleName).addModifiers(PUBLIC);
 
-        if (isNull(daoImplInfo.constructor())) {
+        final var constructor = daoImplInfo.constructor();
+        if (isNull(constructor)) {
             buildImplementInterface(daoBuilder, daoParent, "dataSource");
         } else {
-            buildExtendSuperClass(daoBuilder, daoParent, daoImplInfo.constructor().params());
+            buildExtendSuperClass(daoBuilder, daoParent, constructor.params());
         }
 
-        final var connectionCall = Optional.ofNullable(daoImplInfo.constructor())
+        final var connectionCall = Optional.ofNullable(constructor)
                 .stream()
                 .flatMap(c -> c.params().stream())
                 .filter(p -> p.type().equals(TypeName.get(DataSource.class)))
@@ -82,14 +83,15 @@ public class DAOGenerator {
                 case InsertMethod insertMethod ->
                         insertMethodGenerator.build(insertMethod, connectionCall);
                 case SelectMethodInfo selectMethodInfo ->{
-                    if (CollectionUtil.isCollectionType(selectMethodInfo.getReturnTypeMirror(), types)) {
-                        yield selectCollectionMethodGenerator.build(selectMethodInfo, connectionCall);
-                    }
+                    if (isNull(selectMethodInfo.getContainerReturnTypeMirror())){
+                        yield selectSingleMethodGenerator.build(selectMethodInfo, connectionCall);
+                    } else {
+                        if (CollectionUtil.isCollectionType(selectMethodInfo.getContainerReturnTypeMirror(), types)) {
+                            yield selectCollectionMethodGenerator.build(selectMethodInfo, connectionCall);
+                        }
 
-                    if (TypeUtil.isOptionalType(selectMethodInfo.getReturnTypeMirror(), types)) {
                         yield selectOptionalMethodGenerator.build(selectMethodInfo, connectionCall);
                     }
-                    yield selectSingleMethodGenerator.build(selectMethodInfo, connectionCall);
                 }
                 case UpdateMethod updateMethod ->
                         updateMethodGenerator.build(updateMethod, connectionCall);
