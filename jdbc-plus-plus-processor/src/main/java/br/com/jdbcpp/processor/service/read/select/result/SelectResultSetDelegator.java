@@ -53,8 +53,6 @@ public final class SelectResultSetDelegator {
                 } else {
                     simpleResultList.build(
                             selectMethodInfo.getSimpleResultStrategies(),
-                            objectResultName,
-                            selectMethodInfo.getReturnTypeMirror(),
                             resultSetVar,
                             builder
                     );
