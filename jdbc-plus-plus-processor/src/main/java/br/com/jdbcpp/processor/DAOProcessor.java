@@ -25,6 +25,7 @@ import br.com.jdbcpp.processor.service.read.select.SelectOptionalMethodGenerator
 import br.com.jdbcpp.processor.service.read.select.SelectSingleMethodGenerator;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultSimpleResult;
+import br.com.jdbcpp.processor.service.read.select.result.SelectResultSimpleResultList;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultUsingConstructor;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultUsingSetter;
 import br.com.jdbcpp.processor.service.statement.StatementBuilder;
@@ -262,7 +263,8 @@ public class DAOProcessor extends AbstractProcessor {
             final var selectResultSetDelegator = new SelectResultSetDelegator(
                     new SelectResultUsingConstructor(),
                     new SelectResultUsingSetter(),
-                    new SelectResultSimpleResult()
+                    new SelectResultSimpleResult(),
+                    new SelectResultSimpleResultList()
             );
             this.daoGeneratorCache = new DAOGenerator(
                     types,

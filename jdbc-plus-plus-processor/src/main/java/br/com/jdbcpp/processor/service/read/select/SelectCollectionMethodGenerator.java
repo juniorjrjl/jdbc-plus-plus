@@ -11,6 +11,7 @@ import com.palantir.javapoet.TypeName;
 import javax.lang.model.util.Types;
 import java.sql.SQLException;
 
+import static java.util.Objects.requireNonNull;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
@@ -30,10 +31,15 @@ public class SelectCollectionMethodGenerator {
 
     public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
                                     final String connectionCall) {
+        final var containerReturnTypeMirror = requireNonNull(
+                methodInfo.getContainerReturnTypeMirror(),
+                "For collection method, container return type mirror must not be null"
+        );
+        final var containerReturnType = TypeName.get(containerReturnTypeMirror);
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
                 .addException(SQLException.class)
                 .addModifiers(PUBLIC)
-                .returns(TypeName.get(methodInfo.getContainerReturnTypeMirror()));
+                .returns(containerReturnType);
 
         methodInfo.getParams().forEach(p -> methodBuilder.addParameter(p.getType(), p.getName(), FINAL));
 
@@ -53,7 +59,6 @@ public class SelectCollectionMethodGenerator {
             methodBuilder.beginControlFlow("try (final var $N = $N.executeQuery())", resultSetVar, statementVar);
         }
 
-        final var containerReturnTypeMirror = methodInfo.getContainerReturnTypeMirror();
         final var isInterface = CollectionUtil.isCollectionInterface(containerReturnTypeMirror, types);
         final var collectionImpl = CollectionUtil.getCollectionImplementation(containerReturnTypeMirror, types);
 

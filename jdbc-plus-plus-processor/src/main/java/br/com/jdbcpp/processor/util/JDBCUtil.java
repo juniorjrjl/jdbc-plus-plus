@@ -53,12 +53,15 @@ public final class JDBCUtil {
     }
 
     public static String getResultSetGetter(final TypeName type,
-                                          final String columnAccessor,
-                                          final String resultSetVar,
-                                          final String varName,
-                                          final MethodSpec.Builder builder) {
+                                            final String columnAccessor,
+                                            final String resultSetVar,
+                                            final String varName,
+                                            final boolean setVarPrefix,
+                                            final MethodSpec.Builder builder) {
         final String typeName = type.toString();
-        final var rsVarName = "rs"+ varName.substring(0, 1).toUpperCase() + varName.substring(1);
+        final var rsVarName = (setVarPrefix) ?
+                "rs"+ varName.substring(0, 1).toUpperCase() + varName.substring(1) :
+                varName;
         switch (typeName) {
             case "int", "java.lang.Integer" -> builder.addStatement("final var $L = $L.getInt($L)", rsVarName, resultSetVar, columnAccessor);
             case "long", "java.lang.Long" -> builder.addStatement("final var $L = $L.getLong($L)", rsVarName, resultSetVar, columnAccessor);

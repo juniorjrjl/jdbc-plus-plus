@@ -31,6 +31,7 @@ public class SelectResultUsingConstructor {
                             }),
                     resultSetVar,
                     strategy.getName(),
+                    true,
                     builder);
             rsVarNames[i] = rsVarName;
             if (i > 0) {

@@ -29,6 +29,7 @@ public class SelectResultUsingSetter {
                             }),
                     resultSetVar,
                     strategy.getName(),
+                    true,
                     builder);
         }
     }

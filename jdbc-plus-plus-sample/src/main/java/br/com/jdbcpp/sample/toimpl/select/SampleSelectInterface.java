@@ -45,4 +45,10 @@ public interface SampleSelectInterface {
     @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
     List<Employee> findAll() throws SQLException;
 
+    @Query("""
+            SELECT id
+              FROM user;
+            """)
+    List<Long> findAllId() throws SQLException;
+
 }
