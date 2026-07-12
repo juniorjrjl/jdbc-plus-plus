@@ -1,22 +1,23 @@
 package br.com.jdbcpp.processor.dto.parameter;
 
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
+
+import javax.lang.model.type.TypeMirror;
 
 import static java.util.Objects.nonNull;
 
 public abstract sealed class ParamInfo permits SimpleParamInfo, ClassParamInfo{
 
     protected final String name;
-    protected final TypeName type;
+    protected final TypeMirror type;
     @Nullable
-    protected final TypeName containerType;
+    protected final TypeMirror containerType;
     private final String convertMethod;
 
     protected ParamInfo(final String name,
-                        final TypeName type,
+                        final TypeMirror type,
                         @Nullable
-                        final TypeName containerType,
+                        final TypeMirror containerType,
                         final String convertMethod) {
         this.name = name;
         this.type = type;
@@ -28,12 +29,12 @@ public abstract sealed class ParamInfo permits SimpleParamInfo, ClassParamInfo{
         return name;
     }
 
-    public TypeName getType() {
+    public TypeMirror getType() {
         return type;
     }
 
     @Nullable
-    public TypeName getContainerType() {
+    public TypeMirror getContainerType() {
         return containerType;
     }
 

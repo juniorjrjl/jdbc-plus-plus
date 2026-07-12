@@ -1,8 +1,8 @@
 package br.com.jdbcpp.processor.dto.result;
 
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.type.TypeMirror;
 import java.util.Collections;
 
 import static br.com.jdbcpp.processor.dto.ParamKind.COLLECTION_JAVA_TYPE;
@@ -11,8 +11,8 @@ import static java.util.Objects.isNull;
 
 public class SimpleResultStrategy extends SelectReturnStrategy<SimpleResultStrategy>{
 
-    public SimpleResultStrategy(final TypeName type,
-                                final @Nullable TypeName genericType) {
+    public SimpleResultStrategy(final TypeMirror type,
+                                final @Nullable TypeMirror genericType) {
         super("unnamed",
                 type,
                 isNull(genericType) ?

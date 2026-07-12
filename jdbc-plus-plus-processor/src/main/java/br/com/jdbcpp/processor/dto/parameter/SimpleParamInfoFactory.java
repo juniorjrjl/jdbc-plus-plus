@@ -5,10 +5,10 @@ import br.com.jdbcpp.processor.util.ArrayUtil;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.StringUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +25,9 @@ public final class SimpleParamInfoFactory {
             final var collectionType = CollectionUtil.getCollectionElementType(param.asType());
             final var arrayType = ArrayUtil.getArrayElementType(param.asType());
             if (nonNull(collectionType)) {
-                paramInfos.add(buildSimpleParamInfo(types, param, TypeName.get(collectionType)));
+                paramInfos.add(buildSimpleParamInfo(types, param, collectionType));
             } else if (nonNull(arrayType)) {
-                paramInfos.add(buildSimpleParamInfo(types, param, TypeName.get(arrayType)));
+                paramInfos.add(buildSimpleParamInfo(types, param, arrayType));
             } else {
                 paramInfos.add(buildSimpleParamInfo(types, param, null));
             }
@@ -38,7 +38,7 @@ public final class SimpleParamInfoFactory {
     private static ParamInfo buildSimpleParamInfo(final Types types,
                                                   final VariableElement param,
                                                   @Nullable
-                                                  final TypeName collectionType) {
+                                                  final TypeMirror collectionType) {
         final var paramName = param.getSimpleName().toString();
         return Optional.ofNullable(param.getAnnotation(InputParam.class))
                 .map(i -> {
@@ -54,7 +54,7 @@ public final class SimpleParamInfoFactory {
                     }
                     return new SimpleParamInfo(
                             paramName,
-                            TypeName.get(param.asType()),
+                            param.asType(),
                             TypeUtil.isEnum(param.asType(), types),
                             collectionType,
                             i.statementField().isBlank() ?
@@ -64,7 +64,7 @@ public final class SimpleParamInfoFactory {
                     );
                 }).orElseGet(() -> new SimpleParamInfo(
                         paramName,
-                        TypeName.get(param.asType()),
+                        param.asType(),
                         TypeUtil.isEnum(param.asType(), types),
                         collectionType,
                         StringUtil.camelToSnakeCase(paramName),

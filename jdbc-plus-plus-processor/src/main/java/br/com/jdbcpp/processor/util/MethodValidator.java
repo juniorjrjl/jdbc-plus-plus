@@ -5,28 +5,36 @@ import br.com.jdbcpp.processor.dto.statement.StatementParam;
 import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
-import com.palantir.javapoet.ClassName;
-import com.palantir.javapoet.TypeName;
 
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public final class MethodValidatorUtil {
+public final class MethodValidator {
 
-    private MethodValidatorUtil() {}
+    private final List<TypeMirror> allowedReturnsRowsAffected;
 
-    public static void validateReturn(final String method,
-                                       final boolean returnRowsAffected,
-                                       final TypeName returnType,
-                                       final String operation,
-                                       final List<TypeName> validReturns) {
+    public MethodValidator(final Elements elements, final Types types) {
+        allowedReturnsRowsAffected = List.of(
+                elements.getTypeElement("java.lang.Long").asType(),
+                elements.getTypeElement("java.lang.Integer").asType(),
+                types.getPrimitiveType(TypeKind.LONG),
+                types.getPrimitiveType(TypeKind.INT)
+        );
+    }
+
+    public void validateReturn(final String method,
+                               final boolean returnRowsAffected,
+                               final TypeMirror returnType,
+                               final String operation,
+                               final List<TypeMirror> validReturns) {
         if (returnRowsAffected){
-            if (!(returnType.equals(TypeName.LONG)
-                    || returnType.equals(TypeName.INT)
-                    || returnType.equals(ClassName.get(Long.class))
-                    || returnType.equals(ClassName.get(Integer.class)))) {
+            if (!allowedReturnsRowsAffected.contains(returnType)) {
                 final var message = String.format(
                         "A method %s (%s) is defined to return rows affected, but return is not int or long",
                         operation,

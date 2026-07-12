@@ -3,7 +3,6 @@ package br.com.jdbcpp.processor.dto.method;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
-import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
@@ -12,7 +11,7 @@ import java.util.Map;
 public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, SelectMethodInfo, UpdateMethod {
 
     protected final String name;
-    protected final TypeName returnType;
+    protected final TypeMirror returnType;
     protected final List<ParamInfo> params;
     protected final Map<String, List<ParamInfo>> classPropertyMap;
     protected final StatementInfo statement;
@@ -23,7 +22,7 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
                          final Map<String, List<ParamInfo>> classPropertyMap,
                          final StatementInfo statement) {
         this.name = name;
-        this.returnType = TypeName.get(returnType);
+        this.returnType = returnType;
         this.classPropertyMap = classPropertyMap;
         this.params = params;
         this.statement = statement;
@@ -33,7 +32,7 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
         return name;
     }
 
-    public TypeName getReturnType() {
+    public TypeMirror getReturnType() {
         return returnType;
     }
 

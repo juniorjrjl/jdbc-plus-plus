@@ -4,6 +4,7 @@ import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,11 +51,11 @@ public class ClassParamResolver implements StatementResolver{
 
     @Override
     public void buildCollectionSizes(final MethodSpec.Builder methodBuilder,
-                                             final List<String> sql) {
+                                     final List<String> sql) {
         final List<String> paramsAmountName = new ArrayList<>();
         for (final var listParam : collectionParams){
             final var paramAmountName = listParam.getName() + "size";
-            if (listParam.getContainerType() instanceof ArrayTypeName){
+            if (TypeName.get(listParam.getContainerType()) instanceof ArrayTypeName){
                 methodBuilder.addStatement("final var $N = $N.length", paramAmountName, listParam.getName());
             } else {
                 methodBuilder.addStatement("final var $N = $N.size()", paramAmountName, listParam.getName());

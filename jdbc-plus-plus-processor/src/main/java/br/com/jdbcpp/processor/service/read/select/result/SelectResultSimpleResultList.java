@@ -3,6 +3,7 @@ package br.com.jdbcpp.processor.service.read.select.result;
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
 import br.com.jdbcpp.processor.util.JDBCUtil;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class SelectResultSimpleResultList {
                       final MethodSpec.Builder builder) {
         final var strategy = strategies.getFirst();
         JDBCUtil.getResultSetGetter(
-                strategy.getType(),
+                TypeName.get(strategy.getType()),
                 "0",
                 resultSetVar,
                 "model",

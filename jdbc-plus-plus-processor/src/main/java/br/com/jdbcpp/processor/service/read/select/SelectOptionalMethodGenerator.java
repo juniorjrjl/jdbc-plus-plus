@@ -40,7 +40,7 @@ public class SelectOptionalMethodGenerator {
                 .addModifiers(PUBLIC)
                 .returns(containerReturnType);
 
-        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(p.getType(), p.getName(), FINAL));
+        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(TypeName.get(p.getType()), p.getName(), FINAL));
 
         final var statementVar = "stmt";
         final var resultSetVar = "rs";

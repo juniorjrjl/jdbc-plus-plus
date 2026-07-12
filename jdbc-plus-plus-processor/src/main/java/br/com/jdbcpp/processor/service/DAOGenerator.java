@@ -13,7 +13,6 @@ import br.com.jdbcpp.processor.service.write.delete.DeleteMethodGenerator;
 import br.com.jdbcpp.processor.service.write.insert.InsertMethodGenerator;
 import br.com.jdbcpp.processor.service.write.update.UpdateMethodGenerator;
 import br.com.jdbcpp.processor.util.CollectionUtil;
-import br.com.jdbcpp.processor.util.TypeUtil;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.MethodSpec;
@@ -120,7 +119,9 @@ public class DAOGenerator {
                                        final ClassName abstractClass,
                                        final List<ConstructorParamInfo> constructorParams){
         final var ctorBuilder = MethodSpec.constructorBuilder().addModifiers(PUBLIC);
-        constructorParams.forEach(p -> ctorBuilder.addParameter(p.type(), p.name(), FINAL));
+        constructorParams.forEach(
+                p -> ctorBuilder.addParameter(TypeName.get(p.type()), p.name(), FINAL)
+        );
         final var joinedParams = constructorParams.stream()
                 .map(ConstructorParamInfo::name)
                 .collect(Collectors.joining(", "));

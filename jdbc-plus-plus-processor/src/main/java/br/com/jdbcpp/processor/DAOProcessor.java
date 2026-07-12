@@ -34,10 +34,9 @@ import br.com.jdbcpp.processor.service.write.insert.InsertMethodGenerator;
 import br.com.jdbcpp.processor.service.write.update.UpdateMethodGenerator;
 import br.com.jdbcpp.processor.util.ArrayUtil;
 import br.com.jdbcpp.processor.util.CollectionUtil;
+import br.com.jdbcpp.processor.util.MethodValidator;
 import com.google.auto.service.AutoService;
-import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.JavaFile;
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -52,6 +51,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
@@ -128,7 +128,7 @@ public class DAOProcessor extends AbstractProcessor {
             final List<MethodInfo> methodsInfo = new ArrayList<>();
             for(final var method: methods){
                 try {
-                    final var methodInfo = buildMethodInfo(method, types);
+                    final var methodInfo = buildMethodInfo(method, elements, types);
                     methodsInfo.add(methodInfo);
                 } catch (final MoreParamsThanStatementNeedException e){
                     messager.printWarning(e.getMessage(), method);
@@ -156,11 +156,11 @@ public class DAOProcessor extends AbstractProcessor {
         final var params = constructor.getParameters()
                 .stream()
                 .map(p -> {
-                    TypeName type = TypeName.get(p.asType());
+                    TypeMirror type = p.asType();
                     if (ArrayUtil.isArray(p.asType())){
-                        type = ArrayTypeName.of(TypeName.get(p.asType()));
+                        type = p.asType();
                     } else if (CollectionUtil.isCollectionType(p.asType(), types)){
-                        type = TypeName.get(types.erasure(p.asType()));
+                        type = types.erasure(p.asType());
                     }
                     return new ConstructorParamInfo(
                             p.getSimpleName().toString(),
@@ -221,8 +221,10 @@ public class DAOProcessor extends AbstractProcessor {
     }
 
     private MethodInfo buildMethodInfo(final ExecutableElement method,
+                                       final Elements elements,
                                        final Types types) throws JDBCPlusPlusProcessorException {
         final var parameterInfoDelegator = buildParameterInfoDelegator();
+        final var methodValidator = buildMethodValidator(elements, types);
 
         final var params = parameterInfoDelegator.create(
                 method.getSimpleName().toString(),
@@ -236,7 +238,36 @@ public class DAOProcessor extends AbstractProcessor {
                 Collections.emptyMap();
 
         final var commandOptional = Optional.ofNullable(method.getAnnotation(Command.class))
-                .map(command -> WriteMethodInfoFactory.create(method, params, classPropertyMap, command));
+                .map(command -> {
+                    final var methodInfo = WriteMethodInfoFactory.create(
+                            method,
+                            params,
+                            classPropertyMap,
+                            command
+                    );
+                    switch (command.commandType()){
+                        case INSERT, UPDATE ->{
+                            final List<TypeMirror> validReturns = classPropertyMap.isEmpty() ?
+                                    List.of(types.getNoType(TypeKind.VOID)) :
+                                    List.of(types.getNoType(TypeKind.VOID), params.getFirst().getType());
+                            methodValidator.validateReturn(
+                                    method.getSimpleName().toString(),
+                                    command.returnRowsAffected(),
+                                    methodInfo.getReturnType(),
+                                    command.commandType().name(),
+                                    validReturns);
+                        }
+                        case DELETE ->
+                            methodValidator.validateReturn(
+                                    method.getSimpleName().toString(),
+                                    command.returnRowsAffected(),
+                                    methodInfo.getReturnType(),
+                                    command.commandType().name(),
+                                    List.of(types.getNoType(TypeKind.VOID))
+                            );
+                    }
+                    return  methodInfo;
+                });
 
         return Optional.ofNullable(method.getAnnotation(Query.class))
                 .map(query -> ReadMethodInfoFactory.create(method, params, classPropertyMap, query, types))
@@ -277,6 +308,10 @@ public class DAOProcessor extends AbstractProcessor {
             );
         }
         return daoGeneratorCache;
+    }
+
+    private MethodValidator buildMethodValidator(final Elements elements, final Types types){
+        return new MethodValidator(elements, types);
     }
 
     private void writeClass(final JavaFile javaFile, final Messager messager, final Filer filer){

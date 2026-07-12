@@ -20,7 +20,7 @@ public class SelectResultSimpleResult {
         builder.addStatement("final var $L = new $T()", objectResultName, TypeName.get(returnType));
         final var strategy = strategies.getFirst();
         JDBCUtil.getResultSetGetter(
-                strategy.getType(),
+                TypeName.get(strategy.getType()),
                 Optional.ofNullable(strategy.getResultSetIndex())
                         .map(String::valueOf)
                         .orElseGet(() ->{

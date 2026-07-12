@@ -22,7 +22,7 @@ public class SelectResultUsingConstructor {
         for (int i = 0; i < strategies.size(); i++) {
             final var strategy = strategies.get(i);
             final var rsVarName = JDBCUtil.getResultSetGetter(
-                    strategy.getType(),
+                    TypeName.get(strategy.getType()),
                     Optional.ofNullable(strategy.getResultSetIndex())
                             .map(String::valueOf)
                             .orElseGet(() ->{

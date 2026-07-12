@@ -1,28 +1,28 @@
 package br.com.jdbcpp.processor.dto.result;
 
 import br.com.jdbcpp.processor.dto.ParamKind;
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
 public abstract class SelectReturnStrategy<T extends  SelectReturnStrategy<T>> {
 
     private final String name;
-    private final TypeName type;
+    private final TypeMirror type;
     private final ParamKind paramKind;
     private final List<T> nestedValues;
     @Nullable
-    private final TypeName genericType;
+    private final TypeMirror genericType;
     @Nullable
     private final Integer resultSetIndex;
 
     protected SelectReturnStrategy(final String name,
-                                   final TypeName type,
+                                   final TypeMirror type,
                                    final ParamKind paramKind,
                                    final  List<T> nestedValues,
                                    @Nullable
-                                   final TypeName genericType,
+                                   final TypeMirror genericType,
                                    @Nullable
                                    final Integer resultSetIndex) {
         this.name = name;
@@ -37,7 +37,7 @@ public abstract class SelectReturnStrategy<T extends  SelectReturnStrategy<T>> {
         return name;
     }
 
-    public TypeName getType() {
+    public TypeMirror getType() {
         return type;
     }
 
@@ -49,7 +49,7 @@ public abstract class SelectReturnStrategy<T extends  SelectReturnStrategy<T>> {
         return nestedValues;
     }
 
-    public @Nullable TypeName getGenericType() {
+    public @Nullable TypeMirror getGenericType() {
         return genericType;
     }
 

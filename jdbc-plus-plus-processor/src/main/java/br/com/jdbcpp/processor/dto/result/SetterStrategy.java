@@ -1,9 +1,9 @@
 package br.com.jdbcpp.processor.dto.result;
 
 import br.com.jdbcpp.processor.dto.ParamKind;
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
 public class SetterStrategy extends SelectReturnStrategy<SetterStrategy> {
@@ -12,11 +12,11 @@ public class SetterStrategy extends SelectReturnStrategy<SetterStrategy> {
 
     public SetterStrategy(final String methodName,
                           final String name,
-                          final TypeName type,
+                          final TypeMirror type,
                           final ParamKind paramKind,
                           final List<SetterStrategy> nestedValues,
                           @Nullable
-                          final TypeName genericType,
+                          final TypeMirror genericType,
                           @Nullable
                           final Integer resultSetIndex) {
         super(name, type, paramKind, nestedValues, genericType, resultSetIndex);

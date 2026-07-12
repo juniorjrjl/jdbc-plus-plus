@@ -4,6 +4,7 @@ import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
 import br.com.jdbcpp.processor.service.read.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.util.Types;
 import java.sql.SQLException;
@@ -30,9 +31,9 @@ public class SelectSingleMethodGenerator {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
                 .addException(SQLException.class)
                 .addModifiers(PUBLIC)
-                .returns(methodInfo.getReturnType());
+                .returns(TypeName.get(methodInfo.getReturnType()));
 
-        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(p.getType(), p.getName(), FINAL));
+        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(TypeName.get(p.getType()), p.getName(), FINAL));
 
         final var statementVar = "stmt";
         final var resultSetVar = "rs";

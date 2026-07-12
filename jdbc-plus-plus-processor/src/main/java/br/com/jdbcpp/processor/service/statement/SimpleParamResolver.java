@@ -4,6 +4,7 @@ import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import com.palantir.javapoet.ArrayTypeName;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +49,7 @@ public class SimpleParamResolver implements StatementResolver{
         final List<String> paramsAmountName = new ArrayList<>();
         for (final var listParam : collectionParams){
             final var paramAmountName = listParam.getName() + "Size";
-            if (listParam.getType() instanceof ArrayTypeName){
+            if (TypeName.get(listParam.getType()) instanceof ArrayTypeName){
                 methodBuilder.addStatement("final var $N = $N.length", paramAmountName, listParam.getName());
             } else {
                 methodBuilder.addStatement("final var $N = $N.size()", paramAmountName, listParam.getName());

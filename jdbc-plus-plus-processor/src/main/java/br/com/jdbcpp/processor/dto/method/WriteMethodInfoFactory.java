@@ -4,8 +4,7 @@ import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfoFactory;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
-import br.com.jdbcpp.processor.util.MethodValidatorUtil;
-import com.palantir.javapoet.TypeName;
+import br.com.jdbcpp.processor.util.MethodValidator;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
@@ -24,7 +23,7 @@ public final class WriteMethodInfoFactory {
             case UPDATE -> getUpdateMethod(method, params, classPropertyMap, command);
             case DELETE -> getDeleteMethod(method, params, classPropertyMap, command);
         };
-        MethodValidatorUtil.validateParams(
+        MethodValidator.validateParams(
                 methodInfo.getName(),
                 params,
                 classPropertyMap,
@@ -37,7 +36,7 @@ public final class WriteMethodInfoFactory {
                                                 final List<ParamInfo> params,
                                                 final Map<String, List<ParamInfo>> classPropertyMap,
                                                 final Command command) {
-        final var deleteMethod = new DeleteMethod(
+        return new DeleteMethod(
                 method.getSimpleName().toString(),
                 method.getReturnType(),
                 params,
@@ -45,22 +44,13 @@ public final class WriteMethodInfoFactory {
                 StatementInfoFactory.create(command.value()),
                 command.returnRowsAffected()
         );
-        MethodValidatorUtil.validateReturn(
-                method.getSimpleName().toString(),
-                command.returnRowsAffected(),
-                deleteMethod.getReturnType(),
-                "DELETE",
-                List.of(TypeName.VOID)
-        );
-
-        return deleteMethod;
     }
 
     private static UpdateMethod getUpdateMethod(final ExecutableElement method,
                                                 final List<ParamInfo> params,
                                                 final Map<String, List<ParamInfo>> classPropertyMap,
                                                 final Command command) {
-        final var updateMethod = new UpdateMethod(
+        return new UpdateMethod(
                 method.getSimpleName().toString(),
                 method.getReturnType(),
                 params,
@@ -68,26 +58,13 @@ public final class WriteMethodInfoFactory {
                 StatementInfoFactory.create(command.value()),
                 command.returnRowsAffected()
         );
-
-        final List<TypeName> validReturns = classPropertyMap.isEmpty() ?
-                List.of(TypeName.VOID) :
-                List.of(TypeName.VOID, params.getFirst().getType());
-        MethodValidatorUtil.validateReturn(
-                method.getSimpleName().toString(),
-                command.returnRowsAffected(),
-                updateMethod.getReturnType(),
-                "UPDATE",
-                validReturns
-        );
-
-        return updateMethod;
     }
 
     private static InsertMethod getInsertMethod(final ExecutableElement method,
                                                 final List<ParamInfo> params,
                                                 final Map<String, List<ParamInfo>> classPropertyMap,
                                                 final Command command) {
-        final var insertMethod = new InsertMethod(
+        return new InsertMethod(
                 method.getSimpleName().toString(),
                 method.getReturnType(),
                 params,
@@ -95,19 +72,6 @@ public final class WriteMethodInfoFactory {
                 StatementInfoFactory.create(command.value()),
                 command.returnRowsAffected()
         );
-
-        final List<TypeName> validReturns = classPropertyMap.isEmpty() ?
-                List.of(TypeName.VOID) :
-                List.of(TypeName.VOID, params.getFirst().getType());
-        MethodValidatorUtil.validateReturn(
-                method.getSimpleName().toString(),
-                command.returnRowsAffected(),
-                insertMethod.getReturnType(),
-                "INSERT",
-                validReturns
-        );
-
-        return  insertMethod;
     }
 
 

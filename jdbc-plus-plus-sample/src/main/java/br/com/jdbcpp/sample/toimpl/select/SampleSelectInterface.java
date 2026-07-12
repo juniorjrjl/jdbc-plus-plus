@@ -51,4 +51,10 @@ public interface SampleSelectInterface {
             """)
     List<Long> findAllId() throws SQLException;
 
+    @Query("""
+            SELECT name
+              FROM user;
+            """)
+    Optional<String> findNameById() throws SQLException;
+
 }

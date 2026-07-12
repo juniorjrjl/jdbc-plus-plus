@@ -11,9 +11,8 @@ import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.util.BuildConstructorStrategy;
 import br.com.jdbcpp.processor.util.BuildSetterStrategy;
 import br.com.jdbcpp.processor.util.CollectionUtil;
-import br.com.jdbcpp.processor.util.MethodValidatorUtil;
+import br.com.jdbcpp.processor.util.MethodValidator;
 import br.com.jdbcpp.processor.util.TypeUtil;
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.ExecutableElement;
@@ -61,7 +60,7 @@ public final class ReadMethodInfoFactory {
         final MethodInfo methodInfo = needStrategyToSelectReturn(returnType, types) ?
                 objectSelectResult(method, params, classPropertyMap, query, types, returnType, returnContainerType):
                 simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType);
-        MethodValidatorUtil.validateParams(
+        MethodValidator.validateParams(
                 methodInfo.getName(),
                 params,
                 classPropertyMap,
@@ -105,12 +104,10 @@ public final class ReadMethodInfoFactory {
                                                        final TypeMirror returnType,
                                                        @Nullable
                                                        final TypeMirror returnContainerType) {
-        final var type = TypeName.get(returnType);
         final var genericType = Optional.ofNullable(CollectionUtil.getCollectionElementType(returnType))
                 .or(() -> Optional.ofNullable(TypeUtil.getOptionalType(returnType)))
-                .map(TypeName::get)
                 .orElse(null);
-        final SelectReturnStrategy<SimpleResultStrategy> strategy = new SimpleResultStrategy(type, genericType);
+        final SelectReturnStrategy<SimpleResultStrategy> strategy = new SimpleResultStrategy(returnType, genericType);
         return new SelectMethodInfo(
                 method.getSimpleName().toString(),
                 returnType,

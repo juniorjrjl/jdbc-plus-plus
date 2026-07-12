@@ -4,6 +4,7 @@ import br.com.jdbcpp.processor.dto.method.UpdateMethod;
 import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
 
 import java.sql.SQLException;
 
@@ -23,9 +24,9 @@ public class UpdateMethodGenerator {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
                 .addException(SQLException.class)
                 .addModifiers(PUBLIC)
-                .returns(methodInfo.getReturnType());
+                .returns(TypeName.get(methodInfo.getReturnType()));
 
-        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(p.getType(), p.getName(), FINAL));
+        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(TypeName.get(p.getType()), p.getName(), FINAL));
 
         final var statementVar = "stmt";
         statementBuilder.build(
@@ -51,8 +52,8 @@ public class UpdateMethodGenerator {
                         },
                         () -> {
                             if (methodInfo.isReturnRowsAffected()){
-                                if (methodInfo.getReturnType().isBoxedPrimitive() &&
-                                        methodInfo.getReturnType().equals(ClassName.get(Long.class))){
+                                if (TypeName.get(methodInfo.getReturnType()).isBoxedPrimitive() &&
+                                        TypeName.get(methodInfo.getReturnType()).equals(ClassName.get(Long.class))){
                                     methodBuilder.addStatement(
                                             "return $T.valueOf(" + executeCall + ")",
                                             Long.class,

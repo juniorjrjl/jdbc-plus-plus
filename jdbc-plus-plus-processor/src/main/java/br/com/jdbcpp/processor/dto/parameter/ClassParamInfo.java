@@ -1,8 +1,8 @@
 package br.com.jdbcpp.processor.dto.parameter;
 
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
 public non-sealed class  ClassParamInfo extends ParamInfo{
@@ -11,9 +11,9 @@ public non-sealed class  ClassParamInfo extends ParamInfo{
     private final boolean recordClass;
 
     public ClassParamInfo(final String name,
-                          final TypeName type,
+                          final TypeMirror type,
                           @Nullable
-                          final TypeName containerType,
+                          final TypeMirror containerType,
                           final List<ParamInfo> nestedProperties,
                           final boolean recordClass,
                           final String convertMethod) {

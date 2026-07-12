@@ -4,7 +4,6 @@ import br.com.jdbcpp.processor.dto.ParamKind;
 import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.exception.InvalidSelectResultMappingException;
-import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -68,15 +67,13 @@ public final class BuildConstructorStrategy {
             final var param = parameters.get(i);
             final var paramType = param.asType();
             final var paramName = param.getSimpleName().toString();
-            final var type = TypeName.get(paramType);
 
             final var paramKind = determineParamKind(paramType, types);
             final var genericType = Optional.of(paramType)
                     .map(CollectionUtil::getCollectionElementType)
-                    .map(TypeName::get)
                     .orElse(null);
 
-            strategies.add(new ConstructorStrategy(paramName, type, paramKind, List.of(), genericType, i));
+            strategies.add(new ConstructorStrategy(paramName, paramType, paramKind, List.of(), genericType, i));
         }
         return strategies;
     }

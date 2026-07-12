@@ -1,9 +1,9 @@
 package br.com.jdbcpp.processor.dto.constructor;
 
-import com.palantir.javapoet.TypeName;
+import javax.lang.model.type.TypeMirror;
 
 public record ConstructorParamInfo(
         String name,
-        TypeName type
+        TypeMirror type
 ) {
 }

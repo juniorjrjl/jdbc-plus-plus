@@ -6,6 +6,7 @@ import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import br.com.jdbcpp.processor.util.JDBCUtil;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
 
 import java.util.List;
 
@@ -134,7 +135,7 @@ public class StatementBuilder {
             if (isNull(leafParam.getContainerType())){
                 final var stmtSetter = JDBCUtil.getPrepareStatementSetter(
                         path,
-                        leafParam.getType(),
+                        TypeName.get(leafParam.getType()),
                         leafParam.getConvertMethod(),
                         leafParam.isCustomEnum(),
                         statementVar,
@@ -145,7 +146,7 @@ public class StatementBuilder {
                 methodBuilder.beginControlFlow("for (final var x : $N)", path);
                 final var stmtSetter = JDBCUtil.getPrepareStatementSetter(
                         "x",
-                        leafParam.getType(),
+                        TypeName.get(leafParam.getType()),
                         leafParam.getConvertMethod(),
                         leafParam.isCustomEnum(),
                         statementVar,

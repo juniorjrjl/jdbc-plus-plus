@@ -5,7 +5,6 @@ import br.com.jdbcpp.processor.dto.ParamKind;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SetterStrategy;
 import br.com.jdbcpp.processor.exception.InvalidSelectResultMappingException;
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.ElementKind;
@@ -70,10 +69,10 @@ public final class BuildSetterStrategy {
                 strategies.add(new SetterStrategy(
                         setterMethod.get().getSimpleName().toString(),
                         fieldName,
-                        TypeName.get(fieldType),
+                        fieldType,
                         paramKind,
                         List.of(),
-                        isNull(genericType) ? null : TypeName.get(genericType),
+                        genericType,
                         resultSetIndex
                 ));
             }

@@ -6,7 +6,6 @@ import br.com.jdbcpp.processor.util.ArrayUtil;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.StringUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
-import com.palantir.javapoet.TypeName;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.ElementKind;
@@ -40,15 +39,15 @@ public final class ClassParamInfoFactory {
                                         final TypeMirror parentTypeMirror) {
         final var collectionType = CollectionUtil.getCollectionElementType(paramTypeMirror);
         final var arrayType = ArrayUtil.getArrayElementType(paramTypeMirror);
-        final TypeName typeContainer;
+        final TypeMirror typeContainer;
         final List<ParamInfo> nestedProperties;
         final TypeElement typeElement;
         if (nonNull(collectionType)) {
             typeElement = (TypeElement) types.asElement(collectionType);
-            typeContainer = TypeName.get(collectionType);
+            typeContainer = collectionType;
         } else if (nonNull(arrayType)) {
             typeElement = (TypeElement) types.asElement(arrayType);
-            typeContainer = TypeName.get(arrayType);
+            typeContainer = arrayType;
         } else {
             typeElement = (TypeElement) types.asElement(paramTypeMirror);
             typeContainer = null;
@@ -56,7 +55,7 @@ public final class ClassParamInfoFactory {
         nestedProperties = extractFieldsFromType(typeElement, types);
         return new ClassParamInfo(
                 paramName,
-                TypeName.get(paramTypeMirror),
+                paramTypeMirror,
                 typeContainer,
                 nestedProperties,
                 TypeUtil.isRecord(paramTypeMirror, types),
@@ -98,7 +97,7 @@ public final class ClassParamInfoFactory {
                                                 final TypeMirror collectionType,
                                                 final TypeMirror parentType) {
         if (TypeUtil.isSimpleType(collectionType, types)) {
-            return buildSimpleParamInfo(types, field, TypeName.get(collectionType), parentType);
+            return buildSimpleParamInfo(types, field, collectionType, parentType);
         } else {
             return buildClass(types, collectionType, field.getSimpleName().toString(), parentType);
         }
@@ -107,7 +106,7 @@ public final class ClassParamInfoFactory {
     private static ParamInfo buildSimpleParamInfo(final Types types,
                                                   final VariableElement param,
                                                   @Nullable
-                                                  final TypeName collectionType,
+                                                  final TypeMirror collectionType,
                                                   final TypeMirror parentType) {
         final var paramName = param.getSimpleName().toString();
         return Optional.ofNullable(param.getAnnotation(InputParam.class))
@@ -126,7 +125,7 @@ public final class ClassParamInfoFactory {
                     }
                     return new SimpleParamInfo(
                             paramName,
-                            TypeName.get(param.asType()),
+                            param.asType(),
                             TypeUtil.isEnum(param.asType(), types),
                             collectionType,
                             i.statementField().isBlank() ?
@@ -136,7 +135,7 @@ public final class ClassParamInfoFactory {
                     );
                 }).orElseGet(() -> new SimpleParamInfo(
                         paramName,
-                        TypeName.get(param.asType()),
+                        param.asType(),
                         TypeUtil.isEnum(param.asType(), types),
                         collectionType,
                         StringUtil.camelToSnakeCase(paramName),
