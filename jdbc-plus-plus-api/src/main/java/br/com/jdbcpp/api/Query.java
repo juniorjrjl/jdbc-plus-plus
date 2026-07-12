@@ -24,7 +24,7 @@ public @interface Query {
     /**
      * The SQL select statement to execute.
      * <p>
-     * Must contain named parameters inside with {@code ::} for simple parameters (e.g., {@code :id:}).
+     * Must contain named parameters inside {@code ::} for simple parameters (e.g., {@code :id:}).
      * Parameters that will receive multiple values should be mapped inside {@code :++:} (e.g., {@code :ids++:}).
      * </p>
      *
