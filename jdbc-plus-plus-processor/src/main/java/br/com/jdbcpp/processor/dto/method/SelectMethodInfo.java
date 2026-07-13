@@ -19,7 +19,6 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
 
     private final List<SelectReturnStrategy<?>> strategies;
     private final ResultBuildStrategyType strategyType;
-    private final TypeMirror returnTypeMirror;
     @Nullable
     private final TypeMirror containerReturnTypeMirror;
 
@@ -33,7 +32,6 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             @Nullable
                             final TypeMirror containerReturnTypeMirror) {
         super(name, returnType, params, classPropertyMap, statement);
-        this.returnTypeMirror = returnType;
         this.strategies = strategies;
         this.strategyType = strategyType;
         this.containerReturnTypeMirror = containerReturnTypeMirror;
@@ -48,7 +46,6 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             @Nullable
                             final TypeMirror containerReturnTypeMirror){
         super(name, returnType, params, classPropertyMap, statement);
-        this.returnTypeMirror = returnType;
         this.strategies = List.of(strategy);
         this.strategyType = SIMPLE_RESULT;
         this.containerReturnTypeMirror = containerReturnTypeMirror;
@@ -80,10 +77,6 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
             return List.of();
         }
         return (List<SimpleResultStrategy>) (List<?>) strategies;
-    }
-
-    public TypeMirror getReturnTypeMirror() {
-        return returnTypeMirror;
     }
 
     @Nullable

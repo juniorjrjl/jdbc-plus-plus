@@ -30,14 +30,14 @@ public final class SelectResultSetDelegator {
             case CONSTRUCTOR -> constructor.build(
                     selectMethodInfo.getConstructorStrategies(),
                     objectResultName,
-                    selectMethodInfo.getReturnTypeMirror(),
+                    selectMethodInfo.getReturnType(),
                     resultSetVar,
                     builder
             );
             case SETTER -> setter.build(
                     selectMethodInfo.getSetterStrategies(),
                     objectResultName,
-                    selectMethodInfo.getReturnTypeMirror(),
+                    selectMethodInfo.getReturnType(),
                     resultSetVar,
                     builder
             );
@@ -46,7 +46,7 @@ public final class SelectResultSetDelegator {
                     simpleResult.build(
                             selectMethodInfo.getSimpleResultStrategies(),
                             objectResultName,
-                            selectMethodInfo.getReturnTypeMirror(),
+                            selectMethodInfo.getReturnType(),
                             resultSetVar,
                             builder
                     );
