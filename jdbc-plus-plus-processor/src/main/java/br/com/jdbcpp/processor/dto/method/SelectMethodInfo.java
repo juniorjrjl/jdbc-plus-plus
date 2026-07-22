@@ -21,6 +21,8 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
     private final ResultBuildStrategyType strategyType;
     @Nullable
     private final TypeMirror containerReturnTypeMirror;
+    @Nullable
+    private final TypeMirror instanceContainer;
 
     public SelectMethodInfo(final String name,
                             final TypeMirror returnType,
@@ -30,11 +32,14 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             final List<SelectReturnStrategy<?>> strategies,
                             final ResultBuildStrategyType strategyType,
                             @Nullable
-                            final TypeMirror containerReturnTypeMirror) {
+                            final TypeMirror containerReturnTypeMirror,
+                            @Nullable
+                            final TypeMirror instanceContainer) {
         super(name, returnType, params, classPropertyMap, statement);
         this.strategies = strategies;
         this.strategyType = strategyType;
         this.containerReturnTypeMirror = containerReturnTypeMirror;
+        this.instanceContainer = instanceContainer;
     }
 
     public SelectMethodInfo(final String name,
@@ -44,11 +49,14 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             final StatementInfo statement,
                             final SelectReturnStrategy<?> strategy,
                             @Nullable
-                            final TypeMirror containerReturnTypeMirror){
+                            final TypeMirror containerReturnTypeMirror,
+                            @Nullable
+                            final TypeMirror instanceContainer){
         super(name, returnType, params, classPropertyMap, statement);
         this.strategies = List.of(strategy);
         this.strategyType = SIMPLE_RESULT;
         this.containerReturnTypeMirror = containerReturnTypeMirror;
+        this.instanceContainer = instanceContainer;
     }
 
     public ResultBuildStrategyType getStrategyType() {
@@ -82,5 +90,9 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
     @Nullable
     public TypeMirror getContainerReturnTypeMirror() {
         return containerReturnTypeMirror;
+    }
+
+    public @Nullable TypeMirror getInstanceContainer() {
+        return instanceContainer;
     }
 }

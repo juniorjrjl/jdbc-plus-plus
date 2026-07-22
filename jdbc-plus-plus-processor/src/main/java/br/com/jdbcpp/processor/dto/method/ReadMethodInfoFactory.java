@@ -18,8 +18,10 @@ import org.jspecify.annotations.Nullable;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +41,8 @@ public final class ReadMethodInfoFactory {
                                     final List<ParamInfo> params,
                                     final Map<String, List<ParamInfo>> classPropertyMap,
                                     final Query query,
-                                    final Types types) {
+                                    final Types types,
+                                    final Elements elements) {
 
         if (method.getReturnType().getKind() == TypeKind.VOID) {
             final var message = String.format(
@@ -51,15 +54,40 @@ public final class ReadMethodInfoFactory {
 
         TypeMirror returnType = method.getReturnType();
         TypeMirror returnContainerType = null;
+        TypeMirror instanceContainer = null;
         if (method.getReturnType() instanceof DeclaredType returnTypeElement &&
                 !returnTypeElement.getTypeArguments().isEmpty()){
-            returnContainerType = method.getReturnType();
+            final var resultBuildStrategy= method.getAnnotation(ResultBuildStrategy.class);
             returnType = returnTypeElement.getTypeArguments().getFirst();
+            returnContainerType = method.getReturnType();
+            instanceContainer = method.getReturnType();
+            if (nonNull(resultBuildStrategy)){
+                TypeMirror listTypeMirror;
+                try{
+                    final var canonicalName = resultBuildStrategy.collectionImplementationResult().getCanonicalName();
+                    final var typeElement = elements.getTypeElement(canonicalName);
+                    listTypeMirror = typeElement.asType();
+                } catch (final MirroredTypeException e){
+                    listTypeMirror = e.getTypeMirror();
+                }
+
+                if (TypeUtil.isList(listTypeMirror)) {
+                    instanceContainer = method.getReturnType();
+                } else {
+                    instanceContainer = TypeUtil.buildContainerTypeMirror(
+                            resultBuildStrategy::collectionImplementationResult,
+                            returnType,
+                            elements,
+                            types
+                    );
+                }
+            }
+
         }
 
         final MethodInfo methodInfo = needStrategyToSelectReturn(returnType, types) ?
-                objectSelectResult(method, params, classPropertyMap, query, types, returnType, returnContainerType):
-                simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType);
+                objectSelectResult(method, params, classPropertyMap, query, types, returnType, returnContainerType, instanceContainer):
+                simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer);
         MethodValidator.validateParams(
                 methodInfo.getName(),
                 params,
@@ -77,7 +105,9 @@ public final class ReadMethodInfoFactory {
                                                        final Types types,
                                                        final TypeMirror returnType,
                                                        @Nullable
-                                                       final TypeMirror returnContainerType) {
+                                                       final TypeMirror returnContainerType,
+                                                       @Nullable
+                                                       final TypeMirror instanceContainer) {
         final var resultBuildStrategy = method.getAnnotation(ResultBuildStrategy.class);
         final var strategyType = determineStrategyType(types, returnType, resultBuildStrategy);
         final var typeElement = ((TypeElement) types.asElement(returnType));
@@ -93,7 +123,8 @@ public final class ReadMethodInfoFactory {
                 StatementInfoFactory.create(query.value()),
                 strategies,
                 strategyType,
-                isNull(returnContainerType) ? null : returnContainerType
+                returnContainerType,
+                instanceContainer
         );
     }
 
@@ -103,7 +134,9 @@ public final class ReadMethodInfoFactory {
                                                        final Query query,
                                                        final TypeMirror returnType,
                                                        @Nullable
-                                                       final TypeMirror returnContainerType) {
+                                                       final TypeMirror returnContainerType,
+                                                       @Nullable
+                                                       final TypeMirror instanceContainer) {
         final var genericType = Optional.ofNullable(CollectionUtil.getCollectionElementType(returnType))
                 .or(() -> Optional.ofNullable(TypeUtil.getOptionalType(returnType)))
                 .orElse(null);
@@ -115,7 +148,8 @@ public final class ReadMethodInfoFactory {
                 classPropertyMap,
                 StatementInfoFactory.create(query.value()),
                 strategy,
-                isNull(returnContainerType) ? null : returnContainerType
+                returnContainerType,
+                instanceContainer
         );
     }
 

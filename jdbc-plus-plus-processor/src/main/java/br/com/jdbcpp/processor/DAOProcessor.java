@@ -270,7 +270,14 @@ public class DAOProcessor extends AbstractProcessor {
                 });
 
         return Optional.ofNullable(method.getAnnotation(Query.class))
-                .map(query -> ReadMethodInfoFactory.create(method, params, classPropertyMap, query, types))
+                .map(query -> ReadMethodInfoFactory.create(
+                        method,
+                        params,
+                        classPropertyMap,
+                        query,
+                        types,
+                        elements
+                ))
                 .or(() -> commandOptional)
                 .orElseThrow(() -> {
                     final var message = String.format("Fail to get info from method %s", method.getSimpleName());

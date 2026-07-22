@@ -1,4 +1,4 @@
-package br.com.jdbcpp.sample.toimpl.delete;
+package br.com.jdbcpp.sample.toimpl.commandquery.delete;
 
 import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.api.DAO;

@@ -1,4 +1,4 @@
-package br.com.jdbcpp.sample.toimpl.select;
+package br.com.jdbcpp.sample.toimpl.commandquery.select;
 
 import br.com.jdbcpp.api.DAO;
 import br.com.jdbcpp.api.Query;
@@ -9,6 +9,7 @@ import br.com.jdbcpp.sample.domain.Employee;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @DAO
 public interface SampleSelectInterface {
@@ -44,6 +45,16 @@ public interface SampleSelectInterface {
            """)
     @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
     List<Employee> findAll() throws SQLException;
+
+    @Query("""
+           SELECT id,
+                  name,
+                  email,
+                  birth_date
+             FROM user;
+           """)
+    @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
+    Set<Employee> findAllSet() throws SQLException;
 
     @Query("""
             SELECT id

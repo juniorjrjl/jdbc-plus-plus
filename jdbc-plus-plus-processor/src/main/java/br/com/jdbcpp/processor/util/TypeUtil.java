@@ -5,10 +5,16 @@ import org.jspecify.annotations.Nullable;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class TypeUtil {
 
@@ -173,6 +179,31 @@ public final class TypeUtil {
 
     public static boolean typeHasTypeParameter(final TypeElement type){
         return type.getTypeParameters().isEmpty();
+    }
+
+    public static TypeMirror buildContainerTypeMirror(final Supplier<Class<? extends Collection>> containerType,
+                                                      final TypeMirror elementType,
+                                                      final Elements elements,
+                                                      final Types types){
+        TypeMirror listTypeMirror;
+        try{
+            final var typeElement = elements.getTypeElement(containerType.get().getCanonicalName());
+            listTypeMirror = typeElement.asType();
+        } catch (final MirroredTypeException e){
+            listTypeMirror = e.getTypeMirror();
+        }
+        final var collectionElement = (TypeElement) types.asElement(listTypeMirror);
+        return types.getDeclaredType(collectionElement, elementType);
+    }
+
+    public static boolean isList(TypeMirror typeMirror) {
+        if (typeMirror instanceof DeclaredType declaredType) {
+            final var element = declaredType.asElement();
+            if (element instanceof TypeElement typeElement) {
+                return typeElement.getQualifiedName().contentEquals("java.util.List");
+            }
+        }
+        return false;
     }
 
 }

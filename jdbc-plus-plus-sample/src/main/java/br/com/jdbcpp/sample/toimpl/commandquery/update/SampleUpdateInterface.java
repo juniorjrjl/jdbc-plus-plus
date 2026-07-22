@@ -1,4 +1,4 @@
-package br.com.jdbcpp.sample.toimpl.update;
+package br.com.jdbcpp.sample.toimpl.commandquery.update;
 
 import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.api.DAO;
