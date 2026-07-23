@@ -5,7 +5,6 @@ import br.com.jdbcpp.processor.dto.ParamKind;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SetterStrategy;
 import br.com.jdbcpp.processor.exception.InvalidSelectResultMappingException;
-import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
