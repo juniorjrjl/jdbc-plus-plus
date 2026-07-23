@@ -130,15 +130,14 @@ public final class BuildSetterStrategy {
 
     private static Optional<ExecutableElement> findSetterMethod(final TypeElement typeElement,
                                                                 final VariableElement field,
-                                                                @Nullable
                                                                 final PropStrategy propStrategy,
                                                                 final Types types) {
 
         final var fieldType = field.asType();
         final var fieldName = field.getSimpleName().toString();
 
-        if (nonNull(propStrategy) && !propStrategy.setter().isEmpty()) {
-            return findMethodByName(typeElement, propStrategy.setter());
+        if (!propStrategy.value().isBlank()) {
+            return findMethodByName(typeElement, propStrategy.value());
         }
 
         final var setterName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);

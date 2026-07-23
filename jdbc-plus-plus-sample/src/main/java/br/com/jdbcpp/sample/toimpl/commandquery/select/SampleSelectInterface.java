@@ -5,6 +5,7 @@ import br.com.jdbcpp.api.Query;
 import br.com.jdbcpp.api.ResultBuildStrategy;
 import br.com.jdbcpp.api.ResultBuildStrategyType;
 import br.com.jdbcpp.sample.domain.Employee;
+import br.com.jdbcpp.sample.domain.ProductClass;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -24,6 +25,18 @@ public interface SampleSelectInterface {
            """)
     @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
     Employee findById(final Long id) throws SQLException;
+
+    @Query("""
+           SELECT id,
+                  name,
+                  price,
+                  amount,
+                  created_at
+             FROM product
+            WHERE id = :id:
+           """)
+    @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
+    ProductClass findByIdClass(final Long id) throws SQLException;
 
     @Query("""
            SELECT id,

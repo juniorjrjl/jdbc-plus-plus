@@ -19,7 +19,7 @@ public class SelectResultUsingSetter {
                       final MethodSpec.Builder builder) {
         builder.addStatement("final var $L = new $T()", objectResultName, TypeName.get(returnType));
         for (final var strategy : strategies) {
-            JDBCUtil.getResultSetGetter(
+            final var rsValue = JDBCUtil.getResultSetGetter(
                     TypeName.get(strategy.getType()),
                     Optional.ofNullable(strategy.getResultSetIndex())
                             .map(String::valueOf)
@@ -31,6 +31,7 @@ public class SelectResultUsingSetter {
                     strategy.getName(),
                     true,
                     builder);
+            builder.addStatement("$L.$N($L)", objectResultName, strategy.getMethodName(), rsValue);
         }
     }
 

@@ -113,7 +113,7 @@ public final class ReadMethodInfoFactory {
         final var typeElement = ((TypeElement) types.asElement(returnType));
         final var methodName = method.getSimpleName().toString();
         final var strategies = strategyType == CONSTRUCTOR ?
-                BuildConstructorStrategy.generateStrategyInfo(typeElement, types, methodName) :
+                BuildConstructorStrategy.generateStrategyInfo(returnType, types, methodName) :
                 BuildSetterStrategy.generateStrategyInfo(typeElement, types);
         return new SelectMethodInfo(
                 methodName,

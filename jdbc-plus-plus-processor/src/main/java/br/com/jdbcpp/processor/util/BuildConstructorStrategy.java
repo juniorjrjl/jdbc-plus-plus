@@ -24,37 +24,37 @@ public final class BuildConstructorStrategy {
 
     private  BuildConstructorStrategy() {}
 
-    public static List<SelectReturnStrategy<?>> generateStrategyInfo(final TypeElement typeElement,
+    public static List<SelectReturnStrategy<?>> generateStrategyInfo(final TypeMirror typeMirror,
                                                                      final Types types,
                                                                      final String methodName) throws InvalidSelectResultMappingException {
 
+        final var typeElement = ((TypeElement) types.asElement(typeMirror));
         final List<SelectReturnStrategy<?>> strategies = new ArrayList<>();
         final var constructors = typeElement.getEnclosedElements().stream()
                 .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
                 .map(e -> (ExecutableElement) e)
+                .filter(e -> !e.getParameters().isEmpty())
                 .toList();
 
         if (constructors.isEmpty()) {
             final var message = String.format(
-                    "For use constructor strategy, a class %s must have a constructor",
+                    "For use constructor strategy with method %s, a class %s must have a constructor",
+                    methodName,
                     typeElement.getQualifiedName()
             );
             throw new InvalidSelectResultMappingException(message);
         }
 
-        final var canonicalConstructor = constructors.stream()
-                .filter(c -> c.getParameters().size() == typeElement.getRecordComponents().size())
-                .findFirst()
-                .orElseThrow(() -> {
-                    final var message = String.format(
-                            "A class %s have non constructor compatible with method %s",
-                            typeElement.getQualifiedName(),
-                            methodName
-                    );
-                    return new InvalidSelectResultMappingException(message);
-                });
+        if (constructors.size() > 1) {
+            final var message = String.format(
+                    "For use constructor strategy with method %s, a class %s must have only one constructor",
+                    methodName,
+                    typeElement.getQualifiedName()
+            );
+            throw new InvalidSelectResultMappingException(message);
+        }
 
-        final var parameters = canonicalConstructor.getParameters();
+        final var parameters = constructors.getFirst().getParameters();
         if (parameters.isEmpty()){
             final var message = String.format(
                     "For use constructor strategy, a class %s must have constructor with parameters",
