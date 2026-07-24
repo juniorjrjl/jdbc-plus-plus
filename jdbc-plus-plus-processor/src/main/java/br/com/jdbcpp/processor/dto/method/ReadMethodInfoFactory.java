@@ -32,18 +32,34 @@ import static br.com.jdbcpp.api.ResultBuildStrategyType.SETTER;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
-public final class ReadMethodInfoFactory {
+public class ReadMethodInfoFactory {
 
-    private ReadMethodInfoFactory() {
+    private final Types types;
+    private final Elements elements;
+    private final BuildConstructorStrategy buildConstructorStrategy;
+    private final BuildSetterStrategy buildSetterStrategy;
+    private final TypeUtil typeUtil;
+    private final CollectionUtil collectionUtil;
+
+    public ReadMethodInfoFactory(final Types types,
+                                 final Elements elements,
+                                 final BuildConstructorStrategy buildConstructorStrategy,
+                                 final BuildSetterStrategy buildSetterStrategy,
+                                 final TypeUtil typeUtil,
+                                 final CollectionUtil collectionUtil) {
+        this.types = types;
+        this.elements = elements;
+        this.buildConstructorStrategy = buildConstructorStrategy;
+        this.buildSetterStrategy = buildSetterStrategy;
+        this.typeUtil = typeUtil;
+        this.collectionUtil = collectionUtil;
     }
 
-    public static MethodInfo create(final ExecutableElement method,
-                                    final List<ParamInfo> params,
-                                    final Map<String, List<ParamInfo>> classPropertyMap,
-                                    final Query query,
-                                    final Types types,
-                                    final Elements elements,
-                                    final TypeMirror packException) {
+    public MethodInfo create(final ExecutableElement method,
+                             final List<ParamInfo> params,
+                             final Map<String, List<ParamInfo>> classPropertyMap,
+                             final Query query,
+                             final TypeMirror packException) {
 
         if (method.getReturnType().getKind() == TypeKind.VOID) {
             final var message = String.format(
@@ -72,22 +88,20 @@ public final class ReadMethodInfoFactory {
                     listTypeMirror = e.getTypeMirror();
                 }
 
-                if (TypeUtil.isList(listTypeMirror)) {
+                if (typeUtil.isList(listTypeMirror)) {
                     instanceContainer = method.getReturnType();
                 } else {
-                    instanceContainer = TypeUtil.buildContainerTypeMirror(
+                    instanceContainer = typeUtil.buildContainerTypeMirror(
                             resultBuildStrategy::collectionImplementationResult,
-                            returnType,
-                            elements,
-                            types
+                            returnType
                     );
                 }
             }
 
         }
 
-        final MethodInfo methodInfo = needStrategyToSelectReturn(returnType, types) ?
-                objectSelectResult(method, params, classPropertyMap, query, types, returnType, returnContainerType, instanceContainer, packException):
+        final MethodInfo methodInfo = needStrategyToSelectReturn(returnType) ?
+                objectSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, packException):
                 simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, packException);
         MethodValidator.validateParams(
                 methodInfo.getName(),
@@ -99,24 +113,23 @@ public final class ReadMethodInfoFactory {
         return methodInfo;
     }
 
-    private static SelectMethodInfo objectSelectResult(final ExecutableElement method,
-                                                       final List<ParamInfo> params,
-                                                       final Map<String, List<ParamInfo>> classPropertyMap,
-                                                       final Query query,
-                                                       final Types types,
-                                                       final TypeMirror returnType,
-                                                       @Nullable
-                                                       final TypeMirror returnContainerType,
-                                                       @Nullable
-                                                       final TypeMirror instanceContainer,
-                                                       final TypeMirror packException) {
+    private SelectMethodInfo objectSelectResult(final ExecutableElement method,
+                                                final List<ParamInfo> params,
+                                                final Map<String, List<ParamInfo>> classPropertyMap,
+                                                final Query query,
+                                                final TypeMirror returnType,
+                                                @Nullable
+                                                final TypeMirror returnContainerType,
+                                                @Nullable
+                                                final TypeMirror instanceContainer,
+                                                final TypeMirror packException) {
         final var resultBuildStrategy = method.getAnnotation(ResultBuildStrategy.class);
         final var strategyType = determineStrategyType(types, returnType, resultBuildStrategy);
         final var typeElement = ((TypeElement) types.asElement(returnType));
         final var methodName = method.getSimpleName().toString();
         final var strategies = strategyType == CONSTRUCTOR ?
-                BuildConstructorStrategy.generateStrategyInfo(returnType, types, methodName) :
-                BuildSetterStrategy.generateStrategyInfo(typeElement, types);
+                buildConstructorStrategy.generateStrategyInfo(returnType, methodName) :
+                buildSetterStrategy.generateStrategyInfo(typeElement);
         return new SelectMethodInfo(
                 methodName,
                 returnType,
@@ -131,18 +144,18 @@ public final class ReadMethodInfoFactory {
         );
     }
 
-    private static SelectMethodInfo simpleSelectResult(final ExecutableElement method,
-                                                       final List<ParamInfo> params,
-                                                       final Map<String, List<ParamInfo>> classPropertyMap,
-                                                       final Query query,
-                                                       final TypeMirror returnType,
-                                                       @Nullable
-                                                       final TypeMirror returnContainerType,
-                                                       @Nullable
-                                                       final TypeMirror instanceContainer,
-                                                       final TypeMirror packException) {
-        final var genericType = Optional.ofNullable(CollectionUtil.getCollectionElementType(returnType))
-                .or(() -> Optional.ofNullable(TypeUtil.getOptionalType(returnType)))
+    private SelectMethodInfo simpleSelectResult(final ExecutableElement method,
+                                                final List<ParamInfo> params,
+                                                final Map<String, List<ParamInfo>> classPropertyMap,
+                                                final Query query,
+                                                final TypeMirror returnType,
+                                                @Nullable
+                                                final TypeMirror returnContainerType,
+                                                @Nullable
+                                                final TypeMirror instanceContainer,
+                                                final TypeMirror packException) {
+        final var genericType = Optional.ofNullable(collectionUtil.getCollectionElementType(returnType))
+                .or(() -> Optional.ofNullable(typeUtil.getOptionalType(returnType)))
                 .orElse(null);
         final SelectReturnStrategy<SimpleResultStrategy> strategy = new SimpleResultStrategy(returnType, genericType);
         return new SelectMethodInfo(
@@ -158,27 +171,27 @@ public final class ReadMethodInfoFactory {
         );
     }
 
-    private static boolean needStrategyToSelectReturn(final TypeMirror returnType, final Types types) {
-        if (TypeUtil.isSimpleType(returnType, types)) {
+    private boolean needStrategyToSelectReturn(final TypeMirror returnType) {
+        if (typeUtil.isSimpleType(returnType)) {
             return false;
         }
 
-        if (CollectionUtil.isCollectionType(returnType, types)) {
-            final var elementType = CollectionUtil.getCollectionElementType(returnType);
+        if (collectionUtil.isCollectionType(returnType)) {
+            final var elementType = collectionUtil.getCollectionElementType(returnType);
             if (isNull(elementType)) {
                 return false;
             }
-            return TypeUtil.isNotSimpleType(elementType, types);
+            return typeUtil.isNotSimpleType(elementType);
         }
 
         return true;
     }
 
-    private static ResultBuildStrategyType determineStrategyType(final Types types,
-                                                                 final TypeMirror returnType,
-                                                                 @Nullable
-                                                                 final ResultBuildStrategy resultBuildStrategy) {
-        if (TypeUtil.isRecord(returnType, types)) {
+    private ResultBuildStrategyType determineStrategyType(final Types types,
+                                                          final TypeMirror returnType,
+                                                          @Nullable
+                                                          final ResultBuildStrategy resultBuildStrategy) {
+        if (typeUtil.isRecord(returnType)) {
             return CONSTRUCTOR;
         }
 

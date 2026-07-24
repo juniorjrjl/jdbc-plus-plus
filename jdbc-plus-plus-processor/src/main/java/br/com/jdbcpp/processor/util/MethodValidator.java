@@ -58,9 +58,9 @@ public final class MethodValidator {
     }
 
     public static void validateParams(final String methodNane,
-                                       final List<ParamInfo> params,
-                                       final Map<String, List<ParamInfo>> classPropertyMap,
-                                       final List<StatementParam> statementParams){
+                                      final List<ParamInfo> params,
+                                      final Map<String, List<ParamInfo>> classPropertyMap,
+                                      final List<StatementParam> statementParams){
         final var statementParamsNames = statementParams.stream()
                 .map(StatementParam::name)
                 .map(StringUtil::camelToSnakeCase)

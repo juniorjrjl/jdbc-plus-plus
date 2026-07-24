@@ -20,13 +20,16 @@ public class SelectCollectionMethodGenerator {
     private final Types types;
     private final SelectResultSetDelegator selectResultSetDelegator;
     private final StatementBuilder statementBuilder;
+    private final CollectionUtil collectionUtil;
 
     public SelectCollectionMethodGenerator(final Types types,
                                            final SelectResultSetDelegator selectResultSetDelegator,
-                                           final StatementBuilder statementBuilder) {
+                                           final StatementBuilder statementBuilder,
+                                           final CollectionUtil collectionUtil) {
         this.types = types;
         this.selectResultSetDelegator = selectResultSetDelegator;
         this.statementBuilder = statementBuilder;
+        this.collectionUtil = collectionUtil;
     }
 
     public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
@@ -63,7 +66,7 @@ public class SelectCollectionMethodGenerator {
             methodBuilder.beginControlFlow("try (final var $N = $N.executeQuery())", resultSetVar, statementVar);
         }
 
-        final var collectionImpl = CollectionUtil.getCollectionImplementation(instanceContainer, types);
+        final var collectionImpl = collectionUtil.getCollectionImplementation(instanceContainer);
         final var typeImpl = ClassName.bestGuess(collectionImpl);
         methodBuilder.addStatement("final $T result = new $T<>()", containerReturnTypeMirror, typeImpl);
         methodBuilder.beginControlFlow("while ($N.next())", resultSetVar);

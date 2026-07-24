@@ -42,6 +42,8 @@ public class DAOGenerator {
     private final InsertMethodGenerator insertMethodGenerator;
     private final UpdateMethodGenerator updateMethodGenerator;
     private final DeleteMethodGenerator deleteMethodGenerator;
+    private final CollectionUtil collectionUtil;
+    private final TypeUtil typeUtil;
 
     public DAOGenerator(final Types types,
                         final SelectCollectionMethodGenerator selectCollectionMethodGenerator,
@@ -49,7 +51,7 @@ public class DAOGenerator {
                         final SelectSingleMethodGenerator selectSingleMethodGenerator,
                         final InsertMethodGenerator insertMethodGenerator,
                         final UpdateMethodGenerator updateMethodGenerator,
-                        final DeleteMethodGenerator deleteMethodGenerator) {
+                        final DeleteMethodGenerator deleteMethodGenerator, final CollectionUtil collectionUtil, final TypeUtil typeUtil) {
         this.types = types;
         this.selectCollectionMethodGenerator = selectCollectionMethodGenerator;
         this.selectOptionalMethodGenerator = selectOptionalMethodGenerator;
@@ -57,6 +59,8 @@ public class DAOGenerator {
         this.insertMethodGenerator = insertMethodGenerator;
         this.updateMethodGenerator = updateMethodGenerator;
         this.deleteMethodGenerator = deleteMethodGenerator;
+        this.collectionUtil = collectionUtil;
+        this.typeUtil = typeUtil;
     }
 
     public JavaFile build(final DAOImplInfo daoImplInfo) {
@@ -87,12 +91,12 @@ public class DAOGenerator {
 
                 case SelectMethodInfo selectMethodInfo
                         when nonNull(selectMethodInfo.getInstanceContainer()) &&
-                        CollectionUtil.isCollectionType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()), types)
+                        collectionUtil.isCollectionType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()))
                         -> selectCollectionMethodGenerator.build(selectMethodInfo, connectionCall);
 
                 case SelectMethodInfo selectMethodInfo
                         when nonNull(selectMethodInfo.getInstanceContainer()) &&
-                        TypeUtil.isOptionalType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()), types)
+                        typeUtil.isOptionalType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()))
                         -> selectOptionalMethodGenerator.build(selectMethodInfo, connectionCall);
 
                 case SelectMethodInfo selectMethodInfo ->

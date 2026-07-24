@@ -33,6 +33,8 @@ import br.com.jdbcpp.processor.service.write.delete.DeleteMethodGenerator;
 import br.com.jdbcpp.processor.service.write.insert.InsertMethodGenerator;
 import br.com.jdbcpp.processor.service.write.update.UpdateMethodGenerator;
 import br.com.jdbcpp.processor.util.ArrayUtil;
+import br.com.jdbcpp.processor.util.BuildConstructorStrategy;
+import br.com.jdbcpp.processor.util.BuildSetterStrategy;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.MethodValidator;
 import br.com.jdbcpp.processor.util.TypeUtil;
@@ -112,7 +114,7 @@ public class DAOProcessor extends AbstractProcessor {
 
             try {
                 final var constructor = isValidDAO(mappedDAO, elements, types, dataSourceElement);
-                final var constructorInfo = buildConstructorInfo(constructor, types);
+                final var constructorInfo = buildConstructorInfo(constructor, types, elements);
                 daoImplInfoBuilder.constructor(constructorInfo);
             } catch (final InvalidDAOException e){
                 messager.printError(e.getMessage(), e.getElement());
@@ -150,17 +152,20 @@ public class DAOProcessor extends AbstractProcessor {
     @Nullable
     private ConstructorInfo buildConstructorInfo(@Nullable
                                                  final ExecutableElement constructor,
-                                                 final Types types){
+                                                 final Types types,
+                                                 final Elements elements){
         if (isNull(constructor)) {
             return null;
         }
+        final var arrayUtil = buildArrayUtil(types, elements);
+        final var collectionUtil = buildCollectionUtil(types);
         final var params = constructor.getParameters()
                 .stream()
                 .map(p -> {
                     TypeMirror type = p.asType();
-                    if (ArrayUtil.isArray(p.asType())){
+                    if (arrayUtil.isArray(p.asType())){
                         type = p.asType();
-                    } else if (CollectionUtil.isCollectionType(p.asType(), types)){
+                    } else if (collectionUtil.isCollectionType(p.asType())){
                         type = types.erasure(p.asType());
                     }
                     return new ConstructorParamInfo(
@@ -224,14 +229,13 @@ public class DAOProcessor extends AbstractProcessor {
     private MethodInfo buildMethodInfo(final ExecutableElement method,
                                        final Elements elements,
                                        final Types types) throws JDBCPlusPlusProcessorException {
-        final var parameterInfoDelegator = buildParameterInfoDelegator();
+        final var parameterInfoDelegator = buildParameterInfoDelegator(types, elements);
         final var methodValidator = buildMethodValidator(elements, types);
-
+        final var readMethodInfoFactory = buildReadMethodInfoFactory(types, elements);
+        final var typeUtil = buildTypeUtil(types, elements);
         final var params = parameterInfoDelegator.create(
                 method.getSimpleName().toString(),
-                method.getParameters(),
-                types,
-                elements
+                method.getParameters()
         );
 
         final Map<String, List<ParamInfo>> classPropertyMap =
@@ -241,10 +245,7 @@ public class DAOProcessor extends AbstractProcessor {
 
         final var commandOptional = Optional.ofNullable(method.getAnnotation(Command.class))
                 .map(command -> {
-                    final var packException = TypeUtil.getTypeMirrorFromClass(
-                            () -> command.packException(),
-                            elements
-                    );
+                    final var packException = typeUtil.getTypeMirrorFromClass(command::packException);
                     final var methodInfo = WriteMethodInfoFactory.create(
                             method,
                             params,
@@ -277,14 +278,12 @@ public class DAOProcessor extends AbstractProcessor {
                 });
 
         return Optional.ofNullable(method.getAnnotation(Query.class))
-                .map(query -> ReadMethodInfoFactory.create(
+                .map(query -> readMethodInfoFactory.create(
                         method,
                         params,
                         classPropertyMap,
                         query,
-                        types,
-                        elements,
-                        TypeUtil.getTypeMirrorFromClass(() -> query.packException(), elements)
+                        typeUtil.getTypeMirrorFromClass(query::packException)
                 ))
                 .or(() -> commandOptional)
                 .orElseThrow(() -> {
@@ -293,11 +292,18 @@ public class DAOProcessor extends AbstractProcessor {
                 });
     }
 
-    private ParameterInfoDelegator buildParameterInfoDelegator() {
+    private ParameterInfoDelegator buildParameterInfoDelegator(final Types types,
+                                                               final Elements elements) {
+        final var arrayUtil = buildArrayUtil(types, elements);
+        final var collectionUtil = buildCollectionUtil(types);
+        final var typeUtil = buildTypeUtil(types, elements);
         if (isNull(parameterInfoDelegatorCache)) {
             parameterInfoDelegatorCache =  new ParameterInfoDelegator(
-                    new SimpleParamInfoFactory(),
-                    new ClassParamInfoFactory()
+                    new SimpleParamInfoFactory(types, elements, arrayUtil, collectionUtil, typeUtil),
+                    new ClassParamInfoFactory(types, elements, arrayUtil, collectionUtil, typeUtil),
+                    arrayUtil,
+                    collectionUtil,
+                    typeUtil
             );
         }
         return this.parameterInfoDelegatorCache;
@@ -314,15 +320,63 @@ public class DAOProcessor extends AbstractProcessor {
             );
             this.daoGeneratorCache = new DAOGenerator(
                     types,
-                    new SelectCollectionMethodGenerator(types, selectResultSetDelegator, statementBuilder),
+                    new SelectCollectionMethodGenerator(types, selectResultSetDelegator, statementBuilder, collectionUtil),
                     new SelectOptionalMethodGenerator(types, selectResultSetDelegator, statementBuilder),
                     new SelectSingleMethodGenerator(types, selectResultSetDelegator, statementBuilder),
                     new InsertMethodGenerator(statementBuilder),
                     new UpdateMethodGenerator(statementBuilder),
-                    new DeleteMethodGenerator(statementBuilder)
+                    new DeleteMethodGenerator(statementBuilder),
+                    collectionUtil,
+                    typeUtil
             );
         }
         return daoGeneratorCache;
+    }
+
+    @Nullable
+    private ArrayUtil arrayUtil;
+
+    private ArrayUtil buildArrayUtil(final Types types, final Elements elements) {
+        if (isNull(arrayUtil)) {
+            arrayUtil = new ArrayUtil(types, buildTypeUtil(types, elements));
+        }
+        return arrayUtil;
+    }
+
+    @Nullable
+    private CollectionUtil collectionUtil;
+
+    public CollectionUtil buildCollectionUtil(final Types types) {
+        if (isNull(collectionUtil)) {
+            collectionUtil = new CollectionUtil(types);
+        }
+        return collectionUtil;
+    }
+
+    @Nullable
+    private TypeUtil typeUtil;
+
+    private TypeUtil buildTypeUtil(final Types types, final Elements elements) {
+        if (isNull(typeUtil)) {
+            typeUtil = new TypeUtil(elements, types, buildCollectionUtil(types));
+        }
+        return typeUtil;
+    }
+
+    private ReadMethodInfoFactory buildReadMethodInfoFactory(final Types types,
+                                                             final Elements elements) {
+        final var typeUtil = buildTypeUtil(types, elements);
+        final var collectionUtil = buildCollectionUtil(types);
+        final var buildConstructorStrategy = new BuildConstructorStrategy(types, typeUtil, collectionUtil);
+        final var buildSetterStrategy = new BuildSetterStrategy(types, typeUtil, collectionUtil);
+        return new ReadMethodInfoFactory(
+                types,
+                elements,
+                buildConstructorStrategy,
+                buildSetterStrategy,
+                typeUtil,
+                collectionUtil
+        );
     }
 
     private MethodValidator buildMethodValidator(final Elements elements, final Types types){

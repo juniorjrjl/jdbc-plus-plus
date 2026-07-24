@@ -14,9 +14,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public final class TypeUtil {
+import static java.util.Objects.isNull;
 
-    private TypeUtil() {}
+public class TypeUtil {
 
     private static final Set<String> SIMPLE_TYPES = Set.of(
             String.class.getCanonicalName(),
@@ -78,7 +78,19 @@ public final class TypeUtil {
             java.util.Optional.class.getCanonicalName()
     );
 
-    public static boolean isSimpleType(final TypeMirror type, final Types types) {
+    private final Elements elements;
+    private final Types types;
+    private final CollectionUtil collectionUtil;
+
+    public TypeUtil(final Elements elements,
+                    final Types types,
+                    final CollectionUtil collectionUtil) {
+        this.elements = elements;
+        this.types = types;
+        this.collectionUtil = collectionUtil;
+    }
+
+    public boolean isSimpleType(final TypeMirror type) {
         if (type.getKind().isPrimitive()) {
             return true;
         }
@@ -95,11 +107,11 @@ public final class TypeUtil {
         return SIMPLE_TYPES.contains(typeElement.getQualifiedName().toString());
     }
 
-    public static boolean isNotSimpleType(final TypeMirror type, final Types types) {
-        return !isSimpleType(type, types);
+    public boolean isNotSimpleType(final TypeMirror type) {
+        return !isSimpleType(type);
     }
 
-    public static boolean isEnum(final TypeMirror type, final Types types){
+    public boolean isEnum(final TypeMirror type){
 
         final var element = types.asElement(type);
         if (!(element instanceof TypeElement typeElement)) {
@@ -109,15 +121,15 @@ public final class TypeUtil {
         return isEnum(typeElement);
     }
 
-    private static boolean isEnum(final TypeElement typeElement){
+    private boolean isEnum(final TypeElement typeElement){
         return (typeElement.getKind() == ElementKind.ENUM);
     }
 
-    public static boolean isNestedObjectType(final TypeMirror type, final Types types) {
-        return !isSimpleType(type, types) && !CollectionUtil.isCollectionType(type, types);
+    public boolean isNestedObjectType(final TypeMirror type) {
+        return !isSimpleType(type) && !collectionUtil.isCollectionType(type);
     }
 
-    public static boolean isOptionalType(final TypeMirror type, final Types types) {
+    public boolean isOptionalType(final TypeMirror type) {
         final var element = types.asElement(type);
         if (!(element instanceof TypeElement typeElement)) {
             return false;
@@ -127,7 +139,7 @@ public final class TypeUtil {
     }
 
     @Nullable
-    public static TypeMirror getOptionalType(final TypeMirror typeMirror) {
+    public TypeMirror getOptionalType(final TypeMirror typeMirror) {
         if (!(typeMirror instanceof DeclaredType declaredType)) {
             return null;
         }
@@ -146,7 +158,7 @@ public final class TypeUtil {
     }
 
     @Nullable
-    public static TypeMirror getOptionalElementType(final TypeMirror type, final Types types) {
+    public TypeMirror getOptionalElementType(final TypeMirror type) {
         if (!(type instanceof DeclaredType declaredType)) {
             return null;
         }
@@ -159,7 +171,7 @@ public final class TypeUtil {
         return typeArgs.getFirst();
     }
 
-    public static boolean isRecord(final TypeMirror type, final Types types) {
+    public boolean isRecord(final TypeMirror type) {
         final var element = types.asElement(type);
         if (!(element instanceof TypeElement typeElement)) {
             return false;
@@ -168,21 +180,19 @@ public final class TypeUtil {
         return typeElement.getKind() == ElementKind.RECORD;
     }
 
-    public static String getSimpleClassName(final String qualifiedName){
+    public String getSimpleClassName(final String qualifiedName){
         final var lastDotIndex = qualifiedName.lastIndexOf(".");
         return lastDotIndex == -1 ?
                 qualifiedName :
                 qualifiedName.substring(lastDotIndex + 1);
     }
 
-    public static boolean typeHasTypeParameter(final TypeElement type){
+    public boolean typeHasTypeParameter(final TypeElement type){
         return type.getTypeParameters().isEmpty();
     }
 
-    public static TypeMirror buildContainerTypeMirror(final Supplier<Class<? extends Collection>> containerType,
-                                                      final TypeMirror elementType,
-                                                      final Elements elements,
-                                                      final Types types){
+    public TypeMirror buildContainerTypeMirror(final Supplier<Class<? extends Collection>> containerType,
+                                               final TypeMirror elementType){
         TypeMirror listTypeMirror;
         try{
             final var typeElement = elements.getTypeElement(containerType.get().getCanonicalName());
@@ -194,7 +204,7 @@ public final class TypeUtil {
         return types.getDeclaredType(collectionElement, elementType);
     }
 
-    public static boolean isList(TypeMirror typeMirror) {
+    public boolean isList(TypeMirror typeMirror) {
         if (typeMirror instanceof DeclaredType declaredType) {
             final var element = declaredType.asElement();
             if (element instanceof TypeElement typeElement) {
@@ -204,7 +214,7 @@ public final class TypeUtil {
         return false;
     }
 
-    public static TypeMirror getTypeMirrorFromClass(final Supplier<Class<?>> classCallback, final Elements elements){
+    public TypeMirror getTypeMirrorFromClass(final Supplier<Class<?>> classCallback){
         TypeMirror typeMirror = null;
         try{
             final var typeElement = elements.getTypeElement(classCallback.get().getCanonicalName());
@@ -213,6 +223,14 @@ public final class TypeUtil {
             typeMirror = e.getTypeMirror();
         }
         return typeMirror;
+    }
+
+    public boolean isCollectionOfClass(final TypeMirror type) {
+        final var elementType = collectionUtil.getCollectionElementType(type);
+        if (isNull(elementType)) {
+            return false;
+        }
+        return isNotSimpleType(elementType);
     }
 
 }

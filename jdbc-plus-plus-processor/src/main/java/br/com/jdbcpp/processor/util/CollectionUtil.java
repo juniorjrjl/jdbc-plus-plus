@@ -14,7 +14,7 @@ import java.util.Set;
 
 import static java.util.Objects.isNull;
 
-public final class CollectionUtil {
+public class CollectionUtil {
 
     private static final Set<String> COLLECTION_TYPES = Set.of(
             java.util.Collection.class.getCanonicalName(),
@@ -25,9 +25,13 @@ public final class CollectionUtil {
             java.util.LinkedList.class.getCanonicalName()
     );
 
-    private CollectionUtil() {}
+    private final Types types;
 
-    public static boolean isCollectionType(final TypeMirror type, final Types types) {
+    public CollectionUtil(final Types types) {
+        this.types = types;
+    }
+
+    public boolean isCollectionType(final TypeMirror type) {
         final var element = types.asElement(type);
         if (!(element instanceof TypeElement typeElement)) {
             return false;
@@ -39,7 +43,7 @@ public final class CollectionUtil {
         }
 
         for (final var interfaceType : typeElement.getInterfaces()) {
-            if (isCollectionType(interfaceType, types)) {
+            if (isCollectionType(interfaceType)) {
                 return true;
             }
         }
@@ -47,7 +51,7 @@ public final class CollectionUtil {
         return false;
     }
 
-    public static boolean isCollectionInterface(final TypeMirror type, final Types types) {
+    public boolean isCollectionInterface(final TypeMirror type) {
         final var element = types.asElement(type);
         if (!(element instanceof TypeElement typeElement)) {
             return false;
@@ -60,7 +64,7 @@ public final class CollectionUtil {
                 qualifiedName.equals(Set.class.getCanonicalName());
     }
 
-    public static String getCollectionImplementation(final TypeMirror type, final Types types) {
+    public String getCollectionImplementation(final TypeMirror type) {
         final var element = types.asElement(type);
         if (!(element instanceof TypeElement typeElement)) {
             return ArrayList.class.getCanonicalName();
@@ -81,7 +85,7 @@ public final class CollectionUtil {
     }
 
     @Nullable
-    public static TypeMirror getCollectionElementType(final TypeMirror type) {
+    public TypeMirror getCollectionElementType(final TypeMirror type) {
         if (!(type instanceof DeclaredType declaredType)) {
             return null;
         }
@@ -92,14 +96,6 @@ public final class CollectionUtil {
         }
 
         return typeArgs.getFirst();
-    }
-
-    public static boolean isCollectionOfClass(final TypeMirror type, final Types types) {
-        final var elementType = getCollectionElementType(type);
-        if (isNull(elementType)) {
-            return false;
-        }
-        return TypeUtil.isNotSimpleType(elementType, types);
     }
 
 }

@@ -22,11 +22,20 @@ import static java.util.Objects.nonNull;
 
 public final class BuildConstructorStrategy {
 
-    private  BuildConstructorStrategy() {}
+    private final Types types;
+    private final TypeUtil typeUtil;
+    private final CollectionUtil collectionUtil;
 
-    public static List<SelectReturnStrategy<?>> generateStrategyInfo(final TypeMirror typeMirror,
-                                                                     final Types types,
-                                                                     final String methodName) throws InvalidSelectResultMappingException {
+    public BuildConstructorStrategy(final Types types,
+                                    final TypeUtil typeUtil,
+                                    final CollectionUtil collectionUtil) {
+        this.types = types;
+        this.typeUtil = typeUtil;
+        this.collectionUtil = collectionUtil;
+    }
+
+    public List<SelectReturnStrategy<?>> generateStrategyInfo(final TypeMirror typeMirror,
+                                                              final String methodName) throws InvalidSelectResultMappingException {
 
         final var typeElement = ((TypeElement) types.asElement(typeMirror));
         final List<SelectReturnStrategy<?>> strategies = new ArrayList<>();
@@ -68,9 +77,9 @@ public final class BuildConstructorStrategy {
             final var paramType = param.asType();
             final var paramName = param.getSimpleName().toString();
 
-            final var paramKind = determineParamKind(paramType, types);
+            final var paramKind = determineParamKind(paramType);
             final var genericType = Optional.of(paramType)
-                    .map(CollectionUtil::getCollectionElementType)
+                    .map(collectionUtil::getCollectionElementType)
                     .orElse(null);
 
             strategies.add(new ConstructorStrategy(paramName, paramType, paramKind, List.of(), genericType, i));
@@ -78,15 +87,15 @@ public final class BuildConstructorStrategy {
         return strategies;
     }
 
-    private static ParamKind determineParamKind(final TypeMirror type, final Types types) {
-        if (CollectionUtil.isCollectionType(type, types)) {
-            final var elementType = CollectionUtil.getCollectionElementType(type);
-            if (nonNull(elementType) && TypeUtil.isNestedObjectType(elementType, types)) {
+    private ParamKind determineParamKind(final TypeMirror type) {
+        if (collectionUtil.isCollectionType(type)) {
+            final var elementType = collectionUtil.getCollectionElementType(type);
+            if (nonNull(elementType) && typeUtil.isNestedObjectType(elementType)) {
                 return COLLECTION_NESTED;
             }
             return COLLECTION_JAVA_TYPE;
         }
-        if (TypeUtil.isNestedObjectType(type, types)) {
+        if (typeUtil.isNestedObjectType(type)) {
             return NESTED_OBJECT;
         }
         return JAVA_TYPE;

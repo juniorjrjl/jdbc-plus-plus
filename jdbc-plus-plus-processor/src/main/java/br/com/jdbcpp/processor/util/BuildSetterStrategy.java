@@ -29,10 +29,19 @@ import static java.util.Objects.requireNonNull;
 
 public final class BuildSetterStrategy {
 
-    private BuildSetterStrategy() {}
+    private final Types types;
+    private final TypeUtil typeUtil;
+    private final CollectionUtil collectionUtil;
 
-    public static List<SelectReturnStrategy<?>> generateStrategyInfo(final TypeElement typeElement,
-                                                                     final Types types) {
+    public BuildSetterStrategy(final Types types,
+                               final TypeUtil typeUtil,
+                               final CollectionUtil collectionUtil) {
+        this.types = types;
+        this.typeUtil = typeUtil;
+        this.collectionUtil = collectionUtil;
+    }
+
+    public List<SelectReturnStrategy<?>> generateStrategyInfo(final TypeElement typeElement) {
 
         final List<SelectReturnStrategy<?>> strategies = new ArrayList<>();
         final var useIndexBasedAccess = shouldUseIndexBasedAccess(typeElement);
@@ -51,7 +60,7 @@ public final class BuildSetterStrategy {
                     continue;
                 }
 
-                final var setterMethod = findSetterMethod(typeElement, field, propStrategy, types);
+                final var setterMethod = findSetterMethod(typeElement, field, propStrategy);
                 if (setterMethod.isEmpty()) {
                     final var message = String.format(
                             "no setter found for field '%s' in class %s, create one or mapping using 'PropStrategy.setter'",
@@ -61,8 +70,8 @@ public final class BuildSetterStrategy {
                     throw new InvalidSelectResultMappingException(message);
                 }
 
-                final var paramKind = determineParamKind(fieldType, types);
-                final var genericType = CollectionUtil.getCollectionElementType(fieldType);
+                final var paramKind = determineParamKind(fieldType);
+                final var genericType = collectionUtil.getCollectionElementType(fieldType);
                 final var resultSetIndex = useIndexBasedAccess ? propStrategy.resultSetIndex() : null;
 
                 strategies.add(new SetterStrategy(
@@ -127,10 +136,9 @@ public final class BuildSetterStrategy {
         return true;
     }
 
-    private static Optional<ExecutableElement> findSetterMethod(final TypeElement typeElement,
-                                                                final VariableElement field,
-                                                                final PropStrategy propStrategy,
-                                                                final Types types) {
+    private Optional<ExecutableElement> findSetterMethod(final TypeElement typeElement,
+                                                         final VariableElement field,
+                                                         final PropStrategy propStrategy) {
 
         final var fieldType = field.asType();
         final var fieldName = field.getSimpleName().toString();
@@ -140,23 +148,23 @@ public final class BuildSetterStrategy {
         }
 
         final var setterName = "set" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
-        final var byPrefix = findMethodByNameAndParameterType(typeElement, setterName, fieldType, types);
+        final var byPrefix = findMethodByNameAndParameterType(typeElement, setterName, fieldType);
         if (byPrefix.isPresent()) {
             return byPrefix;
         }
 
-        return findMethodByNameAndParameterType(typeElement, fieldName, fieldType, types);
+        return findMethodByNameAndParameterType(typeElement, fieldName, fieldType);
     }
 
-    private static ParamKind determineParamKind(final TypeMirror type, final Types types) {
-        if (CollectionUtil.isCollectionType(type, types)) {
-            final var elementType = CollectionUtil.getCollectionElementType(type);
-            if (nonNull(elementType) && TypeUtil.isNestedObjectType(elementType, types)) {
+    private ParamKind determineParamKind(final TypeMirror type) {
+        if (collectionUtil.isCollectionType(type)) {
+            final var elementType = collectionUtil.getCollectionElementType(type);
+            if (nonNull(elementType) && typeUtil.isNestedObjectType(elementType)) {
                 return COLLECTION_NESTED;
             }
             return COLLECTION_JAVA_TYPE;
         }
-        if (TypeUtil.isNestedObjectType(type, types)) {
+        if (typeUtil.isNestedObjectType(type)) {
             return NESTED_OBJECT;
         }
         return JAVA_TYPE;
@@ -171,10 +179,9 @@ public final class BuildSetterStrategy {
                 .findFirst();
     }
 
-    private static Optional<ExecutableElement> findMethodByNameAndParameterType(final TypeElement typeElement,
-                                                                                final String methodName,
-                                                                                final TypeMirror parameterType,
-                                                                                final Types types) {
+    private Optional<ExecutableElement> findMethodByNameAndParameterType(final TypeElement typeElement,
+                                                                         final String methodName,
+                                                                         final TypeMirror parameterType) {
 
         return typeElement.getEnclosedElements().stream()
                 .filter(e -> e.getKind() == ElementKind.METHOD)

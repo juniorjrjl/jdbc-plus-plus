@@ -22,35 +22,49 @@ import static java.util.Objects.nonNull;
 
 public final class SimpleParamInfoFactory {
 
-    public List<ParamInfo> create(final List<? extends VariableElement> params,
-                                  final Types types,
-                                  final Elements elements) {
+    private final Types types;
+    private final Elements elements;
+    private final ArrayUtil arrayUtil;
+    private final CollectionUtil collectionUtil;
+    private final TypeUtil typeUtil;
+
+    public SimpleParamInfoFactory(final Types types,
+                                  final Elements elements,
+                                  final ArrayUtil arrayUtil,
+                                  final CollectionUtil collectionUtil,
+                                  final TypeUtil typeUtil) {
+        this.types = types;
+        this.elements = elements;
+        this.arrayUtil = arrayUtil;
+        this.collectionUtil = collectionUtil;
+        this.typeUtil = typeUtil;
+    }
+
+    public List<ParamInfo> create(final List<? extends VariableElement> params) {
         final List<ParamInfo> paramInfos = new ArrayList<>();
         for (final var param : params) {
-            final var collectionType = CollectionUtil.getCollectionElementType(param.asType());
-            final var arrayType = ArrayUtil.getArrayElementType(param.asType());
+            final var collectionType = collectionUtil.getCollectionElementType(param.asType());
+            final var arrayType = arrayUtil.getArrayElementType(param.asType());
             if (nonNull(collectionType)) {
-                paramInfos.add(buildSimpleParamInfo(types, elements, param, collectionType));
+                paramInfos.add(buildSimpleParamInfo(param, collectionType));
             } else if (nonNull(arrayType)) {
-                paramInfos.add(buildSimpleParamInfo(types, elements, param, arrayType));
+                paramInfos.add(buildSimpleParamInfo(param, arrayType));
             } else {
-                paramInfos.add(buildSimpleParamInfo(types, elements, param, null));
+                paramInfos.add(buildSimpleParamInfo(param, null));
             }
         }
         return paramInfos;
     }
 
-    private static ParamInfo buildSimpleParamInfo(final Types types,
-                                                  final Elements elements,
-                                                  final VariableElement param,
-                                                  @Nullable
-                                                  final TypeMirror collectionType) {
+    private ParamInfo buildSimpleParamInfo(final VariableElement param,
+                                           @Nullable
+                                           final TypeMirror collectionType) {
         final var paramName = param.getSimpleName().toString();
         return Optional.ofNullable(param.getAnnotation(InputParam.class))
                 .map(i -> {
                     final String convertMethod;
                     TypeMirror enumMethodType = null;
-                    if (TypeUtil.isEnum(param.asType(), types)) {
+                    if (typeUtil.isEnum(param.asType())) {
                         convertMethod = String.format("%s.%s()", paramName, i.enumMethodValue());
                         final var enumType = (TypeElement) types.asElement(param.asType());
                         enumMethodType = ElementFilter.methodsIn(elements.getAllMembers(enumType)).stream()
@@ -70,7 +84,7 @@ public final class SimpleParamInfoFactory {
                     return new SimpleParamInfo(
                             paramName,
                             param.asType(),
-                            TypeUtil.isEnum(param.asType(), types),
+                            typeUtil.isEnum(param.asType()),
                             collectionType,
                             i.statementField().isBlank() ?
                                     StringUtil.camelToSnakeCase(paramName) :
@@ -82,7 +96,7 @@ public final class SimpleParamInfoFactory {
                 }).orElseGet(() -> new SimpleParamInfo(
                         paramName,
                         param.asType(),
-                        TypeUtil.isEnum(param.asType(), types),
+                        typeUtil.isEnum(param.asType()),
                         collectionType,
                         StringUtil.camelToSnakeCase(paramName),
                         paramName,

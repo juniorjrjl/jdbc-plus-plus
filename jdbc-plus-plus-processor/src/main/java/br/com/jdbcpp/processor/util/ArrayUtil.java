@@ -9,20 +9,27 @@ import javax.lang.model.util.Types;
 
 import static java.util.Objects.isNull;
 
-public final class ArrayUtil {
+public class ArrayUtil {
 
-    private ArrayUtil() {}
+    private final Types types;
+    private final TypeUtil typeUtil;
 
-    public static boolean isArray(final TypeMirror type){
+    public ArrayUtil(final Types types,
+                     final TypeUtil typeUtil) {
+        this.types = types;
+        this.typeUtil = typeUtil;
+    }
+
+    public boolean isArray(final TypeMirror type){
         return type.getKind() == TypeKind.ARRAY;
     }
 
-    public static boolean isNotArray(final TypeMirror type){
+    public boolean isNotArray(final TypeMirror type){
         return !isArray(type);
     }
 
     @Nullable
-    public static TypeMirror getArrayElementType(final TypeMirror type) {
+    public TypeMirror getArrayElementType(final TypeMirror type) {
         if (isNotArray(type)) {
             return null;
         }
@@ -30,12 +37,12 @@ public final class ArrayUtil {
         return ((ArrayType) type).getComponentType();
     }
 
-    public static boolean isArrayOfClass(final TypeMirror type, final Types types) {
+    public boolean isArrayOfClass(final TypeMirror type) {
         final var element = getArrayElementType(type);
         if (isNull(element)) {
             return false;
         }
-        return TypeUtil.isNotSimpleType(element, types);
+        return typeUtil.isNotSimpleType(element);
     }
 
 }
