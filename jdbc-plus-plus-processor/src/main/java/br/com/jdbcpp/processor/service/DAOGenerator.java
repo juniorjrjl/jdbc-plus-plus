@@ -13,6 +13,7 @@ import br.com.jdbcpp.processor.service.write.delete.DeleteMethodGenerator;
 import br.com.jdbcpp.processor.service.write.insert.InsertMethodGenerator;
 import br.com.jdbcpp.processor.service.write.update.UpdateMethodGenerator;
 import br.com.jdbcpp.processor.util.CollectionUtil;
+import br.com.jdbcpp.processor.util.TypeUtil;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.MethodSpec;
@@ -26,6 +27,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static java.util.Objects.requireNonNull;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -81,17 +84,20 @@ public class DAOGenerator {
             final var builder = switch (m){
                 case InsertMethod insertMethod ->
                         insertMethodGenerator.build(insertMethod, connectionCall);
-                case SelectMethodInfo selectMethodInfo ->{
-                    if (isNull(selectMethodInfo.getContainerReturnTypeMirror())){
-                        yield selectSingleMethodGenerator.build(selectMethodInfo, connectionCall);
-                    } else {
-                        if (CollectionUtil.isCollectionType(selectMethodInfo.getContainerReturnTypeMirror(), types)) {
-                            yield selectCollectionMethodGenerator.build(selectMethodInfo, connectionCall);
-                        }
 
-                        yield selectOptionalMethodGenerator.build(selectMethodInfo, connectionCall);
-                    }
-                }
+                case SelectMethodInfo selectMethodInfo
+                        when nonNull(selectMethodInfo.getInstanceContainer()) &&
+                        CollectionUtil.isCollectionType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()), types)
+                        -> selectCollectionMethodGenerator.build(selectMethodInfo, connectionCall);
+
+                case SelectMethodInfo selectMethodInfo
+                        when nonNull(selectMethodInfo.getInstanceContainer()) &&
+                        TypeUtil.isOptionalType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()), types)
+                        -> selectOptionalMethodGenerator.build(selectMethodInfo, connectionCall);
+
+                case SelectMethodInfo selectMethodInfo ->
+                        selectSingleMethodGenerator.build(selectMethodInfo, connectionCall);
+                
                 case UpdateMethod updateMethod ->
                         updateMethodGenerator.build(updateMethod, connectionCall);
                 case DeleteMethod deleteMethod ->

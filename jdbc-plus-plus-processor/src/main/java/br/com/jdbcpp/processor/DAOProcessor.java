@@ -35,6 +35,7 @@ import br.com.jdbcpp.processor.service.write.update.UpdateMethodGenerator;
 import br.com.jdbcpp.processor.util.ArrayUtil;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.MethodValidator;
+import br.com.jdbcpp.processor.util.TypeUtil;
 import com.google.auto.service.AutoService;
 import com.palantir.javapoet.JavaFile;
 import org.jspecify.annotations.Nullable;
@@ -229,7 +230,8 @@ public class DAOProcessor extends AbstractProcessor {
         final var params = parameterInfoDelegator.create(
                 method.getSimpleName().toString(),
                 method.getParameters(),
-                types
+                types,
+                elements
         );
 
         final Map<String, List<ParamInfo>> classPropertyMap =
@@ -239,14 +241,19 @@ public class DAOProcessor extends AbstractProcessor {
 
         final var commandOptional = Optional.ofNullable(method.getAnnotation(Command.class))
                 .map(command -> {
+                    final var packException = TypeUtil.getTypeMirrorFromClass(
+                            () -> command.packException(),
+                            elements
+                    );
                     final var methodInfo = WriteMethodInfoFactory.create(
                             method,
                             params,
                             classPropertyMap,
-                            command
+                            command,
+                            packException
                     );
                     switch (command.commandType()){
-                        case INSERT, UPDATE ->{
+                        case INSERT, UPDATE -> {
                             final List<TypeMirror> validReturns = classPropertyMap.isEmpty() ?
                                     List.of(types.getNoType(TypeKind.VOID)) :
                                     List.of(types.getNoType(TypeKind.VOID), params.getFirst().getType());
@@ -276,7 +283,8 @@ public class DAOProcessor extends AbstractProcessor {
                         classPropertyMap,
                         query,
                         types,
-                        elements
+                        elements,
+                        TypeUtil.getTypeMirrorFromClass(() -> query.packException(), elements)
                 ))
                 .or(() -> commandOptional)
                 .orElseThrow(() -> {

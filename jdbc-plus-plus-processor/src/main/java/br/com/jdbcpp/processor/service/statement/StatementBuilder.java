@@ -11,6 +11,7 @@ import com.palantir.javapoet.TypeName;
 import java.util.List;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.requireNonNull;
 
 public class StatementBuilder {
 
@@ -135,9 +136,9 @@ public class StatementBuilder {
             if (isNull(leafParam.getContainerType())){
                 final var stmtSetter = JDBCUtil.getPrepareStatementSetter(
                         path,
-                        TypeName.get(leafParam.getType()),
-                        leafParam.getConvertMethod(),
-                        leafParam.isCustomEnum(),
+                        TypeName.get(leafParam.isCustomEnum() ?
+                                requireNonNull(leafParam.getEnumMethodType()) :
+                                leafParam.getType()),
                         statementVar,
                         "paramIndex++"
                 );
@@ -146,9 +147,9 @@ public class StatementBuilder {
                 methodBuilder.beginControlFlow("for (final var x : $N)", path);
                 final var stmtSetter = JDBCUtil.getPrepareStatementSetter(
                         "x",
-                        TypeName.get(leafParam.getType()),
-                        leafParam.getConvertMethod(),
-                        leafParam.isCustomEnum(),
+                        TypeName.get(leafParam.isCustomEnum() ?
+                                requireNonNull(leafParam.getEnumMethodType()) :
+                                leafParam.getType()),
                         statementVar,
                         "paramIndex++"
                 );

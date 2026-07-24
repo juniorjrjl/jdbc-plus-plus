@@ -1,6 +1,7 @@
 package br.com.jdbcpp.processor.util;
 
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
+import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementParam;
 import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
@@ -66,9 +67,13 @@ public final class MethodValidator {
                 .collect(Collectors.toSet());
         final var paramsNames = classPropertyMap.isEmpty() ?
                 params.stream()
-                        .map(ParamInfo::getName)
+                        .filter(SimpleParamInfo.class::isInstance)
+                        .map(SimpleParamInfo.class::cast)
+                        .map(p -> p.getName().equals(p.getQueryParamName()) ?
+                                p.getName() :
+                                p.getQueryParamName())
                         .collect(Collectors.toSet()) :
-                classPropertyMap.keySet().stream().toList();
+                classPropertyMap.keySet().stream().map(StringUtil::camelToSnakeCase).toList();
 
         final var extraInStatement = new HashSet<>(statementParamsNames);
         extraInStatement.removeAll(paramsNames);

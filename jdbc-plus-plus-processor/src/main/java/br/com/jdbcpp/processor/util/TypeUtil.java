@@ -204,4 +204,15 @@ public final class TypeUtil {
         return false;
     }
 
+    public static TypeMirror getTypeMirrorFromClass(final Supplier<Class<?>> classCallback, final Elements elements){
+        TypeMirror typeMirror = null;
+        try{
+            final var typeElement = elements.getTypeElement(classCallback.get().getCanonicalName());
+            typeMirror = typeElement.asType();
+        } catch (final MirroredTypeException e){
+            typeMirror = e.getTypeMirror();
+        }
+        return typeMirror;
+    }
+
 }

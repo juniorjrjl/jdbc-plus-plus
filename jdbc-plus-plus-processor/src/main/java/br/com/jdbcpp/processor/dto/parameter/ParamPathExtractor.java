@@ -20,7 +20,10 @@ public final class ParamPathExtractor {
                               final Map<String, List<ParamInfo>> paths) {
 
         switch (current) {
-            case SimpleParamInfo simple -> 
+
+            case SimpleParamInfo simple when (simple.isIgnore()) -> {}
+
+            case SimpleParamInfo simple  ->
                 paths.put(simple.getName(), List.copyOf(currentPath));
 
             case ClassParamInfo clazz -> {

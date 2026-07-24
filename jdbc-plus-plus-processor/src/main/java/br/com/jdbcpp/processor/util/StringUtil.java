@@ -2,6 +2,8 @@ package br.com.jdbcpp.processor.util;
 
 import java.util.regex.Pattern;
 
+import static java.util.Objects.nonNull;
+
 public final class StringUtil {
 
     private  StringUtil() {
@@ -19,14 +21,17 @@ public final class StringUtil {
     }
 
     public static String snakeToCamelCase(final String value) {
-        if (value.isEmpty()) {
+        if (value.isBlank()) {
             return value;
         }
 
-        final var pattern = Pattern.compile("_([a-zA-Z0-9])");
-        final var matcher = pattern.matcher(value.toLowerCase());
+        final var snakePattern = Pattern.compile("^_+|_([a-zA-Z0-9])");
+        final var matcher = snakePattern.matcher(value.toLowerCase());
 
-        return matcher.replaceAll(matchResult -> matchResult.group(1).toUpperCase());
+        return matcher.replaceAll(matchResult -> {
+            final String group = matchResult.group(1);
+            return nonNull(group) ? group.toUpperCase() : "";
+        });
     }
 
 }

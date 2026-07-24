@@ -29,13 +29,15 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             final List<ParamInfo> params,
                             final Map<String, List<ParamInfo>> classPropertyMap,
                             final StatementInfo statement,
+                            @Nullable
+                            final TypeMirror packException,
                             final List<SelectReturnStrategy<?>> strategies,
                             final ResultBuildStrategyType strategyType,
                             @Nullable
                             final TypeMirror containerReturnTypeMirror,
                             @Nullable
                             final TypeMirror instanceContainer) {
-        super(name, returnType, params, classPropertyMap, statement);
+        super(name, returnType, params, classPropertyMap, statement, packException);
         this.strategies = strategies;
         this.strategyType = strategyType;
         this.containerReturnTypeMirror = containerReturnTypeMirror;
@@ -47,12 +49,14 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             final List<ParamInfo> params,
                             final Map<String, List<ParamInfo>> classPropertyMap,
                             final StatementInfo statement,
+                            @Nullable
+                            final TypeMirror packException,
                             final SelectReturnStrategy<?> strategy,
                             @Nullable
                             final TypeMirror containerReturnTypeMirror,
                             @Nullable
                             final TypeMirror instanceContainer){
-        super(name, returnType, params, classPropertyMap, statement);
+        super(name, returnType, params, classPropertyMap, statement, packException);
         this.strategies = List.of(strategy);
         this.strategyType = SIMPLE_RESULT;
         this.containerReturnTypeMirror = containerReturnTypeMirror;

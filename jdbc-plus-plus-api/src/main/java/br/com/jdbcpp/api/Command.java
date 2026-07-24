@@ -52,4 +52,9 @@ public @interface Command {
      */
     boolean returnRowsAffected() default false;
 
+
+    Class<? extends RuntimeException> packException() default None.class;
+
+    final class None extends RuntimeException {}
+
 }

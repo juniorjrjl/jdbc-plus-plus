@@ -32,4 +32,8 @@ public @interface Query {
      */
     String value() default "";
 
+    Class<? extends RuntimeException> packException() default Command.None.class;
+
+    final class None extends RuntimeException {}
+
 }

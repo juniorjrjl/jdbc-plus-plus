@@ -14,6 +14,8 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,14 +27,16 @@ import static java.util.Objects.nonNull;
 public final class ClassParamInfoFactory {
 
     public List<ParamInfo> create(final VariableElement param,
-                                  final Types types) {
+                                  final Types types,
+                                  final Elements elements) {
         final var paramName = param.getSimpleName().toString();
         final var paramTypeMirror = param.asType();
-        final var paramInfo = buildClass(types, paramTypeMirror, paramName, null);
+        final var paramInfo = buildClass(types, elements, paramTypeMirror, paramName, null);
         return List.of(paramInfo);
     }
 
     private static ParamInfo buildClass(final Types types,
+                                        final Elements elements,
                                         final TypeMirror paramTypeMirror,
                                         final String paramName,
                                         @Nullable
@@ -52,7 +56,7 @@ public final class ClassParamInfoFactory {
             typeElement = (TypeElement) types.asElement(paramTypeMirror);
             typeContainer = null;
         }
-        nestedProperties = extractFieldsFromType(typeElement, types);
+        nestedProperties = extractFieldsFromType(typeElement, elements, types);
         return new ClassParamInfo(
                 paramName,
                 paramTypeMirror,
@@ -66,6 +70,7 @@ public final class ClassParamInfoFactory {
     }
 
     private static List<ParamInfo> extractFieldsFromType(final TypeElement typeElement,
+                                                         final Elements elements,
                                                          final Types types) {
         final var fields = typeElement.getEnclosedElements()
                 .stream()
@@ -81,11 +86,11 @@ public final class ClassParamInfoFactory {
             final var arrayType = ArrayUtil.getArrayElementType(field.asType());
             final ParamInfo paramInfo;
             if (nonNull(collectionType)) {
-                paramInfo = buildContainerInfo(types, field, collectionType, typeElement.asType());
+                paramInfo = buildContainerInfo(types, elements, field, collectionType, typeElement.asType());
             } else if (nonNull(arrayType)) {
-                paramInfo = buildContainerInfo(types, field, arrayType, typeElement.asType());
+                paramInfo = buildContainerInfo(types, elements, field, arrayType, typeElement.asType());
             } else {
-                paramInfo = buildSimpleParamInfo(types, field, null, typeElement.asType());
+                paramInfo = buildSimpleParamInfo(types, elements, field, null, typeElement.asType());
             }
             paramInfos.add(paramInfo);
         }
@@ -93,17 +98,19 @@ public final class ClassParamInfoFactory {
     }
 
     private static ParamInfo buildContainerInfo(final Types types,
+                                                final Elements elements,
                                                 final VariableElement field,
                                                 final TypeMirror collectionType,
                                                 final TypeMirror parentType) {
         if (TypeUtil.isSimpleType(collectionType, types)) {
-            return buildSimpleParamInfo(types, field, collectionType, parentType);
+            return buildSimpleParamInfo(types, elements, field, collectionType, parentType);
         } else {
-            return buildClass(types, collectionType, field.getSimpleName().toString(), parentType);
+            return buildClass(types, elements, collectionType, field.getSimpleName().toString(), parentType);
         }
     }
 
     private static ParamInfo buildSimpleParamInfo(final Types types,
+                                                  final Elements elements,
                                                   final VariableElement param,
                                                   @Nullable
                                                   final TypeMirror collectionType,
@@ -112,12 +119,21 @@ public final class ClassParamInfoFactory {
         return Optional.ofNullable(param.getAnnotation(InputParam.class))
                 .map(i -> {
                     final String convertMethod;
+                    TypeMirror enumMethodType = null;
                     if (TypeUtil.isEnum(param.asType(), types)) {
-                        convertMethod = switch (i.strategy()){
-                            case STRING -> String.format("%s.toString", paramName);
-                            case ORDINAL -> String.format("%s.ordinal", paramName);
-                            case CUSTOM_ENUM_METHOD -> String.format("%s.%s", paramName, i.value());
-                        };
+                        convertMethod = String.format("%s().%s", i.value(), i.enumMethodValue());
+                        final var enumType = (TypeElement) types.asElement(param.asType());
+                        enumMethodType = ElementFilter.methodsIn(elements.getAllMembers(enumType)).stream()
+                                .filter(m -> m.getSimpleName().contentEquals(i.enumMethodValue()))
+                                .findFirst()
+                                .orElseThrow(() -> {
+                                    final var message = String.format(
+                                            "An enum %s does not contains method %s",
+                                            enumType.getQualifiedName(),
+                                            i.enumMethodValue()
+                                    );
+                                    return new InvalidInputParamException(message);
+                                }).getReturnType();
                     } else {
                         convertMethod = i.value().isBlank() ?
                                 findMethod(parentType, types, paramName, param.asType()) :
@@ -131,7 +147,9 @@ public final class ClassParamInfoFactory {
                             i.statementField().isBlank() ?
                                     StringUtil.camelToSnakeCase(paramName) :
                                     i.statementField(),
-                            convertMethod
+                            convertMethod,
+                            i.ignore(),
+                            enumMethodType
                     );
                 }).orElseGet(() -> new SimpleParamInfo(
                         paramName,
@@ -139,7 +157,8 @@ public final class ClassParamInfoFactory {
                         TypeUtil.isEnum(param.asType(), types),
                         collectionType,
                         StringUtil.camelToSnakeCase(paramName),
-                        findMethod(parentType, types, paramName, param.asType())
+                        findMethod(parentType, types, paramName, param.asType()),
+                        null
                 ));
     }
 

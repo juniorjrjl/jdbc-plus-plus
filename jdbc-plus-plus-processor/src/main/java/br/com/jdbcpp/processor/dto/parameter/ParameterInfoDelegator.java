@@ -7,6 +7,7 @@ import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.Collections;
 import java.util.List;
@@ -24,8 +25,9 @@ public final class ParameterInfoDelegator {
     }
 
     public List<ParamInfo> create(final String methodName,
-                                         final List<? extends VariableElement> params,
-                                         final Types types){
+                                  final List<? extends VariableElement> params,
+                                  final Types types,
+                                  final Elements elements){
         if (params.isEmpty()) {
             return Collections.emptyList();
         }
@@ -54,7 +56,7 @@ public final class ParameterInfoDelegator {
 
         if (classTypesAmount == 1){
             final var param = params.getFirst();
-            return classParamInfoFactory.create(param, types);
+            return classParamInfoFactory.create(param, types, elements);
         }
 
         if ((params.stream()
@@ -70,7 +72,7 @@ public final class ParameterInfoDelegator {
         }
 
 
-        return simpleParamInfoFactory.create(params, types);
+        return simpleParamInfoFactory.create(params, types, elements);
     }
 
 }

@@ -25,7 +25,8 @@ public class SimpleParamResolver implements StatementResolver{
 
     @Override
     public String resolveParamPath(final String queryParamName) {
-        return getParamInfo(queryParamName).getName();
+        final var foundParam = getParamInfo(queryParamName);
+        return foundParam.isCustomEnum() ? foundParam.getConvertMethod() : foundParam.getName();
     }
 
     @Override

@@ -9,31 +9,8 @@ public final class JDBCUtil {
 
     public static String getPrepareStatementSetter(final String name,
                                                    final TypeName type,
-                                                   final String convertMethod,
-                                                   final boolean isEnum,
                                                    final String prepareStmtVar,
                                                    final String paramIndex) {
-        if (isEnum){
-            if (convertMethod.contains(name + ".")){
-                if (convertMethod.contains("toString")){
-                    return String.format(
-                            "%s.setString(%s, %s())",
-                            prepareStmtVar,
-                            paramIndex,
-                            convertMethod
-                    );
-                }
-            } else {
-                return String.format(
-                        "%s(%s, %s, %s)",
-                        convertMethod,
-                        prepareStmtVar,
-                        paramIndex,
-                        name
-                );
-            }
-        }
-
         return switch (type.toString()) {
             case "int" -> String.format("%s.setInt(%s, %s)", prepareStmtVar, paramIndex, name);
             case "long" -> String.format("%s.setLong(%s, %s)", prepareStmtVar, paramIndex, name);

@@ -42,7 +42,8 @@ public final class ReadMethodInfoFactory {
                                     final Map<String, List<ParamInfo>> classPropertyMap,
                                     final Query query,
                                     final Types types,
-                                    final Elements elements) {
+                                    final Elements elements,
+                                    final TypeMirror packException) {
 
         if (method.getReturnType().getKind() == TypeKind.VOID) {
             final var message = String.format(
@@ -86,8 +87,8 @@ public final class ReadMethodInfoFactory {
         }
 
         final MethodInfo methodInfo = needStrategyToSelectReturn(returnType, types) ?
-                objectSelectResult(method, params, classPropertyMap, query, types, returnType, returnContainerType, instanceContainer):
-                simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer);
+                objectSelectResult(method, params, classPropertyMap, query, types, returnType, returnContainerType, instanceContainer, packException):
+                simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, packException);
         MethodValidator.validateParams(
                 methodInfo.getName(),
                 params,
@@ -107,7 +108,8 @@ public final class ReadMethodInfoFactory {
                                                        @Nullable
                                                        final TypeMirror returnContainerType,
                                                        @Nullable
-                                                       final TypeMirror instanceContainer) {
+                                                       final TypeMirror instanceContainer,
+                                                       final TypeMirror packException) {
         final var resultBuildStrategy = method.getAnnotation(ResultBuildStrategy.class);
         final var strategyType = determineStrategyType(types, returnType, resultBuildStrategy);
         final var typeElement = ((TypeElement) types.asElement(returnType));
@@ -121,6 +123,7 @@ public final class ReadMethodInfoFactory {
                 params,
                 classPropertyMap,
                 StatementInfoFactory.create(query.value()),
+                packException,
                 strategies,
                 strategyType,
                 returnContainerType,
@@ -136,7 +139,8 @@ public final class ReadMethodInfoFactory {
                                                        @Nullable
                                                        final TypeMirror returnContainerType,
                                                        @Nullable
-                                                       final TypeMirror instanceContainer) {
+                                                       final TypeMirror instanceContainer,
+                                                       final TypeMirror packException) {
         final var genericType = Optional.ofNullable(CollectionUtil.getCollectionElementType(returnType))
                 .or(() -> Optional.ofNullable(TypeUtil.getOptionalType(returnType)))
                 .orElse(null);
@@ -147,6 +151,7 @@ public final class ReadMethodInfoFactory {
                 params,
                 classPropertyMap,
                 StatementInfoFactory.create(query.value()),
+                packException,
                 strategy,
                 returnContainerType,
                 instanceContainer
