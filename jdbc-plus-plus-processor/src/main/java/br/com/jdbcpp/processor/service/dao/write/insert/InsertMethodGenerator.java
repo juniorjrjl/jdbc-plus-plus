@@ -1,0 +1,76 @@
+package br.com.jdbcpp.processor.service.dao.write.insert;
+
+import br.com.jdbcpp.processor.dto.method.InsertMethod;
+import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
+import com.palantir.javapoet.ClassName;
+import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.TypeName;
+
+import java.sql.SQLException;
+
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PUBLIC;
+
+public class InsertMethodGenerator {
+
+    private final StatementBuilder statementBuilder;
+
+    public InsertMethodGenerator(final StatementBuilder statementBuilder){
+        this.statementBuilder = statementBuilder;
+    }
+
+    public MethodSpec.Builder build(final InsertMethod methodInfo,
+                                    final String connectionCall) {
+        final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
+                .addException(SQLException.class)
+                .addModifiers(PUBLIC)
+                .returns(TypeName.get(methodInfo.getReturnType()));
+
+        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(TypeName.get(p.getType()), p.getName(), FINAL));
+
+        final var statementVar = "stmt";
+        statementBuilder.build(
+                methodBuilder,
+                methodInfo,
+                "conn",
+                connectionCall,
+                statementVar,
+                "rs"
+        );
+        final var statementCommandVar = statementBuilder.getStatementCommandVar();
+        final String executeCall = methodInfo.unParameterizedStatement()
+                ? "$N.executeUpdate(" + statementCommandVar + ")"
+                : "$N.executeUpdate()";
+
+        methodInfo.getParams().stream()
+                .filter(p -> p.getType().equals(methodInfo.getReturnType()))
+                .findFirst()
+                .ifPresentOrElse(
+                        p -> {
+                            methodBuilder.addStatement(executeCall, statementVar);
+                            methodBuilder.addStatement("return $N", p.getName());
+                        },
+                        () -> {
+                            if (methodInfo.isReturnRowsAffected()){
+                                if (TypeName.get(methodInfo.getReturnType()).isBoxedPrimitive() &&
+                                        TypeName.get(methodInfo.getReturnType()).equals(ClassName.get(Long.class))){
+                                    methodBuilder.addStatement(
+                                            "return $T.valueOf(" + executeCall + ")",
+                                            Long.class,
+                                            statementVar
+                                    );
+                                } else {
+                                    methodBuilder.addStatement("return " + executeCall, statementVar);
+                                }
+                            } else {
+                                methodBuilder.addStatement(executeCall, statementVar);
+                            }
+                        }
+                );
+        return methodBuilder
+                .nextControlFlow(" catch (final $T e) ", SQLException.class)
+                .addStatement("throw e")
+                .endControlFlow();
+    }
+
+}
