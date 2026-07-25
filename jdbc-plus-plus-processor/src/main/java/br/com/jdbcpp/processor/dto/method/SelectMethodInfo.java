@@ -29,7 +29,6 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
                             final List<ParamInfo> params,
                             final Map<String, List<ParamInfo>> classPropertyMap,
                             final StatementInfo statement,
-                            @Nullable
                             final TypeMirror packException,
                             final List<SelectReturnStrategy<?>> strategies,
                             final ResultBuildStrategyType strategyType,

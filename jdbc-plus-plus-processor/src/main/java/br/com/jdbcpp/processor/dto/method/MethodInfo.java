@@ -3,7 +3,6 @@ package br.com.jdbcpp.processor.dto.method;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
-import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
@@ -16,7 +15,6 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
     protected final List<ParamInfo> params;
     protected final Map<String, List<ParamInfo>> classPropertyMap;
     protected final StatementInfo statement;
-    @Nullable
     protected final TypeMirror packException;
 
     protected MethodInfo(final String name,
@@ -24,7 +22,6 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
                          final List<ParamInfo> params,
                          final Map<String, List<ParamInfo>> classPropertyMap,
                          final StatementInfo statement,
-                         @Nullable
                          final TypeMirror packException) {
         this.name = name;
         this.returnType = returnType;
@@ -48,6 +45,10 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
 
     public StatementInfo getStatement() {
         return statement;
+    }
+
+    public TypeMirror getPackException() {
+        return packException;
     }
 
     public boolean useClassParam(){

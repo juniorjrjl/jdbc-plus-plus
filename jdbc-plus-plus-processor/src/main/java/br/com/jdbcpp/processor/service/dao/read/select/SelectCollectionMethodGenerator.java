@@ -8,7 +8,7 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 
-import java.sql.SQLException;
+import javax.lang.model.type.TypeMirror;
 
 import static java.util.Objects.requireNonNull;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -19,13 +19,16 @@ public class SelectCollectionMethodGenerator {
     private final SelectResultSetDelegator selectResultSetDelegator;
     private final StatementBuilder statementBuilder;
     private final CollectionUtil collectionUtil;
+    private final TypeName sqlException;
 
     public SelectCollectionMethodGenerator(final SelectResultSetDelegator selectResultSetDelegator,
                                            final StatementBuilder statementBuilder,
-                                           final CollectionUtil collectionUtil) {
+                                           final CollectionUtil collectionUtil,
+                                           final TypeMirror sqlException) {
         this.selectResultSetDelegator = selectResultSetDelegator;
         this.statementBuilder = statementBuilder;
         this.collectionUtil = collectionUtil;
+        this.sqlException = TypeName.get(sqlException);
     }
 
     public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
@@ -40,9 +43,13 @@ public class SelectCollectionMethodGenerator {
         );
         final var containerReturnType = TypeName.get(containerReturnTypeMirror);
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
-                .addException(SQLException.class)
                 .addModifiers(PUBLIC)
                 .returns(containerReturnType);
+
+        final var receivedException = TypeName.get(methodInfo.getPackException());
+        if (receivedException.equals(sqlException)){
+            methodBuilder.addException(sqlException);
+        }
 
         methodInfo.getParams().forEach(p -> methodBuilder.addParameter(TypeName.get(p.getType()), p.getName(), FINAL));
 
@@ -83,10 +90,15 @@ public class SelectCollectionMethodGenerator {
             methodBuilder.endControlFlow();
         }
 
-        return methodBuilder
-                .nextControlFlow("catch (final $T e)", SQLException.class)
-                .addStatement("throw e")
-                .endControlFlow();
+        methodBuilder.nextControlFlow("catch (final $T e)", sqlException);
+
+        if (receivedException.equals(sqlException)){
+            methodBuilder.addStatement("throw e");
+        } else {
+            methodBuilder.addStatement("throw new $T(e)", receivedException);
+        }
+
+        return methodBuilder.endControlFlow();
     }
 
 }

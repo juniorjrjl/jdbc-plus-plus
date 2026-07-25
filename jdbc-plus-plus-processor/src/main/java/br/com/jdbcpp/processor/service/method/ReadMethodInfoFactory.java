@@ -8,13 +8,13 @@ import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
-import br.com.jdbcpp.processor.service.statement.StatementInfoFactory;
 import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.exception.InvalidSelectResultMappingException;
 import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
-import br.com.jdbcpp.processor.util.CollectionUtil;
+import br.com.jdbcpp.processor.service.statement.StatementInfoFactory;
 import br.com.jdbcpp.processor.service.validation.MethodValidator;
+import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 import org.jspecify.annotations.Nullable;
 
@@ -44,6 +44,8 @@ public class ReadMethodInfoFactory {
     private final TypeUtil typeUtil;
     private final MethodValidator methodValidator;
     private final CollectionUtil collectionUtil;
+    private final TypeMirror nullReadException;
+    private final TypeMirror sqlException;
 
     public ReadMethodInfoFactory(final Types types,
                                  final Elements elements,
@@ -51,7 +53,9 @@ public class ReadMethodInfoFactory {
                                  final BuildSetterStrategy buildSetterStrategy,
                                  final TypeUtil typeUtil,
                                  final MethodValidator methodValidator,
-                                 final CollectionUtil collectionUtil) {
+                                 final CollectionUtil collectionUtil,
+                                 final TypeMirror nullReadException,
+                                 final TypeMirror sqlException) {
         this.types = types;
         this.elements = elements;
         this.buildConstructorStrategy = buildConstructorStrategy;
@@ -59,6 +63,8 @@ public class ReadMethodInfoFactory {
         this.typeUtil = typeUtil;
         this.methodValidator = methodValidator;
         this.collectionUtil = collectionUtil;
+        this.nullReadException = nullReadException;
+        this.sqlException = sqlException;
     }
 
     public MethodInfo create(final ExecutableElement method,
@@ -109,9 +115,12 @@ public class ReadMethodInfoFactory {
 
         }
 
+        final var methodExceptionThrow = types.isSameType(nullReadException, packException) ?
+                sqlException:
+                packException;
         final MethodInfo methodInfo = needStrategyToSelectReturn(returnType) ?
-                objectSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, packException):
-                simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, packException);
+                objectSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, methodExceptionThrow):
+                simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, methodExceptionThrow);
         methodValidator.validateParams(
                 method,
                 params,

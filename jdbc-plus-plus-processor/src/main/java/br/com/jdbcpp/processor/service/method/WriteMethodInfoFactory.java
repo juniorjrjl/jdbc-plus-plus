@@ -13,18 +13,30 @@ import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
 import br.com.jdbcpp.processor.service.validation.MethodValidator;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class WriteMethodInfoFactory {
 
     private static final String NONE_EXCEPTION = "br.com.jdbcpp.api.Command.NONE";
 
     private final MethodValidator methodValidator;
+    private final TypeMirror sqlException;
+    private final TypeMirror nullWriteException;
+    private final Types types;
 
-    public WriteMethodInfoFactory(final MethodValidator methodValidator) {
+    public WriteMethodInfoFactory(final MethodValidator methodValidator,
+                                  final TypeMirror sqlException,
+                                  final TypeMirror nullWriteException,
+                                  final Types types) {
         this.methodValidator = methodValidator;
+        this.sqlException = sqlException;
+        this.nullWriteException = nullWriteException;
+        this.types = types;
     }
 
     public MethodInfo create(final ExecutableElement method,
@@ -34,10 +46,13 @@ public class WriteMethodInfoFactory {
                              final TypeMirror packException) throws InvalidMethodSignatureException,
             InvalidInputParamException,
             MoreParamsThanStatementNeedException {
+        final var methodExceptionThrow = types.isSameType(nullWriteException, packException) ?
+                sqlException:
+                packException;
         final var methodInfo = switch (command.commandType()) {
-            case INSERT -> getInsertMethod(method, params, classPropertyMap, command, packException);
-            case UPDATE -> getUpdateMethod(method, params, classPropertyMap, command, packException);
-            case DELETE -> getDeleteMethod(method, params, classPropertyMap, command, packException);
+            case INSERT -> getInsertMethod(method, params, classPropertyMap, command, methodExceptionThrow);
+            case UPDATE -> getUpdateMethod(method, params, classPropertyMap, command, methodExceptionThrow);
+            case DELETE -> getDeleteMethod(method, params, classPropertyMap, command, methodExceptionThrow);
         };
         methodValidator.validateParams(
                 method,

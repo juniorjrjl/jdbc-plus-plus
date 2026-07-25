@@ -32,7 +32,7 @@ public @interface Query {
      */
     String value() default "";
 
-    Class<? extends RuntimeException> packException() default Command.None.class;
+    Class<? extends RuntimeException> packException() default None.class;
 
     final class None extends RuntimeException {}
 

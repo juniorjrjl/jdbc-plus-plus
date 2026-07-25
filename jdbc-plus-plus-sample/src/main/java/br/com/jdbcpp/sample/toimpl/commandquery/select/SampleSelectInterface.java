@@ -6,6 +6,7 @@ import br.com.jdbcpp.api.ResultBuildStrategy;
 import br.com.jdbcpp.api.ResultBuildStrategyType;
 import br.com.jdbcpp.sample.domain.Employee;
 import br.com.jdbcpp.sample.domain.ProductClass;
+import br.com.jdbcpp.sample.exception.CustomException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -24,7 +25,7 @@ public interface SampleSelectInterface {
             WHERE id = :id:
            """)
     @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
-    Employee findById(final Long id) throws SQLException;
+    Employee findById(final Long id) throws SQLException ;
 
     @Query("""
            SELECT id,
@@ -36,7 +37,7 @@ public interface SampleSelectInterface {
             WHERE id = :id:
            """)
     @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
-    ProductClass findByIdClass(final Long id) throws SQLException;
+    ProductClass findByIdClass(final Long id) throws SQLException ;
 
     @Query("""
            SELECT id,
@@ -47,7 +48,7 @@ public interface SampleSelectInterface {
             WHERE id = :id:;
            """)
     @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
-    Optional<Employee> findOptionalId(final Long id) throws SQLException;
+    Optional<Employee> findOptionalId(final Long id) throws SQLException ;
 
     @Query("""
            SELECT id,
@@ -57,7 +58,7 @@ public interface SampleSelectInterface {
              FROM user;
            """)
     @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
-    List<Employee> findAll() throws SQLException;
+    List<Employee> findAll() throws SQLException ;
 
     @Query("""
            SELECT id,
@@ -67,18 +68,19 @@ public interface SampleSelectInterface {
              FROM user;
            """)
     @ResultBuildStrategy(value = ResultBuildStrategyType.CONSTRUCTOR)
-    Set<Employee> findAllSet() throws SQLException;
+    Set<Employee> findAllSet() throws SQLException ;
 
     @Query("""
             SELECT id
               FROM user;
             """)
-    List<Long> findAllId() throws SQLException;
+    List<Long> findAllId() throws SQLException ;
 
-    @Query("""
+    @Query(value = """
             SELECT name
               FROM user;
-            """)
-    Optional<String> findNameById() throws SQLException;
+            """,
+            packException = CustomException.class)
+    Optional<String> findNameById() throws SQLException ;
 
 }

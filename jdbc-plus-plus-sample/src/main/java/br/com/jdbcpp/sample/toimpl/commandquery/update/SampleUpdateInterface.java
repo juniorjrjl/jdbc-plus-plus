@@ -4,6 +4,7 @@ import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.api.DAO;
 import br.com.jdbcpp.sample.domain.UserClass;
 import br.com.jdbcpp.sample.domain.UserRecord;
+import br.com.jdbcpp.sample.exception.CustomException;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -27,7 +28,7 @@ public interface SampleUpdateInterface {
                 created_at = now(),
                 updated_at = now();
             """, commandType = UPDATE, returnRowsAffected = true)
-    Integer updateDBRowsAffected() throws SQLException;
+    Integer updateDBRowsAffected() throws SQLException ;
 
     @Command(value = """
             UPDATE user
@@ -36,7 +37,7 @@ public interface SampleUpdateInterface {
                 updated_at = now(),
             WHERE id = :id:;
             """, commandType = UPDATE)
-    void updateById(final Long id) throws SQLException;
+    void updateById(final Long id) throws SQLException ;
 
     @Command(value = """
             UPDATE user
@@ -44,15 +45,17 @@ public interface SampleUpdateInterface {
                 name = :name:,
             WHERE id = :id:;
             """, commandType = UPDATE)
-    void updateRecord(final UserRecord userRecord) throws SQLException;
+    void updateRecord(final UserRecord userRecord) throws SQLException ;
 
     @Command(value = """
             UPDATE user
             SET
                 name = :name:,
             WHERE id = :id:;
-            """, commandType = UPDATE)
-    UserClass updateClass(final UserClass userClass) throws SQLException;
+            """,
+            commandType = UPDATE,
+            packException = CustomException.class)
+    UserClass updateClass(final UserClass userClass);
 
 
     @Command(value = """

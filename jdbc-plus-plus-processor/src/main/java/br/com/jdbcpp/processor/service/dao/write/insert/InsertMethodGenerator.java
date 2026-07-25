@@ -6,6 +6,7 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 
+import javax.lang.model.type.TypeMirror;
 import java.sql.SQLException;
 
 import static javax.lang.model.element.Modifier.FINAL;
@@ -14,17 +15,24 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 public class InsertMethodGenerator {
 
     private final StatementBuilder statementBuilder;
+    private final TypeName sqlException;
 
-    public InsertMethodGenerator(final StatementBuilder statementBuilder){
+    public InsertMethodGenerator(final StatementBuilder statementBuilder,
+                                 final TypeMirror sqlException){
         this.statementBuilder = statementBuilder;
+        this.sqlException = TypeName.get(sqlException);
     }
 
     public MethodSpec.Builder build(final InsertMethod methodInfo,
                                     final String connectionCall) {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
-                .addException(SQLException.class)
                 .addModifiers(PUBLIC)
                 .returns(TypeName.get(methodInfo.getReturnType()));
+
+        final var receivedException = TypeName.get(methodInfo.getPackException());
+        if (receivedException.equals(sqlException)){
+            methodBuilder.addException(sqlException);
+        }
 
         methodInfo.getParams().forEach(p -> methodBuilder.addParameter(TypeName.get(p.getType()), p.getName(), FINAL));
 
@@ -67,10 +75,15 @@ public class InsertMethodGenerator {
                             }
                         }
                 );
-        return methodBuilder
-                .nextControlFlow(" catch (final $T e) ", SQLException.class)
-                .addStatement("throw e")
-                .endControlFlow();
+        methodBuilder.nextControlFlow("catch (final $T e)", sqlException);
+
+        if (receivedException.equals(sqlException)){
+            methodBuilder.addStatement("throw e");
+        } else {
+            methodBuilder.addStatement("throw new $T(e)", receivedException);
+        }
+
+        return methodBuilder.endControlFlow();
     }
 
 }
