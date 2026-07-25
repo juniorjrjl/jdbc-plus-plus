@@ -127,6 +127,7 @@ public class ReadMethodInfoFactory {
                 classPropertyMap,
                 methodInfo.getStatement().params()
         );
+        methodValidator.validateExceptionThrow(method, methodExceptionThrow);
 
         return methodInfo;
     }

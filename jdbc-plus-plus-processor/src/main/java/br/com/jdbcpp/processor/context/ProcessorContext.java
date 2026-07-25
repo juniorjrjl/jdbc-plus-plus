@@ -47,6 +47,9 @@ public class ProcessorContext {
     private static final String SQL_EXCEPTION_CANONICAL_NAME = SQLException.class.getCanonicalName();
     private static final String NULL_WRITE_EXCEPTION_CANONICAL_NAME = Command.None.class.getCanonicalName();
     private static final String NULL_READ_EXCEPTION_CANONICAL_NAME = Query.None.class.getCanonicalName();
+    private static final String THROWABLE_CANONICAL_NAME = Throwable.class.getCanonicalName();
+    private static final String LONG_CANONICAL_NAME = Long.class.getCanonicalName();
+    private static final String INTEGER_CANONICAL_NAME = Integer.class.getCanonicalName();
 
     private final ProcessorFacade processorFacade;
 
@@ -68,6 +71,15 @@ public class ProcessorContext {
         final var nullReadException = Optional.ofNullable(elements.getTypeElement(NULL_READ_EXCEPTION_CANONICAL_NAME))
                 .map(TypeElement::asType)
                 .orElseThrow(LambdaUtil.unchecked(() -> new ProcessorContextInitialization("NullReadException not found")));
+        final var throwableElement = Optional.ofNullable(elements.getTypeElement(THROWABLE_CANONICAL_NAME))
+                .map(TypeElement::asType)
+                .orElseThrow(LambdaUtil.unchecked(() -> new ProcessorContextInitialization("Throwable not found")));
+        final var longElement = Optional.ofNullable(elements.getTypeElement(LONG_CANONICAL_NAME))
+                .map(TypeElement::asType)
+                .orElseThrow(LambdaUtil.unchecked(() -> new ProcessorContextInitialization("Long not found")));
+        final var integerElement = Optional.ofNullable(elements.getTypeElement(INTEGER_CANONICAL_NAME))
+                .map(TypeElement::asType)
+                .orElseThrow(LambdaUtil.unchecked(() -> new ProcessorContextInitialization("Integer not found")));
 
 
         final var daoValidator = new DAOValidator(types, elements, DATA_SOURCE_CANONICAL_NAME);
@@ -118,7 +130,13 @@ public class ProcessorContext {
                 typeUtil
         );
 
-        final var methodValidator = new MethodValidator(elements, types);
+        final var methodValidator = new MethodValidator(
+                types,
+                longElement,
+                integerElement,
+                throwableElement,
+                sqlExceptionElement
+        );
 
         final var buildConstructorStrategy = new BuildConstructorStrategy(
                 types,

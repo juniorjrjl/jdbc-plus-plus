@@ -60,6 +60,7 @@ public class WriteMethodInfoFactory {
                 classPropertyMap,
                 methodInfo.getStatement().params()
         );
+        methodValidator.validateExceptionThrow(method, methodExceptionThrow);
         return methodInfo;
     }
 

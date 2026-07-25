@@ -9,26 +9,38 @@ import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
 import br.com.jdbcpp.processor.util.StringUtil;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
+import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Types;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public final class MethodValidator {
 
     private final List<TypeMirror> allowedReturnsRowsAffected;
+    private final Types types;
+    private final TypeMirror throwable;
+    private final TypeMirror sqlException;
 
-    public MethodValidator(final Elements elements, final Types types) {
+    public MethodValidator(final Types types,
+                           final TypeMirror longType,
+                           final TypeMirror integerType,
+                           final TypeMirror throwable,
+                           final TypeMirror sqlException) {
         allowedReturnsRowsAffected = List.of(
-                elements.getTypeElement("java.lang.Long").asType(),
-                elements.getTypeElement("java.lang.Integer").asType(),
+                longType,
+                integerType,
                 types.getPrimitiveType(TypeKind.LONG),
                 types.getPrimitiveType(TypeKind.INT)
         );
+        this.types = types;
+        this.throwable = throwable;
+        this.sqlException = sqlException;
     }
 
     public void validateReturn(final ExecutableElement method,
@@ -101,6 +113,34 @@ public final class MethodValidator {
             );
             throw new MoreParamsThanStatementNeedException(message, method);
         }
+    }
+
+    public void validateExceptionThrow(final ExecutableElement method,
+                                       final TypeMirror exception) throws InvalidMethodSignatureException{
+        if (types.isSameType(exception, sqlException)) {
+            return;
+        }
+
+        final var requiredConstructorNotFound = Optional.of(types.asElement(exception))
+                .filter(TypeElement.class::isInstance)
+                .map(TypeElement.class::cast)
+                .map(TypeElement::getEnclosedElements)
+                .map(ElementFilter::constructorsIn)
+                .stream()
+                .flatMap(List::stream)
+                .noneMatch(c -> c.getParameters().size() == 1
+                        && types.isSameType(c.getParameters().getFirst().asType(), throwable));
+
+        if (requiredConstructorNotFound){
+            final var message = String.format(
+                    "For method %s throw a custom exception %s create a constructor with a Throwable parameter ",
+                    method.getSimpleName(),
+                    exception
+            );
+            throw new InvalidMethodSignatureException(message, method);
+        }
+
+
     }
 
 }
