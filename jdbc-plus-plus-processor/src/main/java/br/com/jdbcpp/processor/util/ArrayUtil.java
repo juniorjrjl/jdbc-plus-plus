@@ -5,18 +5,14 @@ import org.jspecify.annotations.Nullable;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 
 import static java.util.Objects.isNull;
 
 public class ArrayUtil {
 
-    private final Types types;
     private final TypeUtil typeUtil;
 
-    public ArrayUtil(final Types types,
-                     final TypeUtil typeUtil) {
-        this.types = types;
+    public ArrayUtil(final TypeUtil typeUtil) {
         this.typeUtil = typeUtil;
     }
 

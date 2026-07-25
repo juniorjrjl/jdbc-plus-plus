@@ -4,6 +4,7 @@ import br.com.jdbcpp.api.InputParam;
 import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.util.ArrayUtil;
 import br.com.jdbcpp.processor.util.CollectionUtil;
+import br.com.jdbcpp.processor.util.LambdaUtil;
 import br.com.jdbcpp.processor.util.StringUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 import org.jspecify.annotations.Nullable;
@@ -44,7 +45,7 @@ public class ClassParamInfoFactory {
         this.typeUtil = typeUtil;
     }
 
-    public List<ParamInfo> create(final VariableElement param) {
+    public List<ParamInfo> create(final VariableElement param) throws InvalidInputParamException {
         final var paramName = param.getSimpleName().toString();
         final var paramTypeMirror = param.asType();
         final var paramInfo = buildClass(paramTypeMirror, paramName, null);
@@ -54,7 +55,7 @@ public class ClassParamInfoFactory {
     private ParamInfo buildClass(final TypeMirror paramTypeMirror,
                                  final String paramName,
                                  @Nullable
-                                 final TypeMirror parentTypeMirror) {
+                                 final TypeMirror parentTypeMirror) throws InvalidInputParamException {
         final var collectionType = collectionUtil.getCollectionElementType(paramTypeMirror);
         final var arrayType = arrayUtil.getArrayElementType(paramTypeMirror);
         final TypeMirror typeContainer;
@@ -83,7 +84,7 @@ public class ClassParamInfoFactory {
         );
     }
 
-    private List<ParamInfo> extractFieldsFromType(final TypeElement typeElement) {
+    private List<ParamInfo> extractFieldsFromType(final TypeElement typeElement) throws InvalidInputParamException {
         final var fields = typeElement.getEnclosedElements()
                 .stream()
                 .filter(element -> element.getKind() == ElementKind.FIELD)
@@ -111,7 +112,7 @@ public class ClassParamInfoFactory {
 
     private ParamInfo buildContainerInfo(final VariableElement field,
                                          final TypeMirror collectionType,
-                                         final TypeMirror parentType) {
+                                         final TypeMirror parentType) throws InvalidInputParamException {
         if (typeUtil.isSimpleType(collectionType)) {
             return buildSimpleParamInfo(field, collectionType, parentType);
         } else {
@@ -125,7 +126,7 @@ public class ClassParamInfoFactory {
                                            final TypeMirror parentType) {
         final var paramName = param.getSimpleName().toString();
         return Optional.ofNullable(param.getAnnotation(InputParam.class))
-                .map(i -> {
+                .map(LambdaUtil.unchecked(i -> {
                     final String convertMethod;
                     TypeMirror enumMethodType = null;
                     if (typeUtil.isEnum(param.asType())) {
@@ -159,7 +160,7 @@ public class ClassParamInfoFactory {
                             i.ignore(),
                             enumMethodType
                     );
-                }).orElseGet(() -> new SimpleParamInfo(
+                })).orElseGet(LambdaUtil.unchecked(() -> new SimpleParamInfo(
                         paramName,
                         param.asType(),
                         typeUtil.isEnum(param.asType()),
@@ -167,12 +168,12 @@ public class ClassParamInfoFactory {
                         StringUtil.camelToSnakeCase(paramName),
                         findMethod(parentType, paramName, param.asType()),
                         null
-                ));
+                )));
     }
 
     public String findMethod(final TypeMirror typeMirror,
                              final String propertyName,
-                             final TypeMirror expectedReturnType) {
+                             final TypeMirror expectedReturnType) throws InvalidInputParamException{
 
         final var typeElement = (TypeElement) types.asElement(typeMirror);
 
@@ -215,14 +216,14 @@ public class ClassParamInfoFactory {
 
         return Optional.ofNullable(finalGetter)
                 .map(m -> m.getSimpleName().toString())
-                .orElseThrow(() -> {
+                .orElseThrow(LambdaUtil.unchecked(() -> {
                     final var message = String.format(
                             "A class %s has none valid public method to access property %s",
                             typeElement.getQualifiedName(),
                             propertyName
                     );
                     return new InvalidInputParamException(message);
-                });
+                }));
     }
 
 }

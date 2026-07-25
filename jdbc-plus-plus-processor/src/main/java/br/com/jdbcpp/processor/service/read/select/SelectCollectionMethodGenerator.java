@@ -8,7 +8,6 @@ import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 
-import javax.lang.model.util.Types;
 import java.sql.SQLException;
 
 import static java.util.Objects.requireNonNull;
@@ -17,16 +16,13 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 public class SelectCollectionMethodGenerator {
 
-    private final Types types;
     private final SelectResultSetDelegator selectResultSetDelegator;
     private final StatementBuilder statementBuilder;
     private final CollectionUtil collectionUtil;
 
-    public SelectCollectionMethodGenerator(final Types types,
-                                           final SelectResultSetDelegator selectResultSetDelegator,
+    public SelectCollectionMethodGenerator(final SelectResultSetDelegator selectResultSetDelegator,
                                            final StatementBuilder statementBuilder,
                                            final CollectionUtil collectionUtil) {
-        this.types = types;
         this.selectResultSetDelegator = selectResultSetDelegator;
         this.statementBuilder = statementBuilder;
         this.collectionUtil = collectionUtil;

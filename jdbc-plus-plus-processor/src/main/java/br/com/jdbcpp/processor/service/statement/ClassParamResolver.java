@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 public class ClassParamResolver implements StatementResolver{
 
     private final String methodName;
@@ -55,7 +57,11 @@ public class ClassParamResolver implements StatementResolver{
         final List<String> paramsAmountName = new ArrayList<>();
         for (final var listParam : collectionParams){
             final var paramAmountName = listParam.getName() + "size";
-            if (TypeName.get(listParam.getContainerType()) instanceof ArrayTypeName){
+            final var containerType = requireNonNull(
+                    listParam.getContainerType(),
+                    "Container type is null"
+            );
+            if (TypeName.get(containerType) instanceof ArrayTypeName){
                 methodBuilder.addStatement("final var $N = $N.length", paramAmountName, listParam.getName());
             } else {
                 methodBuilder.addStatement("final var $N = $N.size()", paramAmountName, listParam.getName());

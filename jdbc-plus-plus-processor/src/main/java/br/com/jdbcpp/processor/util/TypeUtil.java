@@ -215,7 +215,7 @@ public class TypeUtil {
     }
 
     public TypeMirror getTypeMirrorFromClass(final Supplier<Class<?>> classCallback){
-        TypeMirror typeMirror = null;
+        TypeMirror typeMirror;
         try{
             final var typeElement = elements.getTypeElement(classCallback.get().getCanonicalName());
             typeMirror = typeElement.asType();

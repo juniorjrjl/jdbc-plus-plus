@@ -6,6 +6,7 @@ import br.com.jdbcpp.processor.util.ArrayUtil;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import java.util.Collections;
 import java.util.List;
@@ -30,8 +31,9 @@ public final class ParameterInfoDelegator {
         this.typeUtil = typeUtil;
     }
 
-    public List<ParamInfo> create(final String methodName,
-                                  final List<? extends VariableElement> params){
+    public List<ParamInfo> create(final ExecutableElement method) throws InvalidInputParamException{
+        final var methodName = method.getSimpleName().toString();
+        final List<? extends VariableElement> params = method.getParameters();
         if (params.isEmpty()) {
             return Collections.emptyList();
         }
@@ -55,7 +57,7 @@ public final class ParameterInfoDelegator {
                     "A method %s must receive 1 class param or many simple type params",
                     methodName
             );
-            throw new InvalidInputParamException(message);
+            throw new InvalidInputParamException(message, method);
         }
 
         if (classTypesAmount == 1){
@@ -72,11 +74,11 @@ public final class ParameterInfoDelegator {
                             "can only be used on class properties, not on direct method parameters.",
                     methodName
             );
-            throw new InvalidInputParamException(message);
+            throw new InvalidInputParamException(message, method);
         }
 
 
-        return simpleParamInfoFactory.create(params);
+        return simpleParamInfoFactory.create(method);
     }
 
 }

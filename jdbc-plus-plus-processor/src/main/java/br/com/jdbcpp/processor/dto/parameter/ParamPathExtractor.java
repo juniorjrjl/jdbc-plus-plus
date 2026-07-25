@@ -5,19 +5,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class ParamPathExtractor {
+public class ParamPathExtractor {
 
-    private ParamPathExtractor() {}
+    public ParamPathExtractor() {}
 
-    public static Map<String, List<ParamInfo>> build(final ClassParamInfo root) {
+    public Map<String, List<ParamInfo>> build(final ClassParamInfo root) {
         final Map<String, List<ParamInfo>> paths = new HashMap<>();
         visit(root, new ArrayList<>(List.of(root)), paths);
         return paths;
     }
 
-    private static void visit(final ParamInfo current,
-                              final List<ParamInfo> currentPath,
-                              final Map<String, List<ParamInfo>> paths) {
+    private void visit(final ParamInfo current,
+                       final List<ParamInfo> currentPath,
+                       final Map<String, List<ParamInfo>> paths) {
 
         switch (current) {
 

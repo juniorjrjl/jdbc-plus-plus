@@ -43,7 +43,8 @@ public class DeleteMethodGenerator {
                 "$N.executeUpdate()";
 
         if (methodInfo.isReturnRowsAffected()){
-            if (TypeName.get(methodInfo.getReturnType()).isBoxedPrimitive() && methodInfo.getReturnType().equals(ClassName.get(Long.class))){
+            if (TypeName.get(methodInfo.getReturnType()).isBoxedPrimitive() &&
+                    TypeName.get(methodInfo.getReturnType()).equals(ClassName.get(Long.class))){
                 methodBuilder.addStatement("return $T.valueOf(" + executeCall + ")", Long.class, statementVar);
             } else {
                 methodBuilder.addStatement("return " + executeCall, statementVar);

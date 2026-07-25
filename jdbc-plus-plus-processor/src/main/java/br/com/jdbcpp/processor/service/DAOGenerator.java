@@ -20,7 +20,6 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 
-import javax.lang.model.util.Types;
 import javax.sql.DataSource;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +34,6 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 public class DAOGenerator {
 
-    private final Types types;
     private final SelectCollectionMethodGenerator selectCollectionMethodGenerator;
     private final SelectOptionalMethodGenerator selectOptionalMethodGenerator;
     private final SelectSingleMethodGenerator selectSingleMethodGenerator;
@@ -45,14 +43,14 @@ public class DAOGenerator {
     private final CollectionUtil collectionUtil;
     private final TypeUtil typeUtil;
 
-    public DAOGenerator(final Types types,
-                        final SelectCollectionMethodGenerator selectCollectionMethodGenerator,
+    public DAOGenerator(final SelectCollectionMethodGenerator selectCollectionMethodGenerator,
                         final SelectOptionalMethodGenerator selectOptionalMethodGenerator,
                         final SelectSingleMethodGenerator selectSingleMethodGenerator,
                         final InsertMethodGenerator insertMethodGenerator,
                         final UpdateMethodGenerator updateMethodGenerator,
-                        final DeleteMethodGenerator deleteMethodGenerator, final CollectionUtil collectionUtil, final TypeUtil typeUtil) {
-        this.types = types;
+                        final DeleteMethodGenerator deleteMethodGenerator,
+                        final CollectionUtil collectionUtil,
+                        final TypeUtil typeUtil) {
         this.selectCollectionMethodGenerator = selectCollectionMethodGenerator;
         this.selectOptionalMethodGenerator = selectOptionalMethodGenerator;
         this.selectSingleMethodGenerator = selectSingleMethodGenerator;
@@ -78,7 +76,7 @@ public class DAOGenerator {
         final var connectionCall = Optional.ofNullable(constructor)
                 .stream()
                 .flatMap(c -> c.params().stream())
-                .filter(p -> p.type().equals(TypeName.get(DataSource.class)))
+                .filter(p -> TypeName.get(p.type()).equals(TypeName.get(DataSource.class)))
                 .map(ConstructorParamInfo::name)
                 .map(v -> v + ".getConnection()")
                 .findFirst()

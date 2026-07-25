@@ -41,7 +41,7 @@ public final class BuildSetterStrategy {
         this.collectionUtil = collectionUtil;
     }
 
-    public List<SelectReturnStrategy<?>> generateStrategyInfo(final TypeElement typeElement) {
+    public List<SelectReturnStrategy<?>> generateStrategyInfo(final TypeElement typeElement) throws InvalidSelectResultMappingException {
 
         final List<SelectReturnStrategy<?>> strategies = new ArrayList<>();
         final var useIndexBasedAccess = shouldUseIndexBasedAccess(typeElement);
@@ -89,7 +89,7 @@ public final class BuildSetterStrategy {
         return strategies;
     }
 
-    private static boolean shouldUseIndexBasedAccess(final TypeElement typeElement) {
+    private static boolean shouldUseIndexBasedAccess(final TypeElement typeElement) throws InvalidSelectResultMappingException {
 
         final var fields = typeElement.getEnclosedElements().stream()
                 .filter(e -> e.getKind() == ElementKind.FIELD)

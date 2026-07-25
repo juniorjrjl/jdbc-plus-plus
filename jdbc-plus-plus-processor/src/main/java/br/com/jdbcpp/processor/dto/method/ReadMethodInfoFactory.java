@@ -7,7 +7,10 @@ import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
 import br.com.jdbcpp.processor.dto.statement.StatementInfoFactory;
+import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
+import br.com.jdbcpp.processor.exception.InvalidSelectResultMappingException;
+import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
 import br.com.jdbcpp.processor.util.BuildConstructorStrategy;
 import br.com.jdbcpp.processor.util.BuildSetterStrategy;
 import br.com.jdbcpp.processor.util.CollectionUtil;
@@ -39,6 +42,7 @@ public class ReadMethodInfoFactory {
     private final BuildConstructorStrategy buildConstructorStrategy;
     private final BuildSetterStrategy buildSetterStrategy;
     private final TypeUtil typeUtil;
+    private final MethodValidator methodValidator;
     private final CollectionUtil collectionUtil;
 
     public ReadMethodInfoFactory(final Types types,
@@ -46,12 +50,14 @@ public class ReadMethodInfoFactory {
                                  final BuildConstructorStrategy buildConstructorStrategy,
                                  final BuildSetterStrategy buildSetterStrategy,
                                  final TypeUtil typeUtil,
+                                 final MethodValidator methodValidator,
                                  final CollectionUtil collectionUtil) {
         this.types = types;
         this.elements = elements;
         this.buildConstructorStrategy = buildConstructorStrategy;
         this.buildSetterStrategy = buildSetterStrategy;
         this.typeUtil = typeUtil;
+        this.methodValidator = methodValidator;
         this.collectionUtil = collectionUtil;
     }
 
@@ -59,14 +65,17 @@ public class ReadMethodInfoFactory {
                              final List<ParamInfo> params,
                              final Map<String, List<ParamInfo>> classPropertyMap,
                              final Query query,
-                             final TypeMirror packException) {
+                             final TypeMirror packException) throws InvalidMethodSignatureException,
+            InvalidInputParamException,
+            MoreParamsThanStatementNeedException,
+            InvalidSelectResultMappingException {
 
         if (method.getReturnType().getKind() == TypeKind.VOID) {
             final var message = String.format(
                     "Method %s is annotated with @Query but returns void",
                     method.getSimpleName()
             );
-            throw new InvalidMethodSignatureException(message);
+            throw new InvalidMethodSignatureException(message, method);
         }
 
         TypeMirror returnType = method.getReturnType();
@@ -103,8 +112,8 @@ public class ReadMethodInfoFactory {
         final MethodInfo methodInfo = needStrategyToSelectReturn(returnType) ?
                 objectSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, packException):
                 simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, packException);
-        MethodValidator.validateParams(
-                methodInfo.getName(),
+        methodValidator.validateParams(
+                method,
                 params,
                 classPropertyMap,
                 methodInfo.getStatement().params()
@@ -122,7 +131,7 @@ public class ReadMethodInfoFactory {
                                                 final TypeMirror returnContainerType,
                                                 @Nullable
                                                 final TypeMirror instanceContainer,
-                                                final TypeMirror packException) {
+                                                final TypeMirror packException) throws InvalidSelectResultMappingException {
         final var resultBuildStrategy = method.getAnnotation(ResultBuildStrategy.class);
         final var strategyType = determineStrategyType(types, returnType, resultBuildStrategy);
         final var typeElement = ((TypeElement) types.asElement(returnType));

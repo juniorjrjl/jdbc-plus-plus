@@ -12,8 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static java.util.Objects.isNull;
-
 public class CollectionUtil {
 
     private static final Set<String> COLLECTION_TYPES = Set.of(

@@ -6,7 +6,6 @@ import br.com.jdbcpp.processor.service.statement.StatementBuilder;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 
-import javax.lang.model.util.Types;
 import java.sql.SQLException;
 
 import static javax.lang.model.element.Modifier.FINAL;
@@ -14,14 +13,11 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 public class SelectSingleMethodGenerator {
 
-    protected final Types types;
     protected final SelectResultSetDelegator selectResultSetDelegator;
     private final StatementBuilder statementBuilder;
 
-    public SelectSingleMethodGenerator(final Types types,
-                                       final SelectResultSetDelegator selectResultSetDelegator,
+    public SelectSingleMethodGenerator(final SelectResultSetDelegator selectResultSetDelegator,
                                        final StatementBuilder statementBuilder) {
-        this.types = types;
         this.selectResultSetDelegator = selectResultSetDelegator;
         this.statementBuilder = statementBuilder;
     }
