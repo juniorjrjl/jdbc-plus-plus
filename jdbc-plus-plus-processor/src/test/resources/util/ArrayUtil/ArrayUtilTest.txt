@@ -1,0 +1,7 @@
+package com.example;
+
+public class ArrayUtilTest {
+    String[] stringArray;
+    int[] intArray;
+    String simpleType;
+}

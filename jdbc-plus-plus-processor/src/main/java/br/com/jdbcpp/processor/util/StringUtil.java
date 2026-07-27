@@ -20,18 +20,5 @@ public final class StringUtil {
                 .toLowerCase();
     }
 
-    public static String snakeToCamelCase(final String value) {
-        if (value.isBlank()) {
-            return value;
-        }
-
-        final var snakePattern = Pattern.compile("^_+|_([a-zA-Z0-9])");
-        final var matcher = snakePattern.matcher(value.toLowerCase());
-
-        return matcher.replaceAll(matchResult -> {
-            final String group = matchResult.group(1);
-            return nonNull(group) ? group.toUpperCase() : "";
-        });
-    }
 
 }

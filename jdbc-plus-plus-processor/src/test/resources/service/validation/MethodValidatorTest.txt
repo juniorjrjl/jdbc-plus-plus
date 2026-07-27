@@ -1,0 +1,11 @@
+package com.example;
+
+public class MethodValidatorTest {
+    public int methodReturningInt() { return 0; }
+    public long methodReturningLong() { return 0L; }
+    public Integer methodReturningInteger() { return 0; }
+    public Long methodReturningLongWrapper() { return 0L; }
+    public String methodReturningString() { return ""; }
+    public void methodReturningVoid() {}
+    public Object methodReturningObject() { return null; }
+}

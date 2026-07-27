@@ -1,0 +1,68 @@
+package com.example;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+public class TypeUtilTest<T> {
+    boolean primitiveBoolean;
+    byte primitiveByte;
+    short primitiveShort;
+    int primitiveInt;
+    long primitiveLong;
+    char primitiveChar;
+    float primitiveFloat;
+    double primitiveDouble;
+
+    Boolean wrapperBoolean;
+    Byte wrapperByte;
+    Short wrapperShort;
+    Integer wrapperInt;
+    Long wrapperLong;
+    Character wrapperChar;
+    Float wrapperFloat;
+    Double wrapperDouble;
+
+    EnumType enumType;
+    BigDecimal bigDecimalType;
+    BigInteger bitIntegerType;
+    Date dateType;
+    UUID uuidType;
+    Instant instantType;
+    LocalDate localDateType;
+    LocalDateTime localDateTimeType;
+    LocalTime localTimeType;
+    OffsetDateTime offsetDateTimeType;
+    OffsetTime offsetTimeType;
+    ZonedDateTime zonedDateTimeType;
+
+    T typeParameterField;
+    ComplexEntity complexEntity;
+    List<String> listType;
+    Optional<String> optionalString;
+    Optional<Integer> optionalInteger;
+    Optional emptyOptional;
+    PersonRecord personRecord;
+
+    public enum EnumType {
+        SAMPLE, STUB
+    }
+
+    static class ComplexEntity {
+        String name;
+        int value;
+    }
+
+    record PersonRecord(String name, int age) {
+    }
+}

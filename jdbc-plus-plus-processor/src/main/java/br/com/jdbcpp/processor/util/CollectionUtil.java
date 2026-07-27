@@ -49,19 +49,6 @@ public class CollectionUtil {
         return false;
     }
 
-    public boolean isCollectionInterface(final TypeMirror type) {
-        final var element = types.asElement(type);
-        if (!(element instanceof TypeElement typeElement)) {
-            return false;
-        }
-
-        final var qualifiedName = typeElement.getQualifiedName().toString();
-
-        return qualifiedName.equals(List.class.getCanonicalName()) ||
-                qualifiedName.equals(Collection.class.getCanonicalName()) ||
-                qualifiedName.equals(Set.class.getCanonicalName());
-    }
-
     public String getCollectionImplementation(final TypeMirror type) {
         final var element = types.asElement(type);
         if (!(element instanceof TypeElement typeElement)) {

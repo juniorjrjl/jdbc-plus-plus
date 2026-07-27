@@ -45,9 +45,9 @@ public final class MethodValidator {
 
     public void validateReturn(final ExecutableElement method,
                                final boolean returnRowsAffected,
-                               final TypeMirror returnType,
                                final String operation,
                                final List<TypeMirror> validReturns) throws InvalidMethodSignatureException {
+        final var returnType = method.getReturnType();
         if (returnRowsAffected){
             if (!allowedReturnsRowsAffected.contains(returnType)) {
                 final var message = String.format(

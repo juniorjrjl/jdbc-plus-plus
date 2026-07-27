@@ -6,6 +6,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -43,35 +44,6 @@ public class TypeUtil {
             java.time.OffsetDateTime.class.getCanonicalName(),
             java.time.OffsetTime.class.getCanonicalName(),
             java.time.ZonedDateTime.class.getCanonicalName()
-    );
-
-    private static final Set<String> JDBC_COMPATIBLE_TYPES = Set.of(
-            String.class.getCanonicalName(),
-
-            Boolean.class.getCanonicalName(),
-            Byte.class.getCanonicalName(),
-            Character.class.getCanonicalName(),
-            Short.class.getCanonicalName(),
-            Integer.class.getCanonicalName(),
-            Long.class.getCanonicalName(),
-            Float.class.getCanonicalName(),
-            Double.class.getCanonicalName(),
-
-            java.math.BigDecimal.class.getCanonicalName(),
-            java.math.BigInteger.class.getCanonicalName(),
-
-            java.util.Date.class.getCanonicalName(),
-            java.util.UUID.class.getCanonicalName(),
-
-            java.time.Instant.class.getCanonicalName(),
-            java.time.LocalDate.class.getCanonicalName(),
-            java.time.LocalDateTime.class.getCanonicalName(),
-            java.time.LocalTime.class.getCanonicalName(),
-            java.time.OffsetDateTime.class.getCanonicalName(),
-            java.time.OffsetTime.class.getCanonicalName(),
-            java.time.ZonedDateTime.class.getCanonicalName(),
-            byte[].class.getCanonicalName(),
-            Byte[].class.getCanonicalName()
     );
 
     private static final Set<String> OPTIONAL_TYPES = Set.of(
@@ -126,7 +98,7 @@ public class TypeUtil {
     }
 
     public boolean isNestedObjectType(final TypeMirror type) {
-        return !isSimpleType(type) && !collectionUtil.isCollectionType(type);
+        return isNotSimpleType(type) && !collectionUtil.isCollectionType(type);
     }
 
     public boolean isOptionalType(final TypeMirror type) {
@@ -157,20 +129,6 @@ public class TypeUtil {
         return typeArguments.getFirst();
     }
 
-    @Nullable
-    public TypeMirror getOptionalElementType(final TypeMirror type) {
-        if (!(type instanceof DeclaredType declaredType)) {
-            return null;
-        }
-
-        final var typeArgs = declaredType.getTypeArguments();
-        if (typeArgs.isEmpty()) {
-            return null;
-        }
-
-        return typeArgs.getFirst();
-    }
-
     public boolean isRecord(final TypeMirror type) {
         final var element = types.asElement(type);
         if (!(element instanceof TypeElement typeElement)) {
@@ -178,17 +136,6 @@ public class TypeUtil {
         }
 
         return typeElement.getKind() == ElementKind.RECORD;
-    }
-
-    public String getSimpleClassName(final String qualifiedName){
-        final var lastDotIndex = qualifiedName.lastIndexOf(".");
-        return lastDotIndex == -1 ?
-                qualifiedName :
-                qualifiedName.substring(lastDotIndex + 1);
-    }
-
-    public boolean typeHasTypeParameter(final TypeElement type){
-        return type.getTypeParameters().isEmpty();
     }
 
     public TypeMirror buildContainerTypeMirror(final Supplier<Class<? extends Collection>> containerType,
@@ -201,7 +148,11 @@ public class TypeUtil {
             listTypeMirror = e.getTypeMirror();
         }
         final var collectionElement = (TypeElement) types.asElement(listTypeMirror);
-        return types.getDeclaredType(collectionElement, elementType);
+        final TypeMirror actualElementType = elementType.getKind().isPrimitive()
+                ? types.boxedClass((PrimitiveType) elementType).asType()
+                : elementType;
+
+        return types.getDeclaredType(collectionElement, actualElementType);
     }
 
     public boolean isList(TypeMirror typeMirror) {

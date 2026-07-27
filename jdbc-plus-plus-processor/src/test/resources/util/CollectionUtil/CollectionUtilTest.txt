@@ -1,0 +1,15 @@
+package com.example;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+public class CollectionUtilTest<T> {
+    List<String> listType;
+    Set<String> setType;
+    ArrayList<String> arrayListType;
+    List rawListType;
+    String simpleType;
+    T typeParameterField;
+}

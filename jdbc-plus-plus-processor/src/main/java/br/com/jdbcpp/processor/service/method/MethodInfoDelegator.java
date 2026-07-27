@@ -77,7 +77,6 @@ public class MethodInfoDelegator {
                             methodValidator.validateReturn(
                                     method,
                                     command.returnRowsAffected(),
-                                    methodInfo.getReturnType(),
                                     command.commandType().name(),
                                     validReturns);
                         }
@@ -85,7 +84,6 @@ public class MethodInfoDelegator {
                                 methodValidator.validateReturn(
                                         method,
                                         command.returnRowsAffected(),
-                                        methodInfo.getReturnType(),
                                         command.commandType().name(),
                                         List.of(types.getNoType(TypeKind.VOID))
                                 );

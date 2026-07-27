@@ -1,0 +1,12 @@
+package com.example;
+
+import java.util.List;
+import java.util.Set;
+
+public record ConstructorFactoryTest(
+        List<String> stringList,
+        Set<Integer> integerSet,
+        int[] intArray,
+        double primitiveValue,
+        Boolean wrapperValue
+) {}
