@@ -61,30 +61,32 @@ public class ClassParamInfoFactory {
                                  final TypeMirror parentTypeMirror) throws InvalidInputParamException {
         final var collectionType = collectionUtil.getCollectionElementType(paramTypeMirror);
         final var arrayType = arrayUtil.getArrayElementType(paramTypeMirror);
-        final TypeMirror typeContainer;
-        final List<ParamInfo> nestedProperties;
-        final TypeElement typeElement;
+        final var classParamInfoBuilder = ClassParamInfo.builder()
+                .withName(paramName)
+                .withType(paramTypeMirror)
+                .withRecordClass(typeUtil.isRecord(paramTypeMirror));
         if (nonNull(collectionType)) {
-            typeElement = (TypeElement) types.asElement(collectionType);
-            typeContainer = collectionType;
+            final TypeElement typeElement = (TypeElement) types.asElement(collectionType);
+            final List<ParamInfo> nestedProperties = extractFieldsFromType(typeElement);
+            classParamInfoBuilder.withContainerType(collectionType)
+                    .withNestedProperties(nestedProperties);
         } else if (nonNull(arrayType)) {
-            typeElement = (TypeElement) types.asElement(arrayType);
-            typeContainer = arrayType;
+            final TypeElement typeElement = (TypeElement) types.asElement(arrayType);
+            final List<ParamInfo> nestedProperties = extractFieldsFromType(typeElement);
+            classParamInfoBuilder.withContainerType(arrayType)
+                    .withNestedProperties(nestedProperties);
         } else {
-            typeElement = (TypeElement) types.asElement(paramTypeMirror);
-            typeContainer = null;
+            final TypeElement typeElement = (TypeElement) types.asElement(paramTypeMirror);
+            final List<ParamInfo> nestedProperties = extractFieldsFromType(typeElement);
+            classParamInfoBuilder.withNestedProperties(nestedProperties);
         }
-        nestedProperties = extractFieldsFromType(typeElement);
-        return new ClassParamInfo(
-                paramName,
-                paramTypeMirror,
-                typeContainer,
-                nestedProperties,
-                typeUtil.isRecord(paramTypeMirror),
-                isNull(parentTypeMirror) ?
-                        paramName :
-                        findMethod(parentTypeMirror, paramName, paramTypeMirror)
-        );
+        final var convertMethod = isNull(parentTypeMirror) ?
+                paramName :
+                findMethod(parentTypeMirror, paramName, paramTypeMirror);
+
+        return classParamInfoBuilder
+                .withConvertMethod(convertMethod)
+                .build();
     }
 
     private List<ParamInfo> extractFieldsFromType(final TypeElement typeElement) throws InvalidInputParamException {

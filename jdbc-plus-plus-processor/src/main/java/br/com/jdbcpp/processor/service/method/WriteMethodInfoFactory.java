@@ -6,23 +6,19 @@ import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.UpdateMethod;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
-import br.com.jdbcpp.processor.service.statement.StatementInfoFactory;
 import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
+import br.com.jdbcpp.processor.service.statement.StatementInfoFactory;
 import br.com.jdbcpp.processor.service.validation.MethodValidator;
 
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class WriteMethodInfoFactory {
-
-    private static final String NONE_EXCEPTION = "br.com.jdbcpp.api.Command.NONE";
 
     private final MethodValidator methodValidator;
     private final TypeMirror sqlException;

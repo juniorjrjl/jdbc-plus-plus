@@ -1,0 +1,10 @@
+package com.example;
+
+public class ParamPathExtractorTest {
+    public String name;
+    public int age;
+    public String street;
+    public String city;
+    public String value;
+    public String phone;
+}
