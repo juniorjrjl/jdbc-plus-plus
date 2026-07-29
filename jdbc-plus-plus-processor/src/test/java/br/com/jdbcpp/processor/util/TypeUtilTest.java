@@ -5,11 +5,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import util.FieldUtil;
-import util.MicroProcessor;
+import util.extension.Fixture;
+import util.extension.FixtureElement;
+import util.extension.MicroProcessorExtension;
+import util.extension.ProcessingEnv;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.TypeElement;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
@@ -21,78 +27,71 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, MicroProcessorExtension.class})
+@Fixture(
+        resourcePath = "util/TypeUtil/TypeUtilTest.txt",
+        packageName = "com.example"
+)
 class TypeUtilTest {
 
     @Mock
     private CollectionUtil collectionUtil;
+    @ProcessingEnv
+    private ProcessingEnvironment processingEnv;
+    @FixtureElement
+    private TypeElement fixture;
 
-    private static Stream<String> whenNotPrimitiveTypeThenReturnTrue() {
-        return Stream.of(
-        "primitiveBoolean",
-                "primitiveByte",
-                "primitiveShort",
-                "primitiveInt",
-                "primitiveLong",
-                "primitiveChar",
-                "primitiveFloat",
-                "primitiveDouble",
-                "wrapperBoolean",
-                "wrapperByte",
-                "wrapperShort",
-                "wrapperInt",
-                "wrapperLong",
-                "wrapperChar",
-                "wrapperFloat",
-                "wrapperDouble",
-                "enumType",
-                "bigDecimalType",
-                "bitIntegerType",
-                "dateType",
-                "uuidType",
-                "instantType",
-                "localDateType",
-                "localDateTimeType",
-                "localTimeType",
-                "offsetDateTimeType",
-                "offsetTimeType",
-                "zonedDateTimeType"
+    private TypeUtil createTypeUtil() {
+        return new TypeUtil(
+                processingEnv.getElementUtils(),
+                processingEnv.getTypeUtils(),
+                collectionUtil
         );
     }
 
     @ParameterizedTest
-    @MethodSource
+    @ValueSource(strings = {
+            "primitiveBoolean",
+            "primitiveByte",
+            "primitiveShort",
+            "primitiveInt",
+            "primitiveLong",
+            "primitiveChar",
+            "primitiveFloat",
+            "primitiveDouble",
+            "wrapperBoolean",
+            "wrapperByte",
+            "wrapperShort",
+            "wrapperInt",
+            "wrapperLong",
+            "wrapperChar",
+            "wrapperFloat",
+            "wrapperDouble",
+            "enumType",
+            "bigDecimalType",
+            "bitIntegerType",
+            "dateType",
+            "uuidType",
+            "instantType",
+            "localDateType",
+            "localDateTimeType",
+            "localTimeType",
+            "offsetDateTimeType",
+            "offsetTimeType",
+            "zonedDateTimeType"
+    })
     void whenNotPrimitiveTypeThenReturnTrue(final String fieldName) {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-                );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var primitiveInt = FieldUtil.getFieldType(fixture, fieldName);
-            assertThat(testInstance.isNotSimpleType(primitiveInt)).isFalse();
-        });
+        final var typeUtil = createTypeUtil();
+        final var primitiveInt = FieldUtil.getFieldType(fixture, fieldName);
+        assertThat(typeUtil.isNotSimpleType(primitiveInt)).isFalse();
         verifyNoInteractions(collectionUtil);
     }
 
     @Test
     void shouldReturnFalseForNonTypeElementCallingIsNotSimpleType() {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var typeParameterField = FieldUtil.getFieldType(fixture, "typeParameterField");
-
-            assertThat(testInstance.isNotSimpleType(typeParameterField)).isTrue();
-        });
+        final var typeUtil = createTypeUtil();
+        final var typeParameterField = FieldUtil.getFieldType(fixture, "typeParameterField");
+        assertThat(typeUtil.isNotSimpleType(typeParameterField)).isTrue();
         verifyNoInteractions(collectionUtil);
     }
 
@@ -106,18 +105,9 @@ class TypeUtilTest {
     @ParameterizedTest
     @MethodSource
     void shouldSayIfIsEnum(final String fieldName, final boolean isEnum) {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var enumType = FieldUtil.getFieldType(fixture, fieldName);
-            assertThat(testInstance.isEnum(enumType)).isEqualTo(isEnum);
-        });
+        final var typeUtil = createTypeUtil();
+        final var enumType = FieldUtil.getFieldType(fixture, fieldName);
+        assertThat(typeUtil.isEnum(enumType)).isEqualTo(isEnum);
         verifyNoInteractions(collectionUtil);
     }
 
@@ -131,38 +121,17 @@ class TypeUtilTest {
     @ParameterizedTest
     @MethodSource
     void shouldIdentifyNestedObjectType(final String fieldName, final boolean isNested) {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var type = FieldUtil.getFieldType(fixture, fieldName);
-
-            when(collectionUtil.isCollectionType(type)).thenReturn(fieldName.equals("listType"));
-
-            assertThat(testInstance.isNestedObjectType(type)).isEqualTo(isNested);
-        });
+        final var typeUtil = createTypeUtil();
+        final var type = FieldUtil.getFieldType(fixture, fieldName);
+        when(collectionUtil.isCollectionType(type)).thenReturn(fieldName.equals("listType"));
+        assertThat(typeUtil.isNestedObjectType(type)).isEqualTo(isNested);
     }
 
     @Test
     void shouldReturnFalseForSimpleTypes() {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var wrapperInt = FieldUtil.getFieldType(fixture, "wrapperInt");
-
-            assertThat(testInstance.isNestedObjectType(wrapperInt)).isFalse();
-        });
+        final var typeUtil = createTypeUtil();
+        final var wrapperInt = FieldUtil.getFieldType(fixture, "wrapperInt");
+        assertThat(typeUtil.isNestedObjectType(wrapperInt)).isFalse();
         verifyNoInteractions(collectionUtil);
     }
 
@@ -178,19 +147,9 @@ class TypeUtilTest {
     @ParameterizedTest
     @MethodSource
     void shouldIdentifyOptionalType(final String fieldName, final boolean isOptional) {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var type = FieldUtil.getFieldType(fixture, fieldName);
-
-            assertThat(testInstance.isOptionalType(type)).isEqualTo(isOptional);
-        });
+        final var typeUtil = createTypeUtil();
+        final var type = FieldUtil.getFieldType(fixture, fieldName);
+        assertThat(typeUtil.isOptionalType(type)).isEqualTo(isOptional);
         verifyNoInteractions(collectionUtil);
     }
 
@@ -204,61 +163,29 @@ class TypeUtilTest {
     @ParameterizedTest
     @MethodSource
     void shouldExtractOptionalTypeArgument(final String fieldName, final String expectedTypeName) {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var type = FieldUtil.getFieldType(fixture, fieldName);
-            final var extractedType = testInstance.getOptionalType(type);
-
-            assertThat(extractedType).isNotNull();
-            assertThat(extractedType.toString()).contains(expectedTypeName);
-        });
+        final var typeUtil = createTypeUtil();
+        final var type = FieldUtil.getFieldType(fixture, fieldName);
+        final var extractedType = typeUtil.getOptionalType(type);
+        assertThat(extractedType).isNotNull();
+        assertThat(extractedType.toString()).contains(expectedTypeName);
         verifyNoInteractions(collectionUtil);
     }
 
     @Test
     void shouldReturnNullForNonOptionalTypes() {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var wrapperInt = FieldUtil.getFieldType(fixture, "wrapperInt");
-
-            final var extractedType = testInstance.getOptionalType(wrapperInt);
-
-            assertThat(extractedType).isNull();
-        });
+        final var typeUtil = createTypeUtil();
+        final var wrapperInt = FieldUtil.getFieldType(fixture, "wrapperInt");
+        final var extractedType = typeUtil.getOptionalType(wrapperInt);
+        assertThat(extractedType).isNull();
         verifyNoInteractions(collectionUtil);
     }
 
     @Test
     void shouldReturnNullForOptionalWithoutTypeArgument() {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var emptyOptional = FieldUtil.getFieldType(fixture, "emptyOptional");
-
-            final var extractedType = testInstance.getOptionalType(emptyOptional);
-
-            assertThat(extractedType).isNull();
-        });
+        final var typeUtil = createTypeUtil();
+        final var emptyOptional = FieldUtil.getFieldType(fixture, "emptyOptional");
+        final var extractedType = typeUtil.getOptionalType(emptyOptional);
+        assertThat(extractedType).isNull();
         verifyNoInteractions(collectionUtil);
     }
 
@@ -272,37 +199,17 @@ class TypeUtilTest {
     @ParameterizedTest
     @MethodSource
     void shouldIdentifyRecordType(final String fieldName, final boolean isRecord) {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var type = FieldUtil.getFieldType(fixture, fieldName);
-
-            assertThat(testInstance.isRecord(type)).isEqualTo(isRecord);
-        });
+        final var typeUtil = createTypeUtil();
+        final var type = FieldUtil.getFieldType(fixture, fieldName);
+        assertThat(typeUtil.isRecord(type)).isEqualTo(isRecord);
         verifyNoInteractions(collectionUtil);
     }
 
     @Test
     void shouldReturnFalseForNonTypeElementCallingIsRecord() {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var typeParameterField = FieldUtil.getFieldType(fixture, "typeParameterField");
-
-            assertThat(testInstance.isRecord(typeParameterField)).isFalse();
-        });
+        final var typeUtil = createTypeUtil();
+        final var typeParameterField = FieldUtil.getFieldType(fixture, "typeParameterField");
+        assertThat(typeUtil.isRecord(typeParameterField)).isFalse();
         verifyNoInteractions(collectionUtil);
     }
 
@@ -318,23 +225,12 @@ class TypeUtilTest {
     void shouldBuildContainerTypeMirror(final Class<? extends Collection> containerType,
                                         final String expectedContainerName,
                                         final String fieldName) {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var elementType = FieldUtil.getFieldType(fixture, fieldName);
-
-            final var containerTypeMirror = testInstance.buildContainerTypeMirror(() -> containerType, elementType);
-
-            assertThat(containerTypeMirror).isNotNull();
-            assertThat(containerTypeMirror.toString()).contains(expectedContainerName);
-            assertThat(containerTypeMirror.toString()).contains("Integer");
-        });
+        final var typeUtil = createTypeUtil();
+        final var elementType = FieldUtil.getFieldType(fixture, fieldName);
+        final var containerTypeMirror = typeUtil.buildContainerTypeMirror(() -> containerType, elementType);
+        assertThat(containerTypeMirror).isNotNull();
+        assertThat(containerTypeMirror.toString()).contains(expectedContainerName);
+        assertThat(containerTypeMirror.toString()).contains("Integer");
         verifyNoInteractions(collectionUtil);
     }
 
@@ -348,19 +244,9 @@ class TypeUtilTest {
     @ParameterizedTest
     @MethodSource
     void shouldIdentifyListType(final String fieldName, final boolean isList) {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var type = FieldUtil.getFieldType(fixture, fieldName);
-
-            assertThat(testInstance.isList(type)).isEqualTo(isList);
-        });
+        final var typeUtil = createTypeUtil();
+        final var type = FieldUtil.getFieldType(fixture, fieldName);
+        assertThat(typeUtil.isList(type)).isEqualTo(isList);
         verifyNoInteractions(collectionUtil);
     }
 
@@ -378,80 +264,37 @@ class TypeUtilTest {
     @ParameterizedTest
     @MethodSource
     void shouldGetTypeMirrorFromClass(final Supplier<Class<?>> classCallback, final String expectedTypeName) {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var typeMirror = testInstance.getTypeMirrorFromClass(classCallback);
-
-            assertThat(typeMirror).isNotNull();
-            assertThat(typeMirror.toString()).contains(expectedTypeName);
-        });
+        final var typeUtil = createTypeUtil();
+        final var typeMirror = typeUtil.getTypeMirrorFromClass(classCallback);
+        assertThat(typeMirror).isNotNull();
+        assertThat(typeMirror.toString()).contains(expectedTypeName);
         verifyNoInteractions(collectionUtil);
     }
 
     @Test
     void shouldIdentifyCollectionOfClass() {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var listType = FieldUtil.getFieldType(fixture, "listType");
-            final var complexEntity = FieldUtil.getFieldType(fixture, "complexEntity");
-
-            when(collectionUtil.getCollectionElementType(listType)).thenReturn(complexEntity);
-
-            assertThat(testInstance.isCollectionOfClass(listType)).isTrue();
-        });
+        final var typeUtil = createTypeUtil();
+        final var listType = FieldUtil.getFieldType(fixture, "listType");
+        final var complexEntity = FieldUtil.getFieldType(fixture, "complexEntity");
+        when(collectionUtil.getCollectionElementType(listType)).thenReturn(complexEntity);
+        assertThat(typeUtil.isCollectionOfClass(listType)).isTrue();
     }
 
     @Test
     void shouldReturnFalseForCollectionWithSimpleType() {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var listType = FieldUtil.getFieldType(fixture, "listType");
-            final var wrapperInt = FieldUtil.getFieldType(fixture, "wrapperInt");
-
-            when(collectionUtil.getCollectionElementType(listType)).thenReturn(wrapperInt);
-
-            assertThat(testInstance.isCollectionOfClass(listType)).isFalse();
-        });
+        final var typeUtil = createTypeUtil();
+        final var listType = FieldUtil.getFieldType(fixture, "listType");
+        final var wrapperInt = FieldUtil.getFieldType(fixture, "wrapperInt");
+        when(collectionUtil.getCollectionElementType(listType)).thenReturn(wrapperInt);
+        assertThat(typeUtil.isCollectionOfClass(listType)).isFalse();
     }
 
     @Test
     void shouldReturnFalseForNonCollection() {
-        final var microProcessor = new MicroProcessor<>(
-                "util/TypeUtil/TypeUtilTest.txt",
-                "com.example",
-                processingEnv -> new TypeUtil(
-                        processingEnv.getElementUtils(),
-                        processingEnv.getTypeUtils(),
-                        collectionUtil)
-        );
-        microProcessor.compile((testInstance, fixture) -> {
-            final var wrapperInt = FieldUtil.getFieldType(fixture, "wrapperInt");
-
-            when(collectionUtil.getCollectionElementType(wrapperInt)).thenReturn(null);
-
-            assertThat(testInstance.isCollectionOfClass(wrapperInt)).isFalse();
-        });
+        final var typeUtil = createTypeUtil();
+        final var wrapperInt = FieldUtil.getFieldType(fixture, "wrapperInt");
+        when(collectionUtil.getCollectionElementType(wrapperInt)).thenReturn(null);
+        assertThat(typeUtil.isCollectionOfClass(wrapperInt)).isFalse();
     }
 
 }

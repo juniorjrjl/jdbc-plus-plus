@@ -67,6 +67,11 @@ public final class SimpleParamInfoFactory {
                                            final TypeMirror collectionType)
             throws InvalidInputParamException{
         final var paramName = param.getSimpleName().toString();
+        final var simpleParamInfoBuilder = SimpleParamInfo.builder()
+                .withName(paramName)
+                .withType(param.asType())
+                .withCustomEnum(typeUtil.isEnum(param.asType()))
+                .withContainerType(collectionType);
         return Optional.ofNullable(param.getAnnotation(InputParam.class))
                 .map(LambdaUtil.unchecked(i -> {
                     final String convertMethod;
@@ -88,27 +93,19 @@ public final class SimpleParamInfoFactory {
                     } else {
                         convertMethod = i.value().isBlank() ? paramName : i.value();
                     }
-                    return new SimpleParamInfo(
-                            paramName,
-                            param.asType(),
-                            typeUtil.isEnum(param.asType()),
-                            collectionType,
-                            i.statementField().isBlank() ?
-                                    StringUtil.camelToSnakeCase(paramName) :
-                                    i.statementField(),
-                            convertMethod,
-                            i.ignore(),
-                            enumMethodType
-                    );
-                })).orElseGet(() -> new SimpleParamInfo(
-                        paramName,
-                        param.asType(),
-                        typeUtil.isEnum(param.asType()),
-                        collectionType,
-                        StringUtil.camelToSnakeCase(paramName),
-                        paramName,
-                        null
-                ));
+                    final var queryParamName = i.statementField().isBlank() ?
+                            StringUtil.camelToSnakeCase(paramName) :
+                            i.statementField();
+                    return simpleParamInfoBuilder.withQueryParamName(queryParamName)
+                            .withConvertMethod(convertMethod)
+                            .withIgnore(i.ignore())
+                            .withEnumMethodType(enumMethodType)
+                            .build();
+                })).orElseGet(() -> simpleParamInfoBuilder
+                            .withQueryParamName(StringUtil.camelToSnakeCase(paramName))
+                            .withConvertMethod(paramName)
+                            .build()
+                );
     }
 
 }

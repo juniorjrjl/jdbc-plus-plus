@@ -128,6 +128,11 @@ public class ClassParamInfoFactory {
                                            final TypeMirror collectionType,
                                            final TypeMirror parentType) {
         final var paramName = param.getSimpleName().toString();
+        final var simpleParamInfoBuilder = SimpleParamInfo.builder()
+                .withName(paramName)
+                .withType(param.asType())
+                .withCustomEnum(typeUtil.isEnum(param.asType()))
+                .withContainerType(collectionType);
         return Optional.ofNullable(param.getAnnotation(InputParam.class))
                 .map(LambdaUtil.unchecked(i -> {
                     final String convertMethod;
@@ -151,27 +156,19 @@ public class ClassParamInfoFactory {
                                 findMethod(parentType, paramName, param.asType()) :
                                 i.value();
                     }
-                    return new SimpleParamInfo(
-                            paramName,
-                            param.asType(),
-                            typeUtil.isEnum(param.asType()),
-                            collectionType,
-                            i.statementField().isBlank() ?
-                                    StringUtil.camelToSnakeCase(paramName) :
-                                    i.statementField(),
-                            convertMethod,
-                            i.ignore(),
-                            enumMethodType
-                    );
-                })).orElseGet(LambdaUtil.unchecked(() -> new SimpleParamInfo(
-                        paramName,
-                        param.asType(),
-                        typeUtil.isEnum(param.asType()),
-                        collectionType,
-                        StringUtil.camelToSnakeCase(paramName),
-                        findMethod(parentType, paramName, param.asType()),
-                        null
-                )));
+                    final var queryParamName = i.statementField().isBlank() ?
+                            StringUtil.camelToSnakeCase(paramName) :
+                            i.statementField();
+                    return simpleParamInfoBuilder.withQueryParamName(queryParamName)
+                            .withConvertMethod(convertMethod)
+                            .withIgnore(i.ignore())
+                            .withEnumMethodType(enumMethodType)
+                            .build();
+                })).orElseGet(LambdaUtil.unchecked(() -> simpleParamInfoBuilder
+                        .withQueryParamName(StringUtil.camelToSnakeCase(paramName))
+                        .withConvertMethod(findMethod(parentType, paramName, param.asType()))
+                        .build())
+                );
     }
 
     public String findMethod(final TypeMirror typeMirror,

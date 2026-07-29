@@ -1,5 +1,7 @@
 package com.example;
 
+import java.sql.SQLException;
+
 public class MethodValidatorTest {
     public int methodReturningInt() { return 0; }
     public long methodReturningLong() { return 0L; }
@@ -8,4 +10,24 @@ public class MethodValidatorTest {
     public String methodReturningString() { return ""; }
     public void methodReturningVoid() {}
     public Object methodReturningObject() { return null; }
+
+    public void methodThrowingSQLException() throws SQLException {}
+    public void methodThrowingCustomExceptionWithThrowableConstructor() throws CustomExceptionWithThrowableConstructor {}
+    public void methodThrowingCustomExceptionWithoutThrowableConstructor() throws CustomExceptionWithoutThrowableConstructor {}
+
+    public void methodWithMatchingParams(String name, int age) {}
+    public void methodWithExtraMethodParams(String name, int age, String email) {}
+    public void methodWithExtraStatementParams(String name) {}
+
+    static class CustomExceptionWithThrowableConstructor extends Exception {
+        public CustomExceptionWithThrowableConstructor(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    static class CustomExceptionWithoutThrowableConstructor extends Exception {
+        public CustomExceptionWithoutThrowableConstructor(String message) {
+            super(message);
+        }
+    }
 }

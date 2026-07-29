@@ -84,9 +84,7 @@ public final class MethodValidator {
                 params.stream()
                         .filter(SimpleParamInfo.class::isInstance)
                         .map(SimpleParamInfo.class::cast)
-                        .map(p -> p.getName().equals(p.getQueryParamName()) ?
-                                p.getName() :
-                                p.getQueryParamName())
+                        .map(MethodValidator::extractParamName)
                         .collect(Collectors.toSet()) :
                 classPropertyMap.keySet().stream().map(StringUtil::camelToSnakeCase).toList();
 
@@ -113,6 +111,12 @@ public final class MethodValidator {
             );
             throw new MoreParamsThanStatementNeedException(message, method);
         }
+    }
+
+    private static String extractParamName(final SimpleParamInfo p) {
+        return p.getName().equals(p.getQueryParamName()) ?
+                p.getName() :
+                p.getQueryParamName();
     }
 
     public void validateExceptionThrow(final ExecutableElement method,
