@@ -7,7 +7,6 @@ import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
-import java.sql.SQLException;
 
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
