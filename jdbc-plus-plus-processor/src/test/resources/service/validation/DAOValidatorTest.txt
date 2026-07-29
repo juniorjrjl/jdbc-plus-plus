@@ -1,0 +1,58 @@
+package com.example;
+
+import javax.sql.DataSource;
+
+public class DAOValidatorTest {
+
+    enum InvalidEnum {
+        VALUE
+    }
+
+    interface ValidDAOInterface {
+    }
+
+    abstract static class ValidAbstractDAO {
+        protected final DataSource dataSource;
+
+        protected ValidAbstractDAO(DataSource dataSource) {
+            this.dataSource = dataSource;
+        }
+    }
+
+    abstract static class ValidAbstractPublicDAO {
+            protected final DataSource dataSource;
+
+            public ValidAbstractPublicDAO(DataSource dataSource) {
+                this.dataSource = dataSource;
+            }
+        }
+
+    static class InvalidAbstractClassNotAbstract {
+        protected final DataSource dataSource;
+
+        public InvalidAbstractClassNotAbstract(DataSource dataSource) {
+            this.dataSource = dataSource;
+        }
+    }
+
+    abstract static class InvalidAbstractClassMissingDataSourceField {
+        protected InvalidAbstractClassMissingDataSourceField(DataSource dataSource) {
+        }
+    }
+
+    abstract static class InvalidAbstractClassMissingConstructor {
+        protected final DataSource dataSource;
+
+        protected InvalidAbstractClassMissingConstructor() {
+            this.dataSource = null;
+        }
+    }
+
+    abstract static class InvalidAbstractClassConstructorWithoutDataSourceParam {
+        protected final DataSource dataSource;
+
+        protected InvalidAbstractClassConstructorWithoutDataSourceParam(String name) {
+            this.dataSource = null;
+        }
+    }
+}

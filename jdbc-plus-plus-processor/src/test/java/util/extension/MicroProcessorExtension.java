@@ -16,6 +16,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.google.testing.compile.CompilationSubject.assertThat;
@@ -56,15 +57,14 @@ public class MicroProcessorExtension implements InvocationInterceptor {
             public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                 if (roundEnv.processingOver()) return false;
 
-                final var fixtureElement = processingEnv.getElementUtils().getTypeElement(fqcn);
-                if (nonNull(fixtureElement)) {
-                    injectFields(testInstance, processingEnv, fixtureElement);
+                final var fixtureElement = Optional.ofNullable(processingEnv.getElementUtils().getTypeElement(fqcn))
+                        .orElseThrow();
+                injectFields(testInstance, processingEnv, fixtureElement);
 
-                    try {
-                        testRunnable.run();
-                    } catch (Throwable t) {
-                        thrownInTest[0] = t;
-                    }
+                try {
+                    testRunnable.run();
+                } catch (Throwable t) {
+                    thrownInTest[0] = t;
                 }
                 return true;
             }

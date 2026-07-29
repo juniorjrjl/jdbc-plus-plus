@@ -14,6 +14,7 @@ public class MethodValidatorTest {
     public void methodThrowingSQLException() throws SQLException {}
     public void methodThrowingCustomExceptionWithThrowableConstructor() throws CustomExceptionWithThrowableConstructor {}
     public void methodThrowingCustomExceptionWithoutThrowableConstructor() throws CustomExceptionWithoutThrowableConstructor {}
+    public void methodThrowingCustomExceptionWithTwoArguments() throws CustomExceptionWithTwoArguments {}
 
     public void methodWithMatchingParams(String name, int age) {}
     public void methodWithExtraMethodParams(String name, int age, String email) {}
@@ -30,4 +31,11 @@ public class MethodValidatorTest {
             super(message);
         }
     }
+
+    static class CustomExceptionWithTwoArguments extends Exception {
+        public CustomExceptionWithTwoArguments(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
 }

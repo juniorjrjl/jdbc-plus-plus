@@ -7,7 +7,6 @@ import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
 import br.com.jdbcpp.processor.util.TypeUtil;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -182,12 +181,13 @@ class MethodValidatorTest {
                 methodValidator.validateExceptionThrow(method, exception));
     }
 
-    @Test
-    void shouldThrowExceptionWhenCustomExceptionWithoutThrowableConstructor() {
+    @ParameterizedTest
+    @ValueSource(strings = {"methodThrowingCustomExceptionWithoutThrowableConstructor", "methodThrowingCustomExceptionWithTwoArguments"})
+    void shouldThrowExceptionWhenCustomExceptionWithoutThrowableConstructor(final String methodName) {
         final var methodValidator = createMethodValidator();
         final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
                 .stream()
-                .filter(m -> m.getSimpleName().toString().equals("methodThrowingCustomExceptionWithoutThrowableConstructor"))
+                .filter(m -> m.getSimpleName().toString().equals(methodName))
                 .findFirst()
                 .orElseThrow();
         final var exception = method.getThrownTypes().getFirst();

@@ -4,18 +4,17 @@ import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.api.DAO;
 import br.com.jdbcpp.api.Query;
 import br.com.jdbcpp.processor.dto.DAOImplInfo;
-import br.com.jdbcpp.processor.service.constructor.ConstructorFactory;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
-import br.com.jdbcpp.processor.service.method.MethodInfoDelegator;
 import br.com.jdbcpp.processor.exception.InvalidDAOException;
 import br.com.jdbcpp.processor.exception.JDBCPlusPlusProcessorException;
 import br.com.jdbcpp.processor.exception.ReadDAOFacadeException;
 import br.com.jdbcpp.processor.service.DAOGenerator;
+import br.com.jdbcpp.processor.service.constructor.ConstructorFactory;
+import br.com.jdbcpp.processor.service.method.MethodInfoDelegator;
 import br.com.jdbcpp.processor.service.validation.DAOValidator;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import java.io.IOException;
@@ -29,7 +28,6 @@ public class ProcessorFacade {
     private final RoundEnvironment roundEnv;
     private final Elements elements;
     private final DAOValidator daoValidator;
-    private final TypeMirror dataSourceElement;
     private final ConstructorFactory constructorFactory;
     private final MethodInfoDelegator methodInfoDelegator;
     private final DAOGenerator daoGenerator;
@@ -38,7 +36,6 @@ public class ProcessorFacade {
     public ProcessorFacade(final RoundEnvironment roundEnv,
                            final Elements elements,
                            final DAOValidator daoValidator,
-                           final TypeMirror dataSourceElement,
                            final ConstructorFactory constructorFactory,
                            final MethodInfoDelegator methodInfoDelegator,
                            final DAOGenerator daoGenerator,
@@ -46,7 +43,6 @@ public class ProcessorFacade {
         this.roundEnv = roundEnv;
         this.elements = elements;
         this.daoValidator = daoValidator;
-        this.dataSourceElement = dataSourceElement;
         this.constructorFactory = constructorFactory;
         this.methodInfoDelegator = methodInfoDelegator;
         this.daoGenerator = daoGenerator;
@@ -72,9 +68,9 @@ public class ProcessorFacade {
                     .filter(m -> nonNull(m.getAnnotation(Query.class)) || nonNull(m.getAnnotation(Command.class)))
                     .toList();
 
-            final var constructor = daoValidator.isValid(mappedDAO, dataSourceElement);
-            final var constructorInfo = constructorFactory.build(constructor);
-            daoImplInfoBuilder.constructor(constructorInfo);
+            daoValidator.validateAndResolve(mappedDAO)
+                    .map(constructorFactory::build)
+                    .ifPresent(daoImplInfoBuilder::constructor);
 
             if (methods.isEmpty()) {
                 final var message = String.format(

@@ -82,7 +82,7 @@ public class ProcessorContext {
                 .orElseThrow(LambdaUtil.unchecked(() -> new ProcessorContextInitialization("Integer not found")));
 
 
-        final var daoValidator = new DAOValidator(types, elements, DATA_SOURCE_CANONICAL_NAME);
+        final var daoValidator = new DAOValidator(types, elements, DATA_SOURCE_CANONICAL_NAME, dataSourceElement);
 
         final var collectionUtil = new CollectionUtil(types);
         final var typeUtil = new TypeUtil(elements, types, collectionUtil);
@@ -183,7 +183,6 @@ public class ProcessorContext {
                 roundEnvironment,
                 elements,
                 daoValidator,
-                dataSourceElement,
                 constructorFactory,
                 methodInfoDelegator,
                 daoGenerator,
