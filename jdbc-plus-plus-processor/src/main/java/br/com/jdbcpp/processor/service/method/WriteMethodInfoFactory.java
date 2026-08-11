@@ -18,6 +18,10 @@ import javax.lang.model.util.Types;
 import java.util.List;
 import java.util.Map;
 
+import static br.com.jdbcpp.api.CommandType.DELETE;
+import static br.com.jdbcpp.api.CommandType.INSERT;
+import static br.com.jdbcpp.api.CommandType.UPDATE;
+
 public class WriteMethodInfoFactory {
 
     private final MethodValidator methodValidator;
@@ -45,10 +49,23 @@ public class WriteMethodInfoFactory {
         final var methodExceptionThrow = types.isSameType(nullWriteException, packException) ?
                 sqlException:
                 packException;
+        final var builder = MethodInfo.builder()
+                .withName(method.getSimpleName().toString())
+                .withReturnType(method.getReturnType())
+                .withParams(params)
+                .withClassPropertyMap(classPropertyMap)
+                .withPackException(methodExceptionThrow)
+                .withStatement(StatementInfoFactory.create(command.value()));
         final var methodInfo = switch (command.commandType()) {
-            case INSERT -> getInsertMethod(method, params, classPropertyMap, command, methodExceptionThrow);
-            case UPDATE -> getUpdateMethod(method, params, classPropertyMap, command, methodExceptionThrow);
-            case DELETE -> getDeleteMethod(method, params, classPropertyMap, command, methodExceptionThrow);
+            case INSERT -> builder.<InsertMethod.InsertMethodBuilder>asWriteType(INSERT)
+                    .withReturnRowsAffected(command.returnRowsAffected())
+                    .build();
+            case UPDATE -> builder.<UpdateMethod.UpdateMethodBuilder>asWriteType(UPDATE)
+                    .withReturnRowsAffected(command.returnRowsAffected())
+                    .build();
+            case DELETE -> builder.<DeleteMethod.DeleteMethodBuilder>asWriteType(DELETE)
+                    .withReturnRowsAffected(command.returnRowsAffected())
+                    .build();
         };
         methodValidator.validateParams(
                 method,
@@ -58,54 +75,6 @@ public class WriteMethodInfoFactory {
         );
         methodValidator.validateExceptionThrow(method, methodExceptionThrow);
         return methodInfo;
-    }
-
-    private DeleteMethod getDeleteMethod(final ExecutableElement method,
-                                         final List<ParamInfo> params,
-                                         final Map<String, List<ParamInfo>> classPropertyMap,
-                                         final Command command,
-                                         final TypeMirror packException) {
-        return new DeleteMethod(
-                method.getSimpleName().toString(),
-                method.getReturnType(),
-                params,
-                classPropertyMap,
-                StatementInfoFactory.create(command.value()),
-                packException,
-                command.returnRowsAffected()
-        );
-    }
-
-    private UpdateMethod getUpdateMethod(final ExecutableElement method,
-                                         final List<ParamInfo> params,
-                                         final Map<String, List<ParamInfo>> classPropertyMap,
-                                         final Command command,
-                                         final TypeMirror packException) {
-        return new UpdateMethod(
-                method.getSimpleName().toString(),
-                method.getReturnType(),
-                params,
-                classPropertyMap,
-                StatementInfoFactory.create(command.value()),
-                packException,
-                command.returnRowsAffected()
-        );
-    }
-
-    private InsertMethod getInsertMethod(final ExecutableElement method,
-                                         final List<ParamInfo> params,
-                                         final Map<String, List<ParamInfo>> classPropertyMap,
-                                         final Command command,
-                                         final TypeMirror packException) {
-        return new InsertMethod(
-                method.getSimpleName().toString(),
-                method.getReturnType(),
-                params,
-                classPropertyMap,
-                StatementInfoFactory.create(command.value()),
-                packException,
-                command.returnRowsAffected()
-        );
     }
 
 

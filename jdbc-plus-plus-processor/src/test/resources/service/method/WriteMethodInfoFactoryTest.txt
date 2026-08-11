@@ -1,0 +1,40 @@
+package com.example;
+
+import br.com.jdbcpp.api.Command;
+import br.com.jdbcpp.api.CommandType;
+
+public interface WriteMethodInfoFactoryTest {
+
+    @Command(value = "INSERT INTO users (name) VALUES (:name:)", commandType = CommandType.INSERT)
+    void insertUser(String name);
+
+    @Command(value = "INSERT INTO users (name) VALUES (:name:)", commandType = CommandType.INSERT, returnRowsAffected = true)
+    int insertUserWithRowsAffected(String name);
+
+    @Command(value = "INSERT INTO users (name) VALUES (:name:)", commandType = CommandType.INSERT, packException = CustomException.class)
+    void insertUserWithCustomException(String name);
+
+    @Command(value = "UPDATE users SET name = :name: WHERE id = :id:", commandType = CommandType.UPDATE)
+    void updateUser(String name, Long id);
+
+    @Command(value = "UPDATE users SET name = :name: WHERE id = :id:", commandType = CommandType.UPDATE, returnRowsAffected = true)
+    long updateUserWithRowsAffected(String name, Long id);
+
+    @Command(value = "UPDATE users SET name = :name: WHERE id = :id:", commandType = CommandType.UPDATE, packException = CustomException.class)
+    void updateUserWithCustomException(String name, Long id);
+
+    @Command(value = "DELETE FROM users WHERE id = :id:", commandType = CommandType.DELETE)
+    void deleteUser(Long id);
+
+    @Command(value = "DELETE FROM users WHERE id = :id:", commandType = CommandType.DELETE, returnRowsAffected = true)
+    int deleteUserWithRowsAffected(Long id);
+
+    @Command(value = "DELETE FROM users WHERE id = :id:", commandType = CommandType.DELETE, packException = CustomException.class)
+    void deleteUserWithCustomException(Long id);
+
+    class CustomException extends RuntimeException {
+        public CustomException(Throwable cause) {
+            super(cause);
+        }
+    }
+}

@@ -138,15 +138,20 @@ public class TypeUtil {
         return typeElement.getKind() == ElementKind.RECORD;
     }
 
-    public TypeMirror buildContainerTypeMirror(final Supplier<Class<? extends Collection>> containerType,
-                                               final TypeMirror elementType){
-        TypeMirror listTypeMirror;
+    @SuppressWarnings("rawtypes")
+    public TypeMirror getTypeMirrorFromName(final Supplier<Class<? extends Collection>> containerType){
         try{
             final var typeElement = elements.getTypeElement(containerType.get().getCanonicalName());
-            listTypeMirror = typeElement.asType();
-        } catch (final MirroredTypeException e){
-            listTypeMirror = e.getTypeMirror();
+            return typeElement.asType();
+        } catch (final MirroredTypeException e) {
+            return e.getTypeMirror();
         }
+    }
+
+    @SuppressWarnings("rawtypes")
+    public TypeMirror buildContainerTypeMirror(final Supplier<Class<? extends Collection>> containerType,
+                                               final TypeMirror elementType){
+        final var listTypeMirror = getTypeMirrorFromName(containerType);
         final var collectionElement = (TypeElement) types.asElement(listTypeMirror);
         final TypeMirror actualElementType = elementType.getKind().isPrimitive()
                 ? types.boxedClass((PrimitiveType) elementType).asType()
@@ -163,6 +168,10 @@ public class TypeUtil {
             }
         }
         return false;
+    }
+
+    public boolean isNotList(TypeMirror typeMirror){
+        return !isList(typeMirror);
     }
 
     public TypeMirror getTypeMirrorFromClass(final Supplier<Class<?>> classCallback){

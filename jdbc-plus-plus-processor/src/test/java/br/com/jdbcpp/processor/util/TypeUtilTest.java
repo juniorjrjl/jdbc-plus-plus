@@ -236,8 +236,8 @@ class TypeUtilTest {
 
     private static Stream<Arguments> shouldIdentifyListType() {
         return Stream.of(
-                Arguments.of("listType", true),
-                Arguments.of("wrapperInt", false)
+                Arguments.of("listType", false),
+                Arguments.of("wrapperInt", true)
         );
     }
 
@@ -246,7 +246,7 @@ class TypeUtilTest {
     void shouldIdentifyListType(final String fieldName, final boolean isList) {
         final var typeUtil = createTypeUtil();
         final var type = FieldUtil.getFieldType(fixture, fieldName);
-        assertThat(typeUtil.isList(type)).isEqualTo(isList);
+        assertThat(typeUtil.isNotList(type)).isEqualTo(isList);
         verifyNoInteractions(collectionUtil);
     }
 

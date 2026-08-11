@@ -10,10 +10,11 @@ import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.type.TypeMirror;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static br.com.jdbcpp.api.ResultBuildStrategyType.SIMPLE_RESULT;
+import static java.util.Objects.requireNonNull;
 
 public non-sealed class SelectMethodInfo extends MethodInfo {
 
@@ -24,40 +25,21 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
     @Nullable
     private final TypeMirror instanceContainer;
 
-    public SelectMethodInfo(final String name,
-                            final TypeMirror returnType,
-                            final List<ParamInfo> params,
-                            final Map<String, List<ParamInfo>> classPropertyMap,
-                            final StatementInfo statement,
-                            final TypeMirror packException,
-                            final List<SelectReturnStrategy<?>> strategies,
-                            final ResultBuildStrategyType strategyType,
-                            @Nullable
-                            final TypeMirror containerReturnTypeMirror,
-                            @Nullable
-                            final TypeMirror instanceContainer) {
+    private SelectMethodInfo(final String name,
+                             final TypeMirror returnType,
+                             final List<ParamInfo> params,
+                             final Map<String, List<ParamInfo>> classPropertyMap,
+                             final StatementInfo statement,
+                             final TypeMirror packException,
+                             final List<SelectReturnStrategy<?>> strategies,
+                             final ResultBuildStrategyType strategyType,
+                             @Nullable
+                             final TypeMirror containerReturnTypeMirror,
+                             @Nullable
+                             final TypeMirror instanceContainer) {
         super(name, returnType, params, classPropertyMap, statement, packException);
         this.strategies = strategies;
         this.strategyType = strategyType;
-        this.containerReturnTypeMirror = containerReturnTypeMirror;
-        this.instanceContainer = instanceContainer;
-    }
-
-    public SelectMethodInfo(final String name,
-                            final TypeMirror returnType,
-                            final List<ParamInfo> params,
-                            final Map<String, List<ParamInfo>> classPropertyMap,
-                            final StatementInfo statement,
-                            @Nullable
-                            final TypeMirror packException,
-                            final SelectReturnStrategy<?> strategy,
-                            @Nullable
-                            final TypeMirror containerReturnTypeMirror,
-                            @Nullable
-                            final TypeMirror instanceContainer){
-        super(name, returnType, params, classPropertyMap, statement, packException);
-        this.strategies = List.of(strategy);
-        this.strategyType = SIMPLE_RESULT;
         this.containerReturnTypeMirror = containerReturnTypeMirror;
         this.instanceContainer = instanceContainer;
     }
@@ -98,4 +80,66 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
     public @Nullable TypeMirror getInstanceContainer() {
         return instanceContainer;
     }
+
+    public static class SelectMethodInfoBuilder extends MethodInfo.MethodInfoBuilder {
+
+        private final List<SelectReturnStrategy<?>> strategies = new ArrayList<>();
+        @Nullable
+        private ResultBuildStrategyType strategyType;
+        @Nullable
+        private TypeMirror containerReturnTypeMirror;
+        @Nullable
+        private TypeMirror instanceContainer;
+
+        public SelectMethodInfoBuilder(final MethodInfoBuilder baseBuilder) {
+            this.name = baseBuilder.name;
+            this.returnType = baseBuilder.returnType;
+            this.params.addAll(baseBuilder.params);
+            this.classPropertyMap.putAll(baseBuilder.classPropertyMap);
+            this.statement = baseBuilder.statement;
+            this.packException = baseBuilder.packException;
+        }
+
+        public SelectMethodInfoBuilder withStrategies(final List<SelectReturnStrategy<?>> strategies) {
+            this.strategies.addAll(strategies);
+            return this;
+        }
+
+        public SelectMethodInfoBuilder withStrategy(final SelectReturnStrategy<?> strategy) {
+            this.strategies.add(strategy);
+            return this;
+        }
+
+        public  SelectMethodInfoBuilder withStrategyType(final ResultBuildStrategyType strategyType) {
+            this.strategyType = strategyType;
+            return this;
+        }
+
+        public  SelectMethodInfoBuilder withContainerReturnTypeMirror(@Nullable final TypeMirror containerReturnTypeMirror) {
+            this.containerReturnTypeMirror = containerReturnTypeMirror;
+            return this;
+        }
+
+        public  SelectMethodInfoBuilder withInstanceContainer(@Nullable final TypeMirror instanceContainer) {
+            this.instanceContainer = instanceContainer;
+            return this;
+        }
+
+        public SelectMethodInfo build() {
+            return new SelectMethodInfo(
+                    requireNonNull(name, "name is required"),
+                    requireNonNull(returnType, "returnType is required"),
+                    params,
+                    classPropertyMap,
+                    requireNonNull(statement, "statement is required"),
+                    requireNonNull(packException, "packException is required"),
+                    strategies,
+                    requireNonNull(strategyType, "strategyType is required"),
+                    containerReturnTypeMirror,
+                    instanceContainer
+            );
+        }
+
+    }
+
 }

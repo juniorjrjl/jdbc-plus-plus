@@ -21,24 +21,25 @@ import org.jspecify.annotations.Nullable;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static br.com.jdbcpp.api.ResultBuildStrategyType.CONSTRUCTOR;
 import static br.com.jdbcpp.api.ResultBuildStrategyType.SETTER;
+import static br.com.jdbcpp.api.ResultBuildStrategyType.SIMPLE_RESULT;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 public class ReadMethodInfoFactory {
 
     private final Types types;
-    private final Elements elements;
     private final BuildConstructorStrategy buildConstructorStrategy;
     private final BuildSetterStrategy buildSetterStrategy;
     private final TypeUtil typeUtil;
@@ -48,7 +49,6 @@ public class ReadMethodInfoFactory {
     private final TypeMirror sqlException;
 
     public ReadMethodInfoFactory(final Types types,
-                                 final Elements elements,
                                  final BuildConstructorStrategy buildConstructorStrategy,
                                  final BuildSetterStrategy buildSetterStrategy,
                                  final TypeUtil typeUtil,
@@ -57,7 +57,6 @@ public class ReadMethodInfoFactory {
                                  final TypeMirror nullReadException,
                                  final TypeMirror sqlException) {
         this.types = types;
-        this.elements = elements;
         this.buildConstructorStrategy = buildConstructorStrategy;
         this.buildSetterStrategy = buildSetterStrategy;
         this.typeUtil = typeUtil;
@@ -84,43 +83,26 @@ public class ReadMethodInfoFactory {
             throw new InvalidMethodSignatureException(message, method);
         }
 
-        TypeMirror returnType = method.getReturnType();
-        TypeMirror returnContainerType = null;
-        TypeMirror instanceContainer = null;
-        if (method.getReturnType() instanceof DeclaredType returnTypeElement &&
-                !returnTypeElement.getTypeArguments().isEmpty()){
-            final var resultBuildStrategy= method.getAnnotation(ResultBuildStrategy.class);
-            returnType = returnTypeElement.getTypeArguments().getFirst();
-            returnContainerType = method.getReturnType();
-            instanceContainer = method.getReturnType();
-            if (nonNull(resultBuildStrategy)){
-                TypeMirror listTypeMirror;
-                try{
-                    final var canonicalName = resultBuildStrategy.collectionImplementationResult().getCanonicalName();
-                    final var typeElement = elements.getTypeElement(canonicalName);
-                    listTypeMirror = typeElement.asType();
-                } catch (final MirroredTypeException e){
-                    listTypeMirror = e.getTypeMirror();
-                }
-
-                if (typeUtil.isList(listTypeMirror)) {
-                    instanceContainer = method.getReturnType();
-                } else {
-                    instanceContainer = typeUtil.buildContainerTypeMirror(
-                            resultBuildStrategy::collectionImplementationResult,
-                            returnType
-                    );
-                }
-            }
-
-        }
+        final var returnType = methodReturnType(method);
+        final var returnContainerType = methodReturnContainerType(method);
+        final var instanceContainer = methodInstanceContainer(method, returnType);
 
         final var methodExceptionThrow = types.isSameType(nullReadException, packException) ?
                 sqlException:
                 packException;
+        final var builder = MethodInfo.builder()
+                .withName(method.getSimpleName().toString())
+                .withReturnType(returnType)
+                .withParams(params)
+                .withClassPropertyMap(classPropertyMap)
+                .withStatement(StatementInfoFactory.create(query.value()))
+                .withPackException(methodExceptionThrow)
+                .asReadType()
+                .withContainerReturnTypeMirror(returnContainerType)
+                .withInstanceContainer(instanceContainer);
         final MethodInfo methodInfo = needStrategyToSelectReturn(returnType) ?
-                objectSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, methodExceptionThrow):
-                simpleSelectResult(method, params, classPropertyMap, query, returnType, returnContainerType, instanceContainer, methodExceptionThrow);
+                objectSelectResult(builder, method, returnType):
+                simpleSelectResult(builder, returnType);
         methodValidator.validateParams(
                 method,
                 params,
@@ -132,16 +114,57 @@ public class ReadMethodInfoFactory {
         return methodInfo;
     }
 
-    private SelectMethodInfo objectSelectResult(final ExecutableElement method,
-                                                final List<ParamInfo> params,
-                                                final Map<String, List<ParamInfo>> classPropertyMap,
-                                                final Query query,
-                                                final TypeMirror returnType,
-                                                @Nullable
-                                                final TypeMirror returnContainerType,
-                                                @Nullable
-                                                final TypeMirror instanceContainer,
-                                                final TypeMirror packException) throws InvalidSelectResultMappingException {
+    private TypeMirror methodReturnType(final ExecutableElement method){
+        if (method.getReturnType() instanceof DeclaredType returnTypeElement &&
+                !returnTypeElement.getTypeArguments().isEmpty()){
+            return returnTypeElement.getTypeArguments().getFirst();
+        }
+
+        return method.getReturnType();
+    }
+
+    @Nullable
+    private TypeMirror methodReturnContainerType(final ExecutableElement method){
+        if (method.getReturnType() instanceof DeclaredType returnTypeElement &&
+                !returnTypeElement.getTypeArguments().isEmpty()){
+            return method.getReturnType();
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private TypeMirror methodInstanceContainer(final ExecutableElement method, final TypeMirror returnType){
+        TypeMirror instanceContainer = null;
+        if (method.getReturnType() instanceof DeclaredType returnTypeElement &&
+                !returnTypeElement.getTypeArguments().isEmpty()){
+            final var resultBuildStrategy= method.getAnnotation(ResultBuildStrategy.class);
+
+            if (nonNull(resultBuildStrategy)){
+                @SuppressWarnings("rawtypes")
+                final Supplier<Class<? extends Collection>> containerType =
+                        resultBuildStrategy::collectionImplementationResult;
+                final var listTypeMirror = typeUtil.getTypeMirrorFromName(containerType);
+
+                if (typeUtil.isNotList(listTypeMirror)) {
+                    instanceContainer = typeUtil.buildContainerTypeMirror(
+                            containerType,
+                            returnType
+                    );
+                } else {
+                    instanceContainer = method.getReturnType();
+                }
+            } else {
+                instanceContainer = method.getReturnType();
+            }
+
+        }
+        return instanceContainer;
+    }
+
+    private SelectMethodInfo objectSelectResult(final SelectMethodInfo.SelectMethodInfoBuilder selectMethodInfoBuilder,
+                                                final ExecutableElement method,
+                                                final TypeMirror returnType) throws InvalidSelectResultMappingException {
         final var resultBuildStrategy = method.getAnnotation(ResultBuildStrategy.class);
         final var strategyType = determineStrategyType(returnType, resultBuildStrategy);
         final var typeElement = ((TypeElement) types.asElement(returnType));
@@ -149,45 +172,22 @@ public class ReadMethodInfoFactory {
         final var strategies = strategyType == CONSTRUCTOR ?
                 buildConstructorStrategy.generateStrategyInfo(returnType, methodName) :
                 buildSetterStrategy.generateStrategyInfo(typeElement);
-        return new SelectMethodInfo(
-                methodName,
-                returnType,
-                params,
-                classPropertyMap,
-                StatementInfoFactory.create(query.value()),
-                packException,
-                strategies,
-                strategyType,
-                returnContainerType,
-                instanceContainer
-        );
+        return selectMethodInfoBuilder
+                .withStrategies(strategies)
+                .withStrategyType(strategyType)
+                .build();
     }
 
-    private SelectMethodInfo simpleSelectResult(final ExecutableElement method,
-                                                final List<ParamInfo> params,
-                                                final Map<String, List<ParamInfo>> classPropertyMap,
-                                                final Query query,
-                                                final TypeMirror returnType,
-                                                @Nullable
-                                                final TypeMirror returnContainerType,
-                                                @Nullable
-                                                final TypeMirror instanceContainer,
-                                                final TypeMirror packException) {
+    private SelectMethodInfo simpleSelectResult(final SelectMethodInfo.SelectMethodInfoBuilder selectMethodInfoBuilder,
+                                                final TypeMirror returnType) {
         final var genericType = Optional.ofNullable(collectionUtil.getCollectionElementType(returnType))
                 .or(() -> Optional.ofNullable(typeUtil.getOptionalType(returnType)))
                 .orElse(null);
         final SelectReturnStrategy<SimpleResultStrategy> strategy = new SimpleResultStrategy(returnType, genericType);
-        return new SelectMethodInfo(
-                method.getSimpleName().toString(),
-                returnType,
-                params,
-                classPropertyMap,
-                StatementInfoFactory.create(query.value()),
-                packException,
-                strategy,
-                returnContainerType,
-                instanceContainer
-        );
+        return selectMethodInfoBuilder
+                .withStrategy(strategy)
+                .withStrategyType(SIMPLE_RESULT)
+                .build();
     }
 
     private boolean needStrategyToSelectReturn(final TypeMirror returnType) {

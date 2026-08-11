@@ -150,7 +150,6 @@ public class ProcessorContext {
         );
         final var readMethodInfoFactory = new ReadMethodInfoFactory(
                 types,
-                elements,
                 buildConstructorStrategy,
                 buildSetterStrategy,
                 typeUtil,
