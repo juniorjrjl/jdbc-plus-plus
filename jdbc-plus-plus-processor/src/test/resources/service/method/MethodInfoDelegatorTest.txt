@@ -1,0 +1,27 @@
+package com.example;
+
+import br.com.jdbcpp.api.Command;
+import br.com.jdbcpp.api.CommandType;
+import br.com.jdbcpp.api.Query;
+
+public interface MethodInfoDelegatorTest {
+
+    @Command(value = "INSERT INTO users (name) VALUES (:name:)", commandType = CommandType.INSERT)
+    void insertUser(String name);
+
+    @Command(value = "UPDATE users SET name = :name: WHERE id = :id:", commandType = CommandType.UPDATE)
+    void updateUser(String name, Long id);
+
+    @Command(value = "DELETE FROM users WHERE id = :id:", commandType = CommandType.DELETE)
+    void deleteUser(Long id);
+
+    @Query(value = "SELECT * FROM users WHERE id = :id:")
+    User findUserById(Long id);
+
+    @Command(value = "INSERT INTO users (name) VALUES (:name:)", commandType = CommandType.INSERT)
+    void insertUserWithClassParam(User user);
+
+    void methodWithoutAnnotation(String param);
+
+    record User(Long id, String name) {}
+}

@@ -102,7 +102,12 @@ public class MethodInfoDelegator {
                 packException
         );
 
-        methodValidator.validateWriteReturn(method, methodInfo.getClassPropertyMap(), command.returnRowsAffected(), command.value());
+        methodValidator.validateWriteReturn(
+                method,
+                methodInfo.getClassPropertyMap(),
+                command.returnRowsAffected(),
+                command.commandType().name()
+        );
         return methodInfo;
     }
 
