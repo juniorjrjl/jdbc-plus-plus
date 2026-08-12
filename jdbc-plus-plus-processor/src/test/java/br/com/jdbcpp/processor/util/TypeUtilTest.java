@@ -220,6 +220,7 @@ class TypeUtilTest {
         );
     }
 
+    @SuppressWarnings("rawtypes")
     @ParameterizedTest
     @MethodSource
     void shouldBuildContainerTypeMirror(final Class<? extends Collection> containerType,
