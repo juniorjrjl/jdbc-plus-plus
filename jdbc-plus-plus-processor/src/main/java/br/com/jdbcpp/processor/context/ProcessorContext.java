@@ -153,14 +153,12 @@ public class ProcessorContext {
                 buildConstructorStrategy,
                 buildSetterStrategy,
                 typeUtil,
-                methodValidator,
                 collectionUtil,
                 nullReadException,
                 sqlExceptionElement
         );
 
         final var writeMethodInfoFactory = new WriteMethodInfoFactory(
-                methodValidator,
                 sqlExceptionElement,
                 nullWriteException,
                 types
@@ -174,8 +172,7 @@ public class ProcessorContext {
                 writeMethodInfoFactory,
                 methodValidator,
                 readMethodInfoFactory,
-                typeUtil,
-                types
+                typeUtil
         );
 
         this.processorFacade = new ProcessorFacade(

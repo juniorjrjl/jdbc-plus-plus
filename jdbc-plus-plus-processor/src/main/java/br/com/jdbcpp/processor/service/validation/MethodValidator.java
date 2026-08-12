@@ -43,11 +43,22 @@ public final class MethodValidator {
         this.sqlException = sqlException;
     }
 
-    public void validateReturn(final ExecutableElement method,
-                               final boolean returnRowsAffected,
-                               final String operation,
-                               final List<TypeMirror> validReturns) throws InvalidMethodSignatureException {
+    public void validateReadReturn(final ExecutableElement method) throws InvalidMethodSignatureException{
+        if ((method.getReturnType().getKind() == TypeKind.VOID)) {
+            final var message = String.format(
+                    "Method %s is annotated with @Query but returns void",
+                    method.getSimpleName()
+            );
+            throw new InvalidMethodSignatureException(message, method);
+        }
+    }
+
+    public void validateWriteReturn(final ExecutableElement method,
+                                    final Map<String, List<ParamInfo>> classPropertyMap,
+                                    final boolean returnRowsAffected,
+                                    final String operation) throws InvalidMethodSignatureException {
         final var returnType = method.getReturnType();
+
         if (returnRowsAffected){
             if (!allowedReturnsRowsAffected.contains(returnType)) {
                 final var message = String.format(
@@ -58,7 +69,12 @@ public final class MethodValidator {
                 throw new InvalidMethodSignatureException(message, method);
             }
         } else {
-            if (!validReturns.contains(returnType)) {
+
+            if ((!classPropertyMap.isEmpty() &&
+                    (returnType.getKind() != TypeKind.VOID)
+                    && !types.isSameType(returnType, method.getParameters().getFirst().asType()))
+                    || allowedReturnsRowsAffected.contains(returnType)
+            ) {
                 final var message = String.format("""
                         A method %s, without rowsAffected result has invalid config, use a follow configurations:
                          - for INSERT or UPDATE: return void or received class;
@@ -76,10 +92,12 @@ public final class MethodValidator {
                                final Map<String, List<ParamInfo>> classPropertyMap,
                                final List<StatementParam> statementParams) throws InvalidInputParamException,
             MoreParamsThanStatementNeedException {
+
         final var statementParamsNames = statementParams.stream()
                 .map(StatementParam::name)
                 .map(StringUtil::camelToSnakeCase)
                 .collect(Collectors.toSet());
+
         final var paramsNames = classPropertyMap.isEmpty() ?
                 params.stream()
                         .filter(SimpleParamInfo.class::isInstance)
@@ -143,7 +161,6 @@ public final class MethodValidator {
             );
             throw new InvalidMethodSignatureException(message, method);
         }
-
 
     }
 

@@ -20,6 +20,10 @@ public class MethodValidatorTest {
     public void methodWithExtraMethodParams(String name, int age, String email) {}
     public void methodWithExtraStatementParams(String name) {}
 
+    public String methodReturningStringWithClassParam(String param) { return param; }
+    public User methodReturningUserWithClassParam(User user) { return user; }
+
+    static class User {}
     static class CustomExceptionWithThrowableConstructor extends Exception {
         public CustomExceptionWithThrowableConstructor(Throwable cause) {
             super(cause);

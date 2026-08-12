@@ -3,12 +3,8 @@ package br.com.jdbcpp.processor.service.method;
 import br.com.jdbcpp.api.Query;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
-import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
-import br.com.jdbcpp.processor.exception.InvalidInputParamException;
-import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.service.statement.StatementInfoFactory;
-import br.com.jdbcpp.processor.service.validation.MethodValidator;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 import org.junit.jupiter.api.Test;
@@ -36,16 +32,13 @@ import java.util.Map;
 import static br.com.jdbcpp.api.ResultBuildStrategyType.CONSTRUCTOR;
 import static br.com.jdbcpp.api.ResultBuildStrategyType.SETTER;
 import static br.com.jdbcpp.api.ResultBuildStrategyType.SIMPLE_RESULT;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith({MockitoExtension.class, MicroProcessorExtension.class})
@@ -62,8 +55,6 @@ class ReadMethodInfoFactoryTest {
     @Mock
     private TypeUtil typeUtil;
     @Mock
-    private MethodValidator methodValidator;
-    @Mock
     private CollectionUtil collectionUtil;
     @ProcessingEnv
     private ProcessingEnvironment processingEnv;
@@ -78,27 +69,27 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod(methodName);
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
 
-        when(typeUtil.isSimpleType(any())).thenReturn(true);
+        final var builder = MethodInfo.builder()
+                .withName(methodName)
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
+
+        when(typeUtil.isSimpleType(any(TypeMirror.class))).thenReturn(true);
 
         try (MockedStatic<StatementInfoFactory> mockedFactory = mockStatic(StatementInfoFactory.class)) {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, query, nullReadException);
+            final var result = factory.create(builder, method, query, nullReadException);
 
-            assertThat(result).isInstanceOf(MethodInfo.class);
-            assertThat(result.getName()).isEqualTo(methodName);
+            assertThat(result.getStatement()).isEqualTo(statementInfo);
+            assertThat(result.getPackException()).isEqualTo(sqlException);
             assertThat(result.getReturnType()).isEqualTo(method.getReturnType());
             assertThat(((SelectMethodInfo)result).getStrategyType()).isEqualTo(SIMPLE_RESULT);
             assertThat(((SelectMethodInfo)result).getContainerReturnTypeMirror()).isNull();
             assertThat(((SelectMethodInfo)result).getInstanceContainer()).isNull();
-
-            verify(methodValidator).validateParams(method, params, classPropertyMap, result.getStatement().params());
-            verify(methodValidator).validateExceptionThrow(method, sqlException);
         }
     }
 
@@ -110,9 +101,12 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod(methodName);
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
+
+        final var builder = MethodInfo.builder()
+                .withName(methodName)
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         when(typeUtil.isSimpleType(any())).thenReturn(false);
         when(collectionUtil.isCollectionType(any())).thenReturn(true);
@@ -123,18 +117,15 @@ class ReadMethodInfoFactoryTest {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, query, nullReadException);
+            final var result = factory.create(builder, method, query, nullReadException);
 
-            assertThat(result).isInstanceOf(SelectMethodInfo.class);
-            assertThat(result.getName()).isEqualTo(methodName);
+            assertThat(result.getStatement()).isEqualTo(statementInfo);
+            assertThat(result.getPackException()).isEqualTo(sqlException);
             final var returnType = ((DeclaredType) method.getReturnType()).getTypeArguments().getFirst();
             assertThat(result.getReturnType()).isEqualTo(returnType);
             assertThat(((SelectMethodInfo)result).getStrategyType()).isEqualTo(SIMPLE_RESULT);
             assertThat(((SelectMethodInfo)result).getContainerReturnTypeMirror()).isEqualTo(method.getReturnType());
             assertThat(((SelectMethodInfo)result).getInstanceContainer()).isEqualTo(method.getReturnType());
-
-            verify(methodValidator).validateParams(method, params, classPropertyMap, result.getStatement().params());
-            verify(methodValidator).validateExceptionThrow(method, sqlException);
         }
     }
 
@@ -146,9 +137,12 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod(methodName);
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
+
+        final var builder = MethodInfo.builder()
+                .withName(methodName)
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         when(typeUtil.isSimpleType(any())).thenReturn(false);
         when(collectionUtil.isCollectionType(any())).thenReturn(false);
@@ -161,18 +155,16 @@ class ReadMethodInfoFactoryTest {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, query, nullReadException);
+            final var result = factory.create(builder, method, query, nullReadException);
 
-            assertThat(result).isInstanceOf(SelectMethodInfo.class);
-            assertThat(result.getName()).isEqualTo(methodName);
+            assertThat(result.getStatement()).isEqualTo(statementInfo);
+            assertThat(result.getPackException()).isEqualTo(sqlException);
             final var returnType = ((DeclaredType) method.getReturnType()).getTypeArguments().getFirst();
             assertThat(result.getReturnType()).isEqualTo(returnType);
             assertThat(((SelectMethodInfo)result).getStrategyType()).isEqualTo(SETTER);
+            assertThat(((SelectMethodInfo)result).getSetterStrategies()).isEqualTo(strategies);
             assertThat(((SelectMethodInfo)result).getContainerReturnTypeMirror()).isEqualTo(method.getReturnType());
             assertThat(((SelectMethodInfo)result).getInstanceContainer()).isEqualTo(method.getReturnType());
-
-            verify(methodValidator).validateParams(method, params, classPropertyMap, result.getStatement().params());
-            verify(methodValidator).validateExceptionThrow(method, sqlException);
         }
     }
 
@@ -183,9 +175,12 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod("findUsersByNameWithConstructor");
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
+
+        final var builder = MethodInfo.builder()
+                .withName("findUsersByNameWithConstructor")
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         final var returnType = ((DeclaredType) method.getReturnType()).getTypeArguments().getFirst();
         when(typeUtil.isSimpleType(any())).thenReturn(false);
@@ -201,17 +196,15 @@ class ReadMethodInfoFactoryTest {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, query, nullReadException);
+            final var result = factory.create(builder, method, query, nullReadException);
 
-            assertThat(result).isInstanceOf(SelectMethodInfo.class);
-            assertThat(result.getName()).isEqualTo("findUsersByNameWithConstructor");
+            assertThat(result.getStatement()).isEqualTo(statementInfo);
+            assertThat(result.getPackException()).isEqualTo(sqlException);
             assertThat(result.getReturnType()).isEqualTo(returnType);
             assertThat(((SelectMethodInfo)result).getStrategyType()).isEqualTo(CONSTRUCTOR);
+            assertThat(((SelectMethodInfo)result).getConstructorStrategies()).isEqualTo(strategies);
             assertThat(((SelectMethodInfo)result).getContainerReturnTypeMirror()).isEqualTo(method.getReturnType());
             assertThat(((SelectMethodInfo)result).getInstanceContainer()).isEqualTo(method.getReturnType());
-
-            verify(methodValidator).validateParams(method, params, classPropertyMap, result.getStatement().params());
-            verify(methodValidator).validateExceptionThrow(method, sqlException);
         }
     }
 
@@ -223,9 +216,12 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod(methodName);
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
+
+        final var builder = MethodInfo.builder()
+                .withName(methodName)
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         when(typeUtil.isSimpleType(any())).thenReturn(false);
         when(collectionUtil.isCollectionType(any())).thenReturn(true);
@@ -240,17 +236,13 @@ class ReadMethodInfoFactoryTest {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, query, nullReadException);
+            final var result = factory.create(builder, method, query, nullReadException);
 
-            assertThat(result).isInstanceOf(SelectMethodInfo.class);
-            assertThat(result.getName()).isEqualTo(methodName);
-
+            assertThat(result.getStatement()).isEqualTo(statementInfo);
+            assertThat(result.getPackException()).isEqualTo(sqlException);
             assertThat(result.getReturnType()).isEqualTo(returnType);
             assertThat(((SelectMethodInfo)result).getContainerReturnTypeMirror()).isEqualTo(method.getReturnType());
             assertThat(((SelectMethodInfo)result).getInstanceContainer()).isEqualTo(containerTypeMirror);
-
-            verify(methodValidator).validateParams(method, params, classPropertyMap, result.getStatement().params());
-            verify(methodValidator).validateExceptionThrow(method, sqlException);
         }
     }
 
@@ -261,9 +253,12 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod("findUsersByNameWithSetterAndCustomList");
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
+
+        final var builder = MethodInfo.builder()
+                .withName("findUsersByNameWithSetterAndCustomList")
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         when(typeUtil.isSimpleType(any())).thenReturn(false);
         when(collectionUtil.isCollectionType(any())).thenReturn(true);
@@ -280,17 +275,15 @@ class ReadMethodInfoFactoryTest {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, query, nullReadException);
+            final var result = factory.create(builder, method, query, nullReadException);
 
-            assertThat(result).isInstanceOf(SelectMethodInfo.class);
-            assertThat(result.getName()).isEqualTo("findUsersByNameWithSetterAndCustomList");
+            assertThat(result.getStatement()).isEqualTo(statementInfo);
+            assertThat(result.getPackException()).isEqualTo(sqlException);
             assertThat(result.getReturnType()).isEqualTo(returnType);
             assertThat(((SelectMethodInfo)result).getStrategyType()).isEqualTo(SETTER);
+            assertThat(((SelectMethodInfo)result).getSetterStrategies()).isEqualTo(strategies);
             assertThat(((SelectMethodInfo)result).getContainerReturnTypeMirror()).isEqualTo(method.getReturnType());
             assertThat(((SelectMethodInfo)result).getInstanceContainer()).isEqualTo(method.getReturnType());
-
-            verify(methodValidator).validateParams(method, params, classPropertyMap, result.getStatement().params());
-            verify(methodValidator).validateExceptionThrow(method, sqlException);
         }
     }
 
@@ -301,9 +294,12 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod("findUsersByNameWithConstructorAndCustomList");
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
+
+        final var builder = MethodInfo.builder()
+                .withName("findUsersByNameWithConstructorAndCustomList")
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         when(typeUtil.isSimpleType(any())).thenReturn(false);
         when(collectionUtil.isCollectionType(any())).thenReturn(true);
@@ -320,17 +316,15 @@ class ReadMethodInfoFactoryTest {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, query, nullReadException);
+            final var result = factory.create(builder, method, query, nullReadException);
 
-            assertThat(result).isInstanceOf(SelectMethodInfo.class);
-            assertThat(result.getName()).isEqualTo("findUsersByNameWithConstructorAndCustomList");
+            assertThat(result.getStatement()).isEqualTo(statementInfo);
+            assertThat(result.getPackException()).isEqualTo(sqlException);
             assertThat(result.getReturnType()).isEqualTo(returnType);
             assertThat(((SelectMethodInfo)result).getStrategyType()).isEqualTo(CONSTRUCTOR);
+            assertThat(((SelectMethodInfo)result).getConstructorStrategies()).isEqualTo(strategies);
             assertThat(((SelectMethodInfo)result).getContainerReturnTypeMirror()).isEqualTo(method.getReturnType());
             assertThat(((SelectMethodInfo)result).getInstanceContainer()).isEqualTo(method.getReturnType());
-
-            verify(methodValidator).validateParams(method, params, classPropertyMap, result.getStatement().params());
-            verify(methodValidator).validateExceptionThrow(method, sqlException);
         }
     }
 
@@ -342,9 +336,12 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod(methodName);
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
+
+        final var builder = MethodInfo.builder()
+                .withName(methodName)
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         when(typeUtil.isSimpleType(any())).thenReturn(false);
         when(collectionUtil.isCollectionType(any())).thenReturn(false);
@@ -357,35 +354,16 @@ class ReadMethodInfoFactoryTest {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, query, nullReadException);
+            final var result = factory.create(builder, method, query, nullReadException);
 
-            assertThat(result).isInstanceOf(SelectMethodInfo.class);
-            assertThat(result.getName()).isEqualTo(methodName);
+            assertThat(result.getStatement()).isEqualTo(statementInfo);
+            assertThat(result.getPackException()).isEqualTo(sqlException);
             assertThat(result.getReturnType()).isEqualTo(method.getReturnType());
             assertThat(((SelectMethodInfo)result).getStrategyType()).isEqualTo(CONSTRUCTOR);
+            assertThat(((SelectMethodInfo)result).getConstructorStrategies()).isEqualTo(strategies);
             assertThat(((SelectMethodInfo)result).getContainerReturnTypeMirror()).isNull();
             assertThat(((SelectMethodInfo)result).getInstanceContainer()).isNull();
-
-            verify(methodValidator).validateParams(method, params, classPropertyMap, result.getStatement().params());
-            verify(methodValidator).validateExceptionThrow(method, sqlException);
         }
-    }
-
-    @Test
-    void shouldThrowExceptionWhenMethodReturnsVoid() {
-        final var sqlException = processingEnv.getElementUtils().getTypeElement(SQLException.class.getCanonicalName()).asType();
-        final var nullReadException = processingEnv.getElementUtils().getTypeElement(Query.None.class.getCanonicalName()).asType();
-        final var factory = createFactory(sqlException, nullReadException);
-
-        final var method = getMethod("invalidVoidReturn");
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
-
-        assertThatThrownBy(() -> factory.create(method, params, classPropertyMap, query, nullReadException))
-                .isInstanceOf(InvalidMethodSignatureException.class)
-                .hasMessageContaining("invalidVoidReturn")
-                .hasMessageContaining("returns void");
     }
 
     @Test
@@ -395,49 +373,22 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod("findNameById");
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
+
+        final var builder = MethodInfo.builder()
+                .withName("findNameById")
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         when(typeUtil.isSimpleType(any())).thenReturn(true);
-        doThrow(new InvalidInputParamException("Invalid params", method))
-                .when(methodValidator)
-                .validateParams(method, params, classPropertyMap, List.of());
 
         try (MockedStatic<StatementInfoFactory> mockedFactory = mockStatic(StatementInfoFactory.class)) {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            assertThatThrownBy(() -> factory.create(method, params, classPropertyMap, query, nullReadException))
-                    .isInstanceOf(InvalidInputParamException.class)
-                    .hasMessage("Invalid params");
-        }
-        verify(methodValidator, never()).validateExceptionThrow(any(ExecutableElement.class), any(TypeMirror.class));
-    }
+            final var result = factory.create(builder, method, query, nullReadException);
 
-    @Test
-    void shouldThrowExceptionWhenValidateExceptionThrowFails() throws Throwable {
-        final var sqlException = processingEnv.getElementUtils().getTypeElement(SQLException.class.getCanonicalName()).asType();
-        final var nullReadException = processingEnv.getElementUtils().getTypeElement(Query.None.class.getCanonicalName()).asType();
-        final var factory = createFactory(sqlException, nullReadException);
-
-        final var method = getMethod("findNameById");
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
-
-        when(typeUtil.isSimpleType(any())).thenReturn(true);
-        doThrow(new InvalidMethodSignatureException("Invalid exception", method))
-                .when(methodValidator)
-                .validateExceptionThrow(method, sqlException);
-
-        try (MockedStatic<StatementInfoFactory> mockedFactory = mockStatic(StatementInfoFactory.class)) {
-            final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
-            mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
-
-            assertThatThrownBy(() -> factory.create(method, params, classPropertyMap, query, nullReadException))
-                    .isInstanceOf(InvalidMethodSignatureException.class)
-                    .hasMessage("Invalid exception");
+            assertThat(result).isInstanceOf(SelectMethodInfo.class);
         }
     }
 
@@ -449,9 +400,12 @@ class ReadMethodInfoFactoryTest {
         final var factory = createFactory(sqlException, nullReadException);
 
         final var method = getMethod("findNameById");
-        final var query = method.getAnnotation(Query.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var query = requireNonNull(method.getAnnotation(Query.class));
+
+        final var builder = MethodInfo.builder()
+                .withName("findNameById")
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         when(typeUtil.isSimpleType(any())).thenReturn(true);
 
@@ -459,9 +413,9 @@ class ReadMethodInfoFactoryTest {
             final var statementInfo = new br.com.jdbcpp.processor.dto.statement.StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, query, customException);
+            final var result = factory.create(builder, method, query, customException);
 
-            verify(methodValidator).validateExceptionThrow(method, customException);
+            assertThat(result).isInstanceOf(SelectMethodInfo.class);
         }
     }
 
@@ -479,7 +433,6 @@ class ReadMethodInfoFactoryTest {
                 buildConstructorStrategy,
                 buildSetterStrategy,
                 typeUtil,
-                methodValidator,
                 collectionUtil,
                 nullReadException,
                 sqlException

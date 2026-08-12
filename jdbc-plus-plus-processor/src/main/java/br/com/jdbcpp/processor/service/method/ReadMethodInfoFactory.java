@@ -5,15 +5,10 @@ import br.com.jdbcpp.api.ResultBuildStrategy;
 import br.com.jdbcpp.api.ResultBuildStrategyType;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
-import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;
-import br.com.jdbcpp.processor.exception.InvalidInputParamException;
-import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.exception.InvalidSelectResultMappingException;
-import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
 import br.com.jdbcpp.processor.service.statement.StatementInfoFactory;
-import br.com.jdbcpp.processor.service.validation.MethodValidator;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 import org.jspecify.annotations.Nullable;
@@ -21,12 +16,9 @@ import org.jspecify.annotations.Nullable;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -42,7 +34,6 @@ public class ReadMethodInfoFactory {
     private final BuildConstructorStrategy buildConstructorStrategy;
     private final BuildSetterStrategy buildSetterStrategy;
     private final TypeUtil typeUtil;
-    private final MethodValidator methodValidator;
     private final CollectionUtil collectionUtil;
     private final TypeMirror nullReadException;
     private final TypeMirror sqlException;
@@ -51,7 +42,6 @@ public class ReadMethodInfoFactory {
                                  final BuildConstructorStrategy buildConstructorStrategy,
                                  final BuildSetterStrategy buildSetterStrategy,
                                  final TypeUtil typeUtil,
-                                 final MethodValidator methodValidator,
                                  final CollectionUtil collectionUtil,
                                  final TypeMirror nullReadException,
                                  final TypeMirror sqlException) {
@@ -59,28 +49,16 @@ public class ReadMethodInfoFactory {
         this.buildConstructorStrategy = buildConstructorStrategy;
         this.buildSetterStrategy = buildSetterStrategy;
         this.typeUtil = typeUtil;
-        this.methodValidator = methodValidator;
         this.collectionUtil = collectionUtil;
         this.nullReadException = nullReadException;
         this.sqlException = sqlException;
     }
 
-    public MethodInfo create(final ExecutableElement method,
-                             final List<ParamInfo> params,
-                             final Map<String, List<ParamInfo>> classPropertyMap,
+    public MethodInfo create(final MethodInfo.MethodInfoBuilder builder,
+                             final ExecutableElement method,
                              final Query query,
-                             final TypeMirror packException) throws InvalidMethodSignatureException,
-            InvalidInputParamException,
-            MoreParamsThanStatementNeedException,
-            InvalidSelectResultMappingException {
-
-        if (method.getReturnType().getKind() == TypeKind.VOID) {
-            final var message = String.format(
-                    "Method %s is annotated with @Query but returns void",
-                    method.getSimpleName()
-            );
-            throw new InvalidMethodSignatureException(message, method);
-        }
+                             final TypeMirror packException
+    ) throws InvalidSelectResultMappingException {
 
         final var returnType = methodReturnType(method);
         final var returnContainerType = methodReturnContainerType(method);
@@ -90,25 +68,16 @@ public class ReadMethodInfoFactory {
                 sqlException:
                 packException;
 
-        final var builder = MethodInfo.builder()
-                .withName(method.getSimpleName().toString())
-                .withReturnType(returnType)
-                .withParams(params)
-                .withClassPropertyMap(classPropertyMap)
+        final var selectMethodInfoBuilder = builder.withReturnType(returnType)
                 .withStatement(StatementInfoFactory.create(query.value()))
                 .withPackException(methodExceptionThrow)
                 .asReadType()
                 .withContainerReturnTypeMirror(returnContainerType)
                 .withInstanceContainer(instanceContainer);
 
-        final MethodInfo methodInfo = needStrategyToSelectReturn(returnType) ?
-                objectSelectResult(builder, method, returnType):
-                simpleSelectResult(builder, returnType);
-
-        methodValidator.validateParams(method, params, classPropertyMap, methodInfo.getStatement().params());
-        methodValidator.validateExceptionThrow(method, methodExceptionThrow);
-
-        return methodInfo;
+        return needStrategyToSelectReturn(returnType) ?
+                objectSelectResult(selectMethodInfoBuilder, method, returnType):
+                simpleSelectResult(selectMethodInfoBuilder, returnType);
     }
 
     private TypeMirror methodReturnType(final ExecutableElement method){

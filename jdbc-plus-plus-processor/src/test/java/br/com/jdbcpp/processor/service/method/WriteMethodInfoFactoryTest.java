@@ -5,18 +5,12 @@ import br.com.jdbcpp.processor.dto.method.DeleteMethod;
 import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.UpdateMethod;
-import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
-import br.com.jdbcpp.processor.exception.InvalidInputParamException;
-import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.service.statement.StatementInfoFactory;
-import br.com.jdbcpp.processor.service.validation.MethodValidator;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import util.extension.Fixture;
@@ -34,14 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith({MockitoExtension.class, MicroProcessorExtension.class})
 @Fixture(
@@ -58,8 +48,6 @@ class WriteMethodInfoFactoryTest {
             boolean useCustomException
     ) {}
 
-    @Mock
-    private MethodValidator methodValidator;
     @ProcessingEnv
     private ProcessingEnvironment processingEnv;
     @FixtureElement
@@ -81,26 +69,31 @@ class WriteMethodInfoFactoryTest {
 
     @ParameterizedTest
     @MethodSource
-    void shouldCreateWriteMethod(final TestCase testCase) throws Throwable {
+    void shouldCreateWriteMethod(final TestCase testCase) {
         final var sqlException = processingEnv.getElementUtils().getTypeElement(SQLException.class.getCanonicalName()).asType();
         final var nullWriteException = processingEnv.getElementUtils().getTypeElement(Command.None.class.getCanonicalName()).asType();
         final var customException = processingEnv.getElementUtils().getTypeElement("com.example.WriteMethodInfoFactoryTest.CustomException").asType();
         final var factory = createFactory(sqlException, nullWriteException);
 
         final var method = getMethod(testCase.methodName());
-        final var command = method.getAnnotation(Command.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
+        final var command = requireNonNull(method.getAnnotation(Command.class));
         final var packException = testCase.useCustomException() ? customException : nullWriteException;
+
+        final var builder = MethodInfo.builder()
+                .withName(testCase.methodName())
+                .withReturnType(method.getReturnType())
+                .withParams(List.of())
+                .withClassPropertyMap(Map.of());
 
         try (MockedStatic<StatementInfoFactory> mockedFactory = mockStatic(StatementInfoFactory.class)) {
             final var statementInfo = new StatementInfo(List.of("test"), List.of());
             mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
 
-            final var result = factory.create(method, params, classPropertyMap, command, packException);
+            final var result = factory.create(builder, command, packException);
 
-            assertThat(result).isInstanceOf(testCase.expectedType());
-            assertThat(result.getName()).isEqualTo(testCase.methodName());
+            final var expectedPackException = testCase.useCustomException() ? customException : sqlException;
+            assertThat(result.getPackException()).isEqualTo(expectedPackException);
+            assertThat(result.getStatement()).isEqualTo(statementInfo);
 
             switch (result) {
                 case InsertMethod insertMethod -> assertThat(insertMethod.isReturnRowsAffected()).isEqualTo(testCase.expectedReturnRowsAffected());
@@ -108,60 +101,6 @@ class WriteMethodInfoFactoryTest {
                 case DeleteMethod deleteMethod -> assertThat(deleteMethod.isReturnRowsAffected()).isEqualTo(testCase.expectedReturnRowsAffected());
                 default -> throw new AssertionError("Unexpected result type: " + result.getClass());
             }
-
-            verify(methodValidator).validateParams(method, params, classPropertyMap, result.getStatement().params());
-            verify(methodValidator).validateExceptionThrow(method, testCase.useCustomException() ? customException : sqlException);
-        }
-    }
-
-    @Test
-    void shouldThrowExceptionWhenValidateParamsFails() throws Throwable {
-        final var sqlException = processingEnv.getElementUtils().getTypeElement(SQLException.class.getCanonicalName()).asType();
-        final var nullWriteException = processingEnv.getElementUtils().getTypeElement(Command.None.class.getCanonicalName()).asType();
-        final var factory = createFactory(sqlException, nullWriteException);
-
-        final var method = getMethod("insertUser");
-        final var command = method.getAnnotation(Command.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
-
-        doThrow(new InvalidInputParamException("Invalid params", method))
-                .when(methodValidator)
-                .validateParams(method, params, classPropertyMap, List.of());
-
-        try (MockedStatic<StatementInfoFactory> mockedFactory = mockStatic(StatementInfoFactory.class)) {
-            final var statementInfo = new StatementInfo(List.of("test"), List.of());
-            mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
-
-            assertThatThrownBy(() -> factory.create(method, params, classPropertyMap, command, nullWriteException))
-                    .isInstanceOf(InvalidInputParamException.class)
-                    .hasMessage("Invalid params");
-        }
-        verify(methodValidator, never()).validateExceptionThrow(any(ExecutableElement.class), any(TypeMirror.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenValidateExceptionThrowFails() throws Throwable {
-        final var sqlException = processingEnv.getElementUtils().getTypeElement(SQLException.class.getCanonicalName()).asType();
-        final var nullWriteException = processingEnv.getElementUtils().getTypeElement(Command.None.class.getCanonicalName()).asType();
-        final var factory = createFactory(sqlException, nullWriteException);
-
-        final var method = getMethod("insertUser");
-        final var command = method.getAnnotation(Command.class);
-        final var params = List.<ParamInfo>of();
-        final var classPropertyMap = Map.<String, List<ParamInfo>>of();
-
-        doThrow(new InvalidMethodSignatureException("Invalid exception", method))
-                .when(methodValidator)
-                .validateExceptionThrow(method, sqlException);
-
-        try (MockedStatic<StatementInfoFactory> mockedFactory = mockStatic(StatementInfoFactory.class)) {
-            final var statementInfo = new StatementInfo(List.of("test"), List.of());
-            mockedFactory.when(() -> StatementInfoFactory.create(anyString())).thenReturn(statementInfo);
-
-            assertThatThrownBy(() -> factory.create(method, params, classPropertyMap, command, nullWriteException))
-                    .isInstanceOf(InvalidMethodSignatureException.class)
-                    .hasMessage("Invalid exception");
         }
     }
 
@@ -174,7 +113,7 @@ class WriteMethodInfoFactoryTest {
     }
 
     private WriteMethodInfoFactory createFactory(final TypeMirror sqlException, final TypeMirror nullWriteException) {
-        return new WriteMethodInfoFactory(methodValidator, sqlException, nullWriteException, processingEnv.getTypeUtils());
+        return new WriteMethodInfoFactory(sqlException, nullWriteException, processingEnv.getTypeUtils());
     }
 
 }

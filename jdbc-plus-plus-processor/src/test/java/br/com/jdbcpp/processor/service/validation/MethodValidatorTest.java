@@ -20,7 +20,6 @@ import util.extension.ProcessingEnv;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import java.util.Collections;
 import java.util.List;
@@ -93,7 +92,7 @@ class MethodValidatorTest {
                 .orElseThrow();
 
         assertThatNoException().isThrownBy(() ->
-                methodValidator.validateReturn(method, true, operation, List.of()));
+                methodValidator.validateWriteReturn(method, Collections.emptyMap(), true, operation));
     }
 
     private static Stream<Arguments> shouldThrowExceptionWhenRowsAffectedTrueAndInvalidReturn() {
@@ -114,24 +113,24 @@ class MethodValidatorTest {
                 .findFirst()
                 .orElseThrow();
 
-        assertThatThrownBy(() -> methodValidator.validateReturn(method, true, operation, List.of()))
+        assertThatThrownBy(() -> methodValidator.validateWriteReturn(method, Collections.emptyMap(), true, operation))
                 .isInstanceOf(InvalidMethodSignatureException.class)
                 .hasMessageContaining("is defined to return rows affected, but return is not int or long");
     }
 
     private static Stream<Arguments> shouldValidateReturnWhenRowsAffectedFalse() {
         return Stream.of(
-                Arguments.of("methodReturningVoid", "INSERT"),
-                Arguments.of("methodReturningString", "INSERT"),
-                Arguments.of("methodReturningVoid", "UPDATE"),
-                Arguments.of("methodReturningString", "UPDATE"),
-                Arguments.of("methodReturningVoid", "DELETE")
+                Arguments.of("methodReturningVoid", "INSERT", Collections.emptyMap()),
+                Arguments.of("methodReturningStringWithClassParam", "INSERT", Map.of("param", List.of())),
+                Arguments.of("methodReturningVoid", "UPDATE", Collections.emptyMap()),
+                Arguments.of("methodReturningStringWithClassParam", "UPDATE", Map.of("param", List.of())),
+                Arguments.of("methodReturningVoid", "DELETE", Collections.emptyMap())
         );
     }
 
     @ParameterizedTest
     @MethodSource
-    void shouldValidateReturnWhenRowsAffectedFalse(final String methodName, final String operation) {
+    void shouldValidateReturnWhenRowsAffectedFalse(final String methodName, final String operation, final Map<String, List<ParamInfo>> classPropertyMap) {
         final var methodValidator = createMethodValidator();
         final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
                 .stream()
@@ -140,20 +139,13 @@ class MethodValidatorTest {
                 .orElseThrow();
 
         assertThatNoException().isThrownBy(() ->
-                methodValidator.validateReturn(method, false, operation, List.of(method.getReturnType()))
-        );
-    }
-
-    private static Stream<Arguments> shouldThrowExceptionWhenRowsAffectedFalseAndInvalidReturn() {
-        return Stream.of(
-                Arguments.of("methodReturningInt", List.of()),
-                Arguments.of("methodReturningString", List.of())
+                methodValidator.validateWriteReturn(method, classPropertyMap, false, operation)
         );
     }
 
     @ParameterizedTest
-    @MethodSource
-    void shouldThrowExceptionWhenRowsAffectedFalseAndInvalidReturn(final String methodName, final List<TypeMirror> validReturns) {
+    @ValueSource(strings = {"methodReturningInt", "methodReturningLong", "methodReturningInteger", "methodReturningLongWrapper"})
+    void shouldThrowExceptionWhenRowsAffectedFalseAndInvalidReturn(final String methodName) {
         final var methodValidator = createMethodValidator();
         final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
                 .stream()
@@ -161,7 +153,7 @@ class MethodValidatorTest {
                 .findFirst()
                 .orElseThrow();
 
-        assertThatThrownBy(() -> methodValidator.validateReturn(method, false, "INSERT", validReturns))
+        assertThatThrownBy(() -> methodValidator.validateWriteReturn(method, Collections.emptyMap(), false, "INSERT"))
                 .isInstanceOf(InvalidMethodSignatureException.class)
                 .hasMessageContaining("without rowsAffected result has invalid config");
     }
