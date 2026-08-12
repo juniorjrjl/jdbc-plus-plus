@@ -23,7 +23,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.Collection;
 import java.util.List;
@@ -90,6 +89,7 @@ public class ReadMethodInfoFactory {
         final var methodExceptionThrow = types.isSameType(nullReadException, packException) ?
                 sqlException:
                 packException;
+
         final var builder = MethodInfo.builder()
                 .withName(method.getSimpleName().toString())
                 .withReturnType(returnType)
@@ -100,15 +100,12 @@ public class ReadMethodInfoFactory {
                 .asReadType()
                 .withContainerReturnTypeMirror(returnContainerType)
                 .withInstanceContainer(instanceContainer);
+
         final MethodInfo methodInfo = needStrategyToSelectReturn(returnType) ?
                 objectSelectResult(builder, method, returnType):
                 simpleSelectResult(builder, returnType);
-        methodValidator.validateParams(
-                method,
-                params,
-                classPropertyMap,
-                methodInfo.getStatement().params()
-        );
+
+        methodValidator.validateParams(method, params, classPropertyMap, methodInfo.getStatement().params());
         methodValidator.validateExceptionThrow(method, methodExceptionThrow);
 
         return methodInfo;
@@ -139,25 +136,18 @@ public class ReadMethodInfoFactory {
         if (method.getReturnType() instanceof DeclaredType returnTypeElement &&
                 !returnTypeElement.getTypeArguments().isEmpty()){
             final var resultBuildStrategy= method.getAnnotation(ResultBuildStrategy.class);
+            instanceContainer = method.getReturnType();
 
-            if (nonNull(resultBuildStrategy)){
+            if (nonNull(resultBuildStrategy)) {
                 @SuppressWarnings("rawtypes")
                 final Supplier<Class<? extends Collection>> containerType =
                         resultBuildStrategy::collectionImplementationResult;
                 final var listTypeMirror = typeUtil.getTypeMirrorFromName(containerType);
 
                 if (typeUtil.isNotList(listTypeMirror)) {
-                    instanceContainer = typeUtil.buildContainerTypeMirror(
-                            containerType,
-                            returnType
-                    );
-                } else {
-                    instanceContainer = method.getReturnType();
+                    instanceContainer = typeUtil.buildContainerTypeMirror(containerType, returnType);
                 }
-            } else {
-                instanceContainer = method.getReturnType();
             }
-
         }
         return instanceContainer;
     }
