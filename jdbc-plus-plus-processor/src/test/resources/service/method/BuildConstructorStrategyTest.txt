@@ -1,0 +1,24 @@
+package com.example;
+
+import java.util.List;
+
+public class BuildConstructorStrategyTest {
+
+    public static record UserWithConstructor(Long id, String name) {}
+
+    public static record UserWithoutConstructor() {}
+
+    public static record UserWithMultipleConstructors(Long id) {
+        public UserWithMultipleConstructors(String name) {
+            this((Long) null);
+        }
+    }
+
+    public static record UserWithNoParamConstructor() {
+        public UserWithNoParamConstructor() {}
+    }
+
+    public static record UserWithMixedTypes(Long id, String name, Address address, List<String> tags, List<Address> addresses) {}
+
+    public static record Address(Long id, String street) {}
+}

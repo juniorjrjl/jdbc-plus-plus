@@ -9,6 +9,7 @@ import br.com.jdbcpp.processor.util.TypeUtil;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
@@ -43,13 +44,14 @@ public final class BuildConstructorStrategy {
         final List<SelectReturnStrategy<?>> strategies = new ArrayList<>();
         final var constructors = typeElement.getEnclosedElements().stream()
                 .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
+                .filter(e -> e.getModifiers().contains(Modifier.PUBLIC))
                 .map(e -> (ExecutableElement) e)
                 .filter(e -> !e.getParameters().isEmpty())
                 .toList();
 
         if (constructors.isEmpty()) {
             final var message = String.format(
-                    "For use constructor strategy with method %s, a class %s must have a constructor",
+                    "For use constructor strategy with method %s, a class %s must have a public constructor with parameters",
                     methodName,
                     typeElement.getQualifiedName()
             );
@@ -66,14 +68,6 @@ public final class BuildConstructorStrategy {
         }
 
         final var parameters = constructors.getFirst().getParameters();
-        if (parameters.isEmpty()){
-            final var message = String.format(
-                    "For use constructor strategy, a class %s must have constructor with parameters",
-                    typeElement.getQualifiedName()
-            );
-            throw new InvalidSelectResultMappingException(message);
-        }
-
         for (int i = 0; i < parameters.size(); i++) {
             final var param = parameters.get(i);
             final var paramType = param.asType();

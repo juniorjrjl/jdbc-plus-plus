@@ -10,6 +10,7 @@ import br.com.jdbcpp.processor.util.TypeUtil;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
@@ -187,6 +188,7 @@ public final class BuildSetterStrategy {
 
         return typeElement.getEnclosedElements().stream()
                 .filter(e -> e.getKind() == ElementKind.METHOD)
+                .filter(e -> e.getModifiers().contains(Modifier.PUBLIC))
                 .map(e -> (ExecutableElement) e)
                 .filter(m -> m.getSimpleName().toString().equals(methodName))
                 .filter(m -> m.getParameters().size() == 1)
