@@ -1,0 +1,24 @@
+package com.example;
+
+import br.com.jdbcpp.api.Command;
+import br.com.jdbcpp.api.CommandType;
+import br.com.jdbcpp.api.DAO;
+import br.com.jdbcpp.api.Query;
+
+@DAO
+public interface ProcessorFacadeTest {
+
+    @Query(value = "SELECT * FROM users WHERE id = :id:")
+    User findById(Long id);
+
+    @Command(value = "INSERT INTO users (name) VALUES (:name:)", commandType = CommandType.INSERT)
+    void insert(String name);
+
+    record User(Long id, String name) {}
+
+    @DAO
+    public interface ProcessorFacadeTestNoMethods {
+        void someMethod();
+    }
+
+}

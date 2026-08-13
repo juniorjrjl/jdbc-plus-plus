@@ -126,7 +126,7 @@ public final class BuildSetterStrategy {
             throw new InvalidSelectResultMappingException(message);
         }
 
-        final var max = Collections.min(rsIndexes);
+        final var max = Collections.max(rsIndexes);
         final var hasAllIndexes = IntStream.range(min, max).allMatch(rsIndexes::contains);
         if (!hasAllIndexes) {
             final var message = String.format(
@@ -177,6 +177,7 @@ public final class BuildSetterStrategy {
 
         return typeElement.getEnclosedElements().stream()
                 .filter(e -> e.getKind() == ElementKind.METHOD)
+                .filter(e -> e.getModifiers().contains(Modifier.PUBLIC))
                 .map(e -> (ExecutableElement) e)
                 .filter(m -> m.getSimpleName().toString().equals(methodName))
                 .findFirst();

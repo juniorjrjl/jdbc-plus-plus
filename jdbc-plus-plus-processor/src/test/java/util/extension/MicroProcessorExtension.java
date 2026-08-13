@@ -1,6 +1,7 @@
 package util.extension;
 
 import com.google.testing.compile.JavaFileObjects;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
@@ -26,14 +27,14 @@ import static java.util.Objects.nonNull;
 public class MicroProcessorExtension implements InvocationInterceptor {
 
     @Override
-    public void interceptTestMethod(final Invocation<Void> invocation,
+    public void interceptTestMethod(final Invocation<@Nullable Void> invocation,
                                     final ReflectiveInvocationContext<Method> invocationContext,
                                     final ExtensionContext extensionContext) throws Throwable {
         runInCompilerContext(invocation::proceed, extensionContext);
     }
 
     @Override
-    public void interceptTestTemplateMethod(final Invocation<Void> invocation,
+    public void interceptTestTemplateMethod(final Invocation<@Nullable Void> invocation,
                                             final ReflectiveInvocationContext<Method> invocationContext,
                                             final ExtensionContext extensionContext) throws Throwable {
         runInCompilerContext(invocation::proceed, extensionContext);
@@ -45,7 +46,7 @@ public class MicroProcessorExtension implements InvocationInterceptor {
         final var testInstance = context.getRequiredTestInstance();
 
         final var annotation = testClass.getAnnotation(Fixture.class);
-        Objects.requireNonNull(annotation, "A classe de teste deve ser anotada com @MicroProcessorExtension.Fixture");
+        Objects.requireNonNull(annotation, "A target test class must be annotated with @MicroProcessorExtension.Fixture");
 
         final var fqcn = buildFqcn(annotation.packageName(), annotation.resourcePath());
         final var resource = loadFromResources(annotation.resourcePath(), fqcn);
@@ -98,7 +99,7 @@ public class MicroProcessorExtension implements InvocationInterceptor {
                         field.set(testInstance, fixtureElement);
                     }
                 } catch (IllegalAccessException e) {
-                    throw new RuntimeException("Erro ao injetar campo no teste: " + field.getName(), e);
+                    throw new RuntimeException("Error injecting field in test: " + field.getName(), e);
                 }
             }
             clazz = clazz.getSuperclass();
@@ -119,11 +120,11 @@ public class MicroProcessorExtension implements InvocationInterceptor {
     private static JavaFileObject loadFromResources(final String resourcePath, final String fqcn) {
         try {
             final var url = MicroProcessorExtension.class.getClassLoader().getResource(resourcePath);
-            Objects.requireNonNull(url, "Fixture não encontrada: " + resourcePath);
+            Objects.requireNonNull(url, "Fixture not found: " + resourcePath);
             final var content = Files.readString(Path.of(url.toURI()));
             return JavaFileObjects.forSourceLines(fqcn, content);
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao carregar fixture", e);
+            throw new RuntimeException("Error to load fixture", e);
         }
     }
 }

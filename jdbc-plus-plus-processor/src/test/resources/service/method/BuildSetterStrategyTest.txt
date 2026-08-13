@@ -1,0 +1,172 @@
+package com.example;
+
+import br.com.jdbcpp.api.PropStrategy;
+import java.util.List;
+
+public class BuildSetterStrategyTest {
+
+    static class UserWithValidSetters {
+        @PropStrategy
+        private Long id;
+
+        @PropStrategy
+        private String name;
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    static class UserWithCustomSetter {
+        @PropStrategy(value = "changeId")
+        private Long id;
+
+        @PropStrategy
+        private String name;
+
+        public void changeId(Long id) {
+            this.id = id;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    static class UserWithIgnoredField {
+        @PropStrategy
+        private Long id;
+
+        @PropStrategy(ignore = true)
+        private String ignoredField;
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public void setIgnoredField(String ignoredField) {
+            this.ignoredField = ignoredField;
+        }
+    }
+
+    static class UserWithMissingSetter {
+        @PropStrategy
+        private Long id;
+
+        @PropStrategy
+        private String name;
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+    }
+
+    static class UserWithIndexBasedAccess {
+        @PropStrategy(resultSetIndex = 0)
+        private Long id;
+
+        @PropStrategy(resultSetIndex = 1)
+        private String name;
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    static class UserWithInvalidIndexStart {
+        @PropStrategy(resultSetIndex = 1)
+        private Long id;
+
+        @PropStrategy(resultSetIndex = 2)
+        private String name;
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    static class UserWithNonSequentialIndexes {
+        @PropStrategy(resultSetIndex = 0)
+        private Long id;
+
+        @PropStrategy(resultSetIndex = 2)
+        private String name;
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    static class UserWithNoFields {
+        public void setId(Long id) {}
+    }
+
+    static class UserWithMixedTypes {
+        @PropStrategy
+        private Long id;
+
+        @PropStrategy
+        private String name;
+
+        @PropStrategy
+        private Address address;
+
+        @PropStrategy
+        private List<String> tags;
+
+        @PropStrategy
+        private List<Address> addresses;
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void setAddress(Address address) {
+            this.address = address;
+        }
+
+        public void setTags(List<String> tags) {
+            this.tags = tags;
+        }
+
+        public void setAddresses(List<Address> addresses) {
+            this.addresses = addresses;
+        }
+    }
+
+    static class Address {
+        @PropStrategy
+        private Long id;
+
+        @PropStrategy
+        private String street;
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public void setStreet(String street) {
+            this.street = street;
+        }
+    }
+}
