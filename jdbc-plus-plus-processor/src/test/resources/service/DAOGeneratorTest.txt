@@ -1,0 +1,27 @@
+package com.example;
+
+import br.com.jdbcpp.api.DAO;
+import javax.sql.DataSource;
+
+
+public class DAOGeneratorTest {
+
+    @DAO
+    public interface DAOInterface {}
+
+
+    @DAO
+    public abstract class DAOClass {
+
+        protected final DataSource dataSource;
+        protected final String sample;
+
+        public DAOClass(DataSource dataSource, String sample) {
+            this.dataSource = dataSource;
+            this.sample = sample;
+        }
+
+
+    }
+
+}

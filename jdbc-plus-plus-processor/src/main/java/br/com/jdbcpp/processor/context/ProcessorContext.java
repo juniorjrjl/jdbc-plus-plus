@@ -39,6 +39,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 public class ProcessorContext {
@@ -120,14 +121,12 @@ public class ProcessorContext {
                 new SelectResultSimpleResultList()
         );
         final var daoGenerator = new DAOGenerator(
-                new SelectCollectionMethodGenerator(selectResultSetDelegator, statementBuilder, collectionUtil, sqlExceptionElement),
-                new SelectOptionalMethodGenerator(selectResultSetDelegator, statementBuilder, sqlExceptionElement),
+                List.of(new SelectCollectionMethodGenerator(selectResultSetDelegator, statementBuilder, collectionUtil, sqlExceptionElement),
+                new SelectOptionalMethodGenerator(selectResultSetDelegator, statementBuilder, sqlExceptionElement, typeUtil),
                 new SelectSingleMethodGenerator(selectResultSetDelegator, statementBuilder, sqlExceptionElement),
                 new InsertMethodGenerator(statementBuilder, sqlExceptionElement),
                 new UpdateMethodGenerator(statementBuilder, sqlExceptionElement),
-                new DeleteMethodGenerator(statementBuilder, sqlExceptionElement),
-                collectionUtil,
-                typeUtil
+                new DeleteMethodGenerator(statementBuilder, sqlExceptionElement))
         );
 
         final var methodValidator = new MethodValidator(

@@ -2,18 +2,8 @@ package br.com.jdbcpp.processor.service;
 
 import br.com.jdbcpp.processor.dto.DAOImplInfo;
 import br.com.jdbcpp.processor.dto.constructor.ConstructorParamInfo;
-import br.com.jdbcpp.processor.dto.method.DeleteMethod;
-import br.com.jdbcpp.processor.dto.method.InsertMethod;
-import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
-import br.com.jdbcpp.processor.dto.method.UpdateMethod;
-import br.com.jdbcpp.processor.service.dao.read.select.SelectCollectionMethodGenerator;
-import br.com.jdbcpp.processor.service.dao.read.select.SelectOptionalMethodGenerator;
-import br.com.jdbcpp.processor.service.dao.read.select.SelectSingleMethodGenerator;
-import br.com.jdbcpp.processor.service.dao.write.delete.DeleteMethodGenerator;
-import br.com.jdbcpp.processor.service.dao.write.insert.InsertMethodGenerator;
-import br.com.jdbcpp.processor.service.dao.write.update.UpdateMethodGenerator;
-import br.com.jdbcpp.processor.util.CollectionUtil;
-import br.com.jdbcpp.processor.util.TypeUtil;
+import br.com.jdbcpp.processor.dto.method.MethodInfo;
+import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.MethodSpec;
@@ -26,39 +16,18 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-import static java.util.Objects.requireNonNull;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 public class DAOGenerator {
 
-    private final SelectCollectionMethodGenerator selectCollectionMethodGenerator;
-    private final SelectOptionalMethodGenerator selectOptionalMethodGenerator;
-    private final SelectSingleMethodGenerator selectSingleMethodGenerator;
-    private final InsertMethodGenerator insertMethodGenerator;
-    private final UpdateMethodGenerator updateMethodGenerator;
-    private final DeleteMethodGenerator deleteMethodGenerator;
-    private final CollectionUtil collectionUtil;
-    private final TypeUtil typeUtil;
+    private static final String DATA_SOURCE = "dataSource";
 
-    public DAOGenerator(final SelectCollectionMethodGenerator selectCollectionMethodGenerator,
-                        final SelectOptionalMethodGenerator selectOptionalMethodGenerator,
-                        final SelectSingleMethodGenerator selectSingleMethodGenerator,
-                        final InsertMethodGenerator insertMethodGenerator,
-                        final UpdateMethodGenerator updateMethodGenerator,
-                        final DeleteMethodGenerator deleteMethodGenerator,
-                        final CollectionUtil collectionUtil,
-                        final TypeUtil typeUtil) {
-        this.selectCollectionMethodGenerator = selectCollectionMethodGenerator;
-        this.selectOptionalMethodGenerator = selectOptionalMethodGenerator;
-        this.selectSingleMethodGenerator = selectSingleMethodGenerator;
-        this.insertMethodGenerator = insertMethodGenerator;
-        this.updateMethodGenerator = updateMethodGenerator;
-        this.deleteMethodGenerator = deleteMethodGenerator;
-        this.collectionUtil = collectionUtil;
-        this.typeUtil = typeUtil;
+    private final List<MethodGenerator<?>> methodGenerators;
+
+    public DAOGenerator(final List<MethodGenerator<?>> methodGenerators) {
+        this.methodGenerators = methodGenerators;
     }
 
     public JavaFile build(final DAOImplInfo daoImplInfo) {
@@ -68,7 +37,7 @@ public class DAOGenerator {
 
         final var constructor = daoImplInfo.constructor();
         if (isNull(constructor)) {
-            buildImplementInterface(daoBuilder, daoParent, "dataSource");
+            buildImplementInterface(daoBuilder, daoParent);
         } else {
             buildExtendSuperClass(daoBuilder, daoParent, constructor.params());
         }
@@ -80,45 +49,30 @@ public class DAOGenerator {
                 .map(ConstructorParamInfo::name)
                 .map(v -> v + ".getConnection()")
                 .findFirst()
-                .orElse("dataSource.getConnection()");
+                .orElse(DATA_SOURCE + ".getConnection()");
 
-        daoImplInfo.methods().forEach(m -> {
-            final var builder = switch (m){
-                case InsertMethod insertMethod ->
-                        insertMethodGenerator.build(insertMethod, connectionCall);
 
-                case SelectMethodInfo selectMethodInfo
-                        when nonNull(selectMethodInfo.getInstanceContainer()) &&
-                        collectionUtil.isCollectionType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()))
-                        -> selectCollectionMethodGenerator.build(selectMethodInfo, connectionCall);
-
-                case SelectMethodInfo selectMethodInfo
-                        when nonNull(selectMethodInfo.getInstanceContainer()) &&
-                        typeUtil.isOptionalType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()))
-                        -> selectOptionalMethodGenerator.build(selectMethodInfo, connectionCall);
-
-                case SelectMethodInfo selectMethodInfo ->
-                        selectSingleMethodGenerator.build(selectMethodInfo, connectionCall);
-                
-                case UpdateMethod updateMethod ->
-                        updateMethodGenerator.build(updateMethod, connectionCall);
-                case DeleteMethod deleteMethod ->
-                        deleteMethodGenerator.build(deleteMethod, connectionCall);
-            };
-            daoBuilder.addMethod(builder.build());
+        daoImplInfo.methods().forEach(m ->{
+            @SuppressWarnings("unchecked")
+            final var methodSpec = methodGenerators.stream().filter(g -> g.useInstance(m))
+                    .findFirst()
+                    .map(g -> ((MethodGenerator<MethodInfo>) g).build(m, connectionCall))
+                    .map(MethodSpec.Builder::build)
+                    .orElseThrow();
+            daoBuilder.addMethod(methodSpec);
         });
+
         return JavaFile.builder(daoImplInfo.packageName(), daoBuilder.build()).build();
     }
 
     private void buildImplementInterface(final TypeSpec.Builder classBuilder,
-                                         final ClassName interfaceName,
-                                         final String dataSourceVar) {
+                                         final ClassName interfaceName) {
         classBuilder.addSuperinterface(interfaceName)
-                .addField(DataSource.class, dataSourceVar, PRIVATE, FINAL);
+                .addField(DataSource.class, DATA_SOURCE, PRIVATE, FINAL);
         final var constructor = MethodSpec.constructorBuilder()
                 .addModifiers(PUBLIC)
-                .addParameter(DataSource.class, dataSourceVar, FINAL)
-                .addStatement("this.$L = $L", dataSourceVar, dataSourceVar)
+                .addParameter(DataSource.class, DATA_SOURCE, FINAL)
+                .addStatement("this.$L = $L", DATA_SOURCE, DATA_SOURCE)
                 .build();
         classBuilder.addMethod(constructor);
     }

@@ -1,6 +1,8 @@
 package br.com.jdbcpp.processor.service.dao.write.delete;
 
 import br.com.jdbcpp.processor.dto.method.DeleteMethod;
+import br.com.jdbcpp.processor.dto.method.MethodInfo;
+import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
@@ -11,7 +13,7 @@ import javax.lang.model.type.TypeMirror;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-public class DeleteMethodGenerator {
+public class DeleteMethodGenerator implements MethodGenerator<DeleteMethod> {
 
     private final StatementBuilder statementBuilder;
     private final TypeName sqlException;
@@ -22,6 +24,12 @@ public class DeleteMethodGenerator {
         this.sqlException = TypeName.get(sqlException);
     }
 
+    @Override
+    public boolean useInstance(final MethodInfo methodInfo) {
+        return methodInfo instanceof DeleteMethod;
+    }
+
+    @Override
     public MethodSpec.Builder build(final DeleteMethod methodInfo,
                                     final String connectionCall) {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())

@@ -1,32 +1,47 @@
 package br.com.jdbcpp.processor.service.dao.read.select;
 
+import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
+import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.read.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
+import br.com.jdbcpp.processor.util.TypeUtil;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.Optional;
 
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-public class SelectOptionalMethodGenerator {
+public class SelectOptionalMethodGenerator implements MethodGenerator<SelectMethodInfo> {
 
     protected final SelectResultSetDelegator selectResultSetDelegator;
     private final StatementBuilder statementBuilder;
     private final TypeName sqlException;
+    private final TypeUtil typeUtil;
 
     public SelectOptionalMethodGenerator(final SelectResultSetDelegator selectResultSetDelegator,
                                          final StatementBuilder statementBuilder,
-                                         final TypeMirror sqlException) {
+                                         final TypeMirror sqlException,
+                                         final TypeUtil typeUtil) {
         this.selectResultSetDelegator = selectResultSetDelegator;
         this.statementBuilder = statementBuilder;
         this.sqlException = TypeName.get(sqlException);
+        this.typeUtil = typeUtil;
     }
 
+    @Override
+    public boolean useInstance(final MethodInfo methodInfo) {
+        return methodInfo instanceof SelectMethodInfo selectMethodInfo &&
+                nonNull(selectMethodInfo.getContainerReturnTypeMirror()) &&
+                typeUtil.isOptionalType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()));
+    }
+
+    @Override
     public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
                                     final String connectionCall) {
         final var containerReturnTypeMirror = requireNonNull(

@@ -110,17 +110,17 @@ public non-sealed class SelectMethodInfo extends MethodInfo {
             return this;
         }
 
-        public  SelectMethodInfoBuilder withStrategyType(final ResultBuildStrategyType strategyType) {
+        public SelectMethodInfoBuilder withStrategyType(final ResultBuildStrategyType strategyType) {
             this.strategyType = strategyType;
             return this;
         }
 
-        public  SelectMethodInfoBuilder withContainerReturnTypeMirror(@Nullable final TypeMirror containerReturnTypeMirror) {
+        public SelectMethodInfoBuilder withContainerReturnTypeMirror(@Nullable final TypeMirror containerReturnTypeMirror) {
             this.containerReturnTypeMirror = containerReturnTypeMirror;
             return this;
         }
 
-        public  SelectMethodInfoBuilder withInstanceContainer(@Nullable final TypeMirror instanceContainer) {
+        public SelectMethodInfoBuilder withInstanceContainer(@Nullable final TypeMirror instanceContainer) {
             this.instanceContainer = instanceContainer;
             return this;
         }

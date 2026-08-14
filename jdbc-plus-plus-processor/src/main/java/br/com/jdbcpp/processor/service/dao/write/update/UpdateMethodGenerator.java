@@ -1,6 +1,8 @@
 package br.com.jdbcpp.processor.service.dao.write.update;
 
+import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.UpdateMethod;
+import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
@@ -11,10 +13,11 @@ import javax.lang.model.type.TypeMirror;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-public class UpdateMethodGenerator {
+public class UpdateMethodGenerator implements MethodGenerator<UpdateMethod> {
 
     private final StatementBuilder statementBuilder;
     private final TypeName sqlException;
+
 
     public UpdateMethodGenerator(final StatementBuilder statementBuilder,
                                  final TypeMirror sqlException){
@@ -22,6 +25,12 @@ public class UpdateMethodGenerator {
         this.sqlException = TypeName.get(sqlException);
     }
 
+    @Override
+    public boolean useInstance(final MethodInfo methodInfo) {
+        return methodInfo instanceof UpdateMethod;
+    }
+
+    @Override
     public MethodSpec.Builder build(final UpdateMethod methodInfo,
                                     final String connectionCall) {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
