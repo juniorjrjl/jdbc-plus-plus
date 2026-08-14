@@ -6,7 +6,6 @@ import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.UpdateMethod;
 import br.com.jdbcpp.processor.service.statement.StatementInfoFactory;
-import br.com.jdbcpp.processor.service.validation.MethodValidator;
 
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
