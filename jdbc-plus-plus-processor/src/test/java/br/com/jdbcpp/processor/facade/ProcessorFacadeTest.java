@@ -104,7 +104,8 @@ class ProcessorFacadeTest {
 
     @Test
     void shouldThrowExceptionWhenDAOHasNoAnnotatedMethods() throws InvalidDAOException {
-        final var daoElement = getTypeElement("ProcessorFacadeTest.ProcessorFacadeTestNoMethods");
+        final var daoElement = processingEnv.getElementUtils()
+                .getTypeElement("com.example.ProcessorFacadeTest.ProcessorFacadeTestNoMethods");
         final var facade = createFacade();
         doReturn(Set.of(daoElement)).when(roundEnv).getElementsAnnotatedWith(DAO.class);
         when(daoValidator.validateAndResolve(daoElement)).thenReturn(Optional.empty());
@@ -126,10 +127,5 @@ class ProcessorFacadeTest {
                 daoGenerator,
                 filer
         );
-    }
-
-    private TypeElement getTypeElement(final String className) {
-        return processingEnv.getElementUtils()
-                .getTypeElement("com.example." + className);
     }
 }

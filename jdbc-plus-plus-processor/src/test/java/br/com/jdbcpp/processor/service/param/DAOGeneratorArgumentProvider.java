@@ -48,16 +48,16 @@ public class DAOGeneratorArgumentProvider implements ArgumentsProvider {
                         daoInterface,
                         """
                         package com.example;
-                                        
+                        
                         import javax.sql.DataSource;
-                                
+                        
                         public class DAOInterfaceImpl implements DAOGeneratorTest.DAOInterface {
                           private final DataSource dataSource;
-                                
+                        
                           public DAOInterfaceImpl(final DataSource dataSource) {
                             this.dataSource = dataSource;
                           }
-                          
+                        
                           public void insertUser() {
                           }
                         }
@@ -67,15 +67,15 @@ public class DAOGeneratorArgumentProvider implements ArgumentsProvider {
                         daoClass,
                         """
                         package com.example;
-                                        
+                        
                         import java.lang.String;
                         import javax.sql.DataSource;
-                                
+                        
                         public class DAOClassImpl extends DAOGeneratorTest.DAOClass {
                           public DAOClassImpl(final DataSource dataSource, final String sample) {
                             super(dataSource, sample);
                           }
-                          
+                        
                           public void insertUser() {
                           }
                         }

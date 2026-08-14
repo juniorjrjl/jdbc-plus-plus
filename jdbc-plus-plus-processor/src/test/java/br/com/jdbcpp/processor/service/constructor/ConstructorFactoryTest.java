@@ -77,6 +77,7 @@ class ConstructorFactoryTest {
         final var actual = constructorFactory.build(constructor);
 
         expectedFields.forEach((fieldName, expectedType) -> {
+            assertThat(actual).isNotNull();
             final var foundParam = actual.params().stream()
                     .filter(p -> p.name().equals(fieldName))
                     .findFirst()

@@ -18,6 +18,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -108,7 +109,7 @@ class ArrayUtilTest {
         final var arrayUtil = createArrayUtil();
         final var stringArray = FieldUtil.getFieldType(fixture, "stringArray");
         final var elementType = arrayUtil.getArrayElementType(stringArray);
-        when(typeUtil.isNotSimpleType(elementType)).thenReturn(true);
+        when(typeUtil.isNotSimpleType(requireNonNull(elementType))).thenReturn(true);
         assertThat(arrayUtil.isArrayOfClass(stringArray)).isTrue();
     }
 
@@ -117,7 +118,7 @@ class ArrayUtilTest {
         final var arrayUtil = createArrayUtil();
         final var stringArray = FieldUtil.getFieldType(fixture, "stringArray");
         final var elementType = arrayUtil.getArrayElementType(stringArray);
-        when(typeUtil.isNotSimpleType(elementType)).thenReturn(false);
+        when(typeUtil.isNotSimpleType(requireNonNull(elementType))).thenReturn(false);
         assertThat(arrayUtil.isArrayOfClass(stringArray)).isFalse();
     }
 
