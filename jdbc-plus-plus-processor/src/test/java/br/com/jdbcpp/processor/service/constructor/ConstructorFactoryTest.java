@@ -17,6 +17,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -78,7 +79,7 @@ class ConstructorFactoryTest {
 
         expectedFields.forEach((fieldName, expectedType) -> {
             assertThat(actual).isNotNull();
-            final var foundParam = actual.params().stream()
+            final var foundParam = requireNonNull(actual).params().stream()
                     .filter(p -> p.name().equals(fieldName))
                     .findFirst()
                     .orElseThrow();

@@ -39,6 +39,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +52,7 @@ public class ProcessorContext {
     private static final String THROWABLE_CANONICAL_NAME = Throwable.class.getCanonicalName();
     private static final String LONG_CANONICAL_NAME = Long.class.getCanonicalName();
     private static final String INTEGER_CANONICAL_NAME = Integer.class.getCanonicalName();
+    private static final String COLLECTION_CANONICAL_NAME = Collection.class.getCanonicalName();
 
     private final ProcessorFacade processorFacade;
 
@@ -81,6 +83,9 @@ public class ProcessorContext {
         final var integerElement = Optional.ofNullable(elements.getTypeElement(INTEGER_CANONICAL_NAME))
                 .map(TypeElement::asType)
                 .orElseThrow(LambdaUtil.unchecked(() -> new ProcessorContextInitialization("Integer not found")));
+        final var collectionElement = Optional.ofNullable(elements.getTypeElement(COLLECTION_CANONICAL_NAME))
+                .map(TypeElement::asType)
+                .orElseThrow(LambdaUtil.unchecked(() -> new ProcessorContextInitialization("Collection not found")));
 
 
         final var daoValidator = new DAOValidator(types, elements, DATA_SOURCE_CANONICAL_NAME, dataSourceElement);
@@ -122,7 +127,7 @@ public class ProcessorContext {
         );
         final var daoGenerator = new DAOGenerator(
                 List.of(new SelectCollectionMethodGenerator(selectResultSetDelegator, statementBuilder, collectionUtil, sqlExceptionElement),
-                new SelectOptionalMethodGenerator(selectResultSetDelegator, statementBuilder, sqlExceptionElement, typeUtil),
+                new SelectOptionalMethodGenerator(selectResultSetDelegator, statementBuilder, sqlExceptionElement),
                 new SelectSingleMethodGenerator(selectResultSetDelegator, statementBuilder, sqlExceptionElement),
                 new InsertMethodGenerator(statementBuilder, sqlExceptionElement),
                 new UpdateMethodGenerator(statementBuilder, sqlExceptionElement),
@@ -154,7 +159,8 @@ public class ProcessorContext {
                 typeUtil,
                 collectionUtil,
                 nullReadException,
-                sqlExceptionElement
+                sqlExceptionElement,
+                collectionElement
         );
 
         final var writeMethodInfoFactory = new WriteMethodInfoFactory(

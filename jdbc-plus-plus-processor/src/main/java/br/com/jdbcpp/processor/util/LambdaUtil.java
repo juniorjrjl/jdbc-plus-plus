@@ -1,5 +1,6 @@
 package br.com.jdbcpp.processor.util;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -21,6 +22,16 @@ public final class LambdaUtil {
         return () -> {
             try {
                 return supplier.get();
+            } catch (Exception e) {
+                throw sneakyThrow(e);
+            }
+        };
+    }
+
+    public static <T, E extends Exception> Consumer<T> unchecked(final ThrowableConsumer<T, E> consumer) {
+        return t -> {
+            try {
+                consumer.accept(t);
             } catch (Exception e) {
                 throw sneakyThrow(e);
             }

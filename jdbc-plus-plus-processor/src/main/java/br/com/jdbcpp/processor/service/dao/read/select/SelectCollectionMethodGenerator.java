@@ -1,7 +1,7 @@
 package br.com.jdbcpp.processor.service.dao.read.select;
 
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
-import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
+import br.com.jdbcpp.processor.dto.method.SelectCollectionMethodInfo;
 import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.read.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
@@ -12,12 +12,10 @@ import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
 
-import static java.util.Objects.nonNull;
-import static java.util.Objects.requireNonNull;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-public class SelectCollectionMethodGenerator implements MethodGenerator<SelectMethodInfo> {
+public class SelectCollectionMethodGenerator implements MethodGenerator<SelectCollectionMethodInfo> {
 
     private final SelectResultSetDelegator selectResultSetDelegator;
     private final StatementBuilder statementBuilder;
@@ -36,22 +34,14 @@ public class SelectCollectionMethodGenerator implements MethodGenerator<SelectMe
 
     @Override
     public boolean useInstance(final MethodInfo methodInfo) {
-        return methodInfo instanceof SelectMethodInfo selectMethodInfo &&
-                nonNull(selectMethodInfo.getContainerReturnTypeMirror()) &&
-                collectionUtil.isCollectionType(requireNonNull(selectMethodInfo.getContainerReturnTypeMirror()));
+        return methodInfo instanceof SelectCollectionMethodInfo;
     }
 
     @Override
-    public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
+    public MethodSpec.Builder build(final SelectCollectionMethodInfo methodInfo,
                                     final String connectionCall) {
-        final var containerReturnTypeMirror = requireNonNull(
-                methodInfo.getContainerReturnTypeMirror(),
-                "For collection method, container return type mirror must not be null"
-        );
-        final var instanceContainer = requireNonNull(
-                methodInfo.getInstanceContainer(),
-                "For collection method, container instance type mirror must not be null"
-        );
+        final var containerReturnTypeMirror = methodInfo.getContainerReturnTypeMirror();
+        final var instanceContainer = methodInfo.getInstanceContainer();
         final var containerReturnType = TypeName.get(containerReturnTypeMirror);
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
                 .addModifiers(PUBLIC)

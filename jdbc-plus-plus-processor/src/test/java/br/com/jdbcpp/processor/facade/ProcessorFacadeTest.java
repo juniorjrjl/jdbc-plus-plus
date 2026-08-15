@@ -3,7 +3,7 @@ package br.com.jdbcpp.processor.facade;
 import br.com.jdbcpp.api.DAO;
 import br.com.jdbcpp.api.Query;
 import br.com.jdbcpp.processor.dto.method.InsertMethod;
-import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
+import br.com.jdbcpp.processor.dto.method.SelectNullableMethodInfo;
 import br.com.jdbcpp.processor.exception.InvalidDAOException;
 import br.com.jdbcpp.processor.exception.ReadDAOFacadeException;
 import br.com.jdbcpp.processor.service.DAOGenerator;
@@ -75,7 +75,7 @@ class ProcessorFacadeTest {
         when(daoValidator.validateAndResolve(daoElement)).thenReturn(Optional.empty());
         when(methodInfoDelegator.build(any())).thenAnswer(invocation -> {
             if (isNull(invocation.getArgument(0, ExecutableElement.class).getAnnotation(Query.class))){
-                return mock(SelectMethodInfo.class);
+                return mock(SelectNullableMethodInfo.class);
             } else {
                 return  mock(InsertMethod.class);
             }

@@ -1,6 +1,5 @@
 package br.com.jdbcpp.processor.service.dao.read.select.result;
 
-import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
 import com.palantir.javapoet.MethodSpec;
 
 import static java.util.Objects.isNull;
@@ -22,37 +21,37 @@ public final class SelectResultSetDelegator {
         this.simpleResultList = simpleResultList;
     }
 
-    public void build(final SelectMethodInfo selectMethodInfo,
+    public void build(final ResultSetInfo resultSetInfo,
                       final String objectResultName,
                       final String resultSetVar,
                       final MethodSpec.Builder builder){
-        switch (selectMethodInfo.getStrategyType()){
+        switch (resultSetInfo.getStrategyType()){
             case CONSTRUCTOR -> constructor.build(
-                    selectMethodInfo.getConstructorStrategies(),
+                    resultSetInfo.getConstructorStrategies(),
                     objectResultName,
-                    selectMethodInfo.getReturnType(),
+                    resultSetInfo.getReturnType(),
                     resultSetVar,
                     builder
             );
             case SETTER -> setter.build(
-                    selectMethodInfo.getSetterStrategies(),
+                    resultSetInfo.getSetterStrategies(),
                     objectResultName,
-                    selectMethodInfo.getReturnType(),
+                    resultSetInfo.getReturnType(),
                     resultSetVar,
                     builder
             );
             case SIMPLE_RESULT -> {
-                if (isNull(selectMethodInfo.getContainerReturnTypeMirror())) {
+                if (isNull(resultSetInfo.getContainerReturnTypeMirror())) {
                     simpleResult.build(
-                            selectMethodInfo.getSimpleResultStrategies(),
+                            resultSetInfo.getSimpleResultStrategies(),
                             objectResultName,
-                            selectMethodInfo.getReturnType(),
+                            resultSetInfo.getReturnType(),
                             resultSetVar,
                             builder
                     );
                 } else {
                     simpleResultList.build(
-                            selectMethodInfo.getSimpleResultStrategies(),
+                            resultSetInfo.getSimpleResultStrategies(),
                             resultSetVar,
                             builder
                     );

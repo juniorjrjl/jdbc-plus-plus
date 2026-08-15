@@ -1,7 +1,9 @@
 package br.com.jdbcpp.processor.service.dao.statement;
 
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
-import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
+import br.com.jdbcpp.processor.dto.method.SelectCollectionMethodInfo;
+import br.com.jdbcpp.processor.dto.method.SelectNullableMethodInfo;
+import br.com.jdbcpp.processor.dto.method.SelectOptionalMethodInfo;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import br.com.jdbcpp.processor.util.JDBCUtil;
@@ -28,7 +30,9 @@ public class StatementBuilder {
                       final String statementVar,
                       final String resultSetVar) {
         final var statement = methodInfo.getStatement();
-        final var readMethod = methodInfo instanceof SelectMethodInfo;
+        final var readMethod = methodInfo instanceof SelectNullableMethodInfo ||
+                methodInfo instanceof SelectCollectionMethodInfo ||
+                methodInfo instanceof SelectOptionalMethodInfo;
         if (methodInfo.unParameterizedStatement()){
             buildStatement(
                     methodBuilder,

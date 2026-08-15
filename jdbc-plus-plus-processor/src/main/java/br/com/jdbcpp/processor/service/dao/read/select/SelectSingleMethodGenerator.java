@@ -1,7 +1,7 @@
 package br.com.jdbcpp.processor.service.dao.read.select;
 
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
-import br.com.jdbcpp.processor.dto.method.SelectMethodInfo;
+import br.com.jdbcpp.processor.dto.method.SelectNullableMethodInfo;
 import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.read.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
@@ -10,11 +10,10 @@ import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
 
-import static java.util.Objects.isNull;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-public class SelectSingleMethodGenerator implements MethodGenerator<SelectMethodInfo> {
+public class SelectSingleMethodGenerator implements MethodGenerator<SelectNullableMethodInfo> {
 
     protected final SelectResultSetDelegator selectResultSetDelegator;
     private final StatementBuilder statementBuilder;
@@ -30,12 +29,11 @@ public class SelectSingleMethodGenerator implements MethodGenerator<SelectMethod
 
     @Override
     public boolean useInstance(final MethodInfo methodInfo) {
-        return methodInfo instanceof SelectMethodInfo selectMethodInfo &&
-                isNull(selectMethodInfo.getContainerReturnTypeMirror());
+        return methodInfo instanceof SelectNullableMethodInfo;
     }
 
     @Override
-    public MethodSpec.Builder build(final SelectMethodInfo methodInfo,
+    public MethodSpec.Builder build(final SelectNullableMethodInfo methodInfo,
                                     final String connectionCall) {
         final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
                 .addModifiers(PUBLIC)

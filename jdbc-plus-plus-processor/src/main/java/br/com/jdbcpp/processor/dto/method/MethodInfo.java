@@ -12,7 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, SelectMethodInfo, UpdateMethod {
+public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, UpdateMethod,
+        SelectNullableMethodInfo, SelectOptionalMethodInfo, SelectCollectionMethodInfo {
 
     protected final String name;
     protected final TypeMirror returnType;
@@ -130,8 +131,13 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Sele
             };
         }
 
-        public SelectMethodInfo.SelectMethodInfoBuilder asReadType() {
-            return new SelectMethodInfo.SelectMethodInfoBuilder(this);
+        @SuppressWarnings("unchecked")
+        public <T extends MethodInfoBuilder> T asReadType(final QueryType queryType) {
+            return (T) switch (queryType) {
+                case NULLABLE -> new SelectNullableMethodInfo.SelectNullableMethodInfoBuilder(this);
+                case OPTIONAL -> new SelectOptionalMethodInfo.SelectOptionalMethodInfoBuilder(this);
+                case COLLECTION -> new SelectCollectionMethodInfo.SelectCollectionMethodInfoBuilder(this);
+            };
         }
 
     }

@@ -49,6 +49,10 @@ public class CollectionUtil {
         return false;
     }
 
+    public boolean isNotCollectionType(final TypeMirror type) {
+        return !isCollectionType(type);
+    }
+
     public String getCollectionImplementation(final TypeMirror type) {
         final var element = types.asElement(type);
         if (!(element instanceof TypeElement typeElement)) {

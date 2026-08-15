@@ -7,6 +7,7 @@ import br.com.jdbcpp.api.ResultBuildStrategyType;
 import br.com.jdbcpp.processor.dto.method.DeleteMethod;
 import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
+import br.com.jdbcpp.processor.dto.method.SelectNullableMethodInfo;
 import br.com.jdbcpp.processor.dto.method.UpdateMethod;
 import br.com.jdbcpp.processor.dto.parameter.ClassParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
@@ -33,6 +34,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+import static br.com.jdbcpp.processor.dto.method.QueryType.NULLABLE;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -199,7 +201,7 @@ class MethodInfoDelegatorTest {
                 .withClassPropertyMap(classPropertyMap)
                 .withStatement(statementInfo)
                 .withPackException(packException)
-                .asReadType()
+                .<SelectNullableMethodInfo.SelectNullableMethodInfoBuilder>asReadType(NULLABLE)
                 .withStrategyType(ResultBuildStrategyType.CONSTRUCTOR)
                 .build();
 

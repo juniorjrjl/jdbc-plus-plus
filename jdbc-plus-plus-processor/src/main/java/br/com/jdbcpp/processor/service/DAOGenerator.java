@@ -3,7 +3,9 @@ package br.com.jdbcpp.processor.service;
 import br.com.jdbcpp.processor.dto.DAOImplInfo;
 import br.com.jdbcpp.processor.dto.constructor.ConstructorParamInfo;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
+import br.com.jdbcpp.processor.exception.InvalidMethodInformationException;
 import br.com.jdbcpp.processor.service.dao.MethodGenerator;
+import br.com.jdbcpp.processor.util.LambdaUtil;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.MethodSpec;
@@ -52,15 +54,17 @@ public class DAOGenerator {
                 .orElse(DATA_SOURCE + ".getConnection()");
 
 
-        daoImplInfo.methods().forEach(m ->{
+        daoImplInfo.methods().forEach(LambdaUtil.unchecked(m ->{
             @SuppressWarnings("unchecked")
             final var methodSpec = methodGenerators.stream().filter(g -> g.useInstance(m))
                     .findFirst()
                     .map(g -> ((MethodGenerator<MethodInfo>) g).build(m, connectionCall))
                     .map(MethodSpec.Builder::build)
-                    .orElseThrow();
+                    .orElseThrow(LambdaUtil.unchecked(() -> new InvalidMethodInformationException(
+                            String.format("A method %s contains a unknow error", m.getName())
+                    )));
             daoBuilder.addMethod(methodSpec);
-        });
+        }));
 
         return JavaFile.builder(daoImplInfo.packageName(), daoBuilder.build()).build();
     }
