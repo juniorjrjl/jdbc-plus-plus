@@ -1,0 +1,130 @@
+package com.example;
+
+import br.com.jdbcpp.api.InputParam;
+import java.util.List;
+import java.util.Set;
+
+public interface ClassParamInfoFactoryTest {
+    
+    void simpleClassParam(Person person);
+    
+    void classWithCollectionParam(List<Address> addresses);
+    
+    void classWithArrayParam(Phone[] phones);
+    
+    void recordParam(UserRecord userRecord);
+    
+    void classWithAnnotatedField(PersonWithAnnotations person);
+    
+    void classWithInvalidEnumMethod(PersonWithInvalidEnum person);
+    
+    void classWithComplexCollection(List<Address> addresses);
+    
+    void classWithMixedFields(ClassWithMixedFields obj);
+
+    
+    static class Person {
+        private String name;
+        private int age;
+        
+        public String getName() {
+            return name;
+        }
+        
+        public int getAge() {
+            return age;
+        }
+    }
+    
+    static class Address {
+        private String street;
+        private String city;
+        
+        public String getStreet() {
+            return street;
+        }
+        
+        public String getCity() {
+            return city;
+        }
+    }
+    
+    static class Phone {
+        private String number;
+        
+        public String getNumber() {
+            return number;
+        }
+    }
+    
+    static class Company {
+        private String name;
+        private Address headquarters;
+        
+        public String getName() {
+            return name;
+        }
+        
+        public Address getHeadquarters() {
+            return headquarters;
+        }
+    }
+    
+    record UserRecord(String username, String email) {}
+    
+    static class PersonWithAnnotations {
+        @InputParam(value = "getFullName", statementField = "full_name")
+        private String name;
+        
+        @InputParam(ignore = true)
+        private String secret;
+        
+        public String getName() {
+            return name;
+        }
+        
+        public String getSecret() {
+            return secret;
+        }
+    }
+    
+    static class PersonWithInvalidEnum {
+        @InputParam(enumMethodValue = "nonExistentMethod")
+        private Status status;
+        
+        public Status getStatus() {
+            return status;
+        }
+    }
+    
+    static class PersonWithValidEnum {
+        @InputParam(enumMethodValue = "getValue")
+        private Status status;
+        
+        public Status getStatus() {
+            return status;
+        }
+    }
+    
+    enum Status {
+        ACTIVE, INACTIVE;
+        
+        public String getValue() {
+            return name();
+        }
+    }
+    
+    static class ClassWithMixedFields {
+        private String privateField;
+        public String publicField;
+        private static String staticField;
+        
+        public String getPrivateField() {
+            return privateField;
+        }
+        
+        public String getPublicField() {
+            return publicField;
+        }
+    }
+}

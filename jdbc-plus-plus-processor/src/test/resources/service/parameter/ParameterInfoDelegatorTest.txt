@@ -1,0 +1,49 @@
+package com.example;
+
+import br.com.jdbcpp.api.InputParam;
+import java.util.List;
+
+public interface ParameterInfoDelegatorTest {
+    
+    void noParams();
+    
+    void singleSimpleParam(String name);
+    
+    void multipleSimpleParams(String name, int age, String email);
+    
+    void singleClassParam(Person person);
+    
+    void multipleClassParams(Person person, Address address);
+    
+    void simpleParamWithIgnore(@InputParam(ignore = true) String name);
+    
+    void classParamInCollection(List<Person> people);
+    
+    void classParamInArray(Person[] people);
+    
+    static class Person {
+        private String name;
+        private int age;
+        
+        public String getName() {
+            return name;
+        }
+        
+        public int getAge() {
+            return age;
+        }
+    }
+    
+    static class Address {
+        private String street;
+        private String city;
+        
+        public String getStreet() {
+            return street;
+        }
+        
+        public String getCity() {
+            return city;
+        }
+    }
+}

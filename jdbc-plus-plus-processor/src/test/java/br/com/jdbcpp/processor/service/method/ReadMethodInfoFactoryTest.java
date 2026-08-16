@@ -180,9 +180,9 @@ class ReadMethodInfoFactoryTest {
         final var nullReadException = processingEnv.getElementUtils().getTypeElement(Query.None.class.getCanonicalName()).asType();
         final var factory = createFactory(sqlException, nullReadException, collection);
 
-        final var ListType = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName());
+        final var listType = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName());
         final var user = processingEnv.getElementUtils().getTypeElement("com.example.ReadMethodInfoFactoryTest.User").asType();
-        final var ListUser = processingEnv.getTypeUtils().getDeclaredType(ListType, user);
+        final var listUser = processingEnv.getTypeUtils().getDeclaredType(listType, user);
 
         final var method = getMethod("findUsersByNameWithConstructor");
         final var query = requireNonNull(method.getAnnotation(Query.class));
@@ -198,7 +198,7 @@ class ReadMethodInfoFactoryTest {
         when(collectionUtil.getCollectionElementType(any())).thenReturn(returnType);
         when(typeUtil.isNotSimpleType(any())).thenReturn(true);
         when(typeUtil.isRecord(any())).thenReturn(true);
-        when(typeUtil.buildContainerTypeMirror(any(), any())).thenReturn(ListUser);
+        when(typeUtil.buildContainerTypeMirror(any(), any())).thenReturn(listUser);
 
         final var strategies = List.<SelectReturnStrategy<?>>of();
         when(buildConstructorStrategy.generateStrategyInfo(any(), anyString())).thenReturn(strategies);

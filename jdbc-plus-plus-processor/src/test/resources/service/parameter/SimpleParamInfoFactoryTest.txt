@@ -1,0 +1,30 @@
+package com.example;
+
+import br.com.jdbcpp.api.InputParam;
+import java.util.List;
+import java.util.Set;
+
+public interface SimpleParamInfoFactoryTest {
+    
+    void simpleParam(String name);
+    
+    void simpleParamWithAnnotation(@InputParam(value = "customName", statementField = "custom_field") String name);
+    
+    void collectionParam(List<String> names);
+    
+    void arrayParam(String[] names);
+    
+    void enumParamWithAnnotation(@InputParam(enumMethodValue = "getValue") Status status);
+    
+    void multipleParams(String name, int age, List<String> tags);
+    
+    void ignoredParam(@InputParam(ignore = true) String name);
+    
+    enum Status {
+        ACTIVE, INACTIVE;
+        
+        public String getValue() {
+            return name();
+        }
+    }
+}
