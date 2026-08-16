@@ -1,0 +1,8 @@
+CREATE TABLE orders(
+    id BIGSERIAL PRIMARY KEY,
+    status VARCHAR(100) NOT NULL,
+    user_id INT NOT NULL,
+    invoice_file BYTEA,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

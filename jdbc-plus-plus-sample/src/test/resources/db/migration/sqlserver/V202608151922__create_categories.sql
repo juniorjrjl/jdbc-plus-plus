@@ -1,0 +1,6 @@
+CREATE TABLE categories (
+    id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    created_at DATETIME2 NOT NULL,
+    updated_at DATETIME2 NOT NULL
+);

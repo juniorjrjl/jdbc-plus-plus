@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/mysql/V202608151922__create_categories.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/mysql/V202608151955__create_products.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/mysql/V202608151957__create_users.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/mysql/V202608152000__create_orders.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/mysql/V202608152001__create_payments.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/mysql/V202608152003__create_order_items.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/oracle/V202608151922__create_categories.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/oracle/V202608151955__create_products.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/oracle/V202608151957__create_users.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/oracle/V202608152000__create_orders.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/oracle/V202608152001__create_payments.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/oracle/V202608152003__create_order_items.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/sqlserver/V202608151922__create_categories.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/sqlserver/V202608151955__create_products.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/sqlserver/V202608151957__create_users.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/sqlserver/V202608152000__create_orders.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/sqlserver/V202608152001__create_payments.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/jdbc-plus-plus-sample/src/test/resources/db/migration/sqlserver/V202608152003__create_order_items.sql" dialect="GenericSQL" />
+  </component>
+</project>

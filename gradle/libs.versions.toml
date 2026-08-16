@@ -2,10 +2,17 @@
 assertjVersion = "3.27.7"
 autoserviceVersion = "1.1.1"
 compileTestingVersion = "0.23.0"
+datafaker = "2.7.0"
+flywayVersion = "13.3.0"
 javapoetVersion = "0.15.0"
 jspecifyVersion = "1.0.0"
 junitVersion = "6.1.1"
 mockitoVersion = "5.23.0"
+mysqlVersion = "26.7.0"
+oracleVersion = "23.26.3.0.0"
+postgresqlVersion = "42.7.3"
+sqlserverVersion = "13.4.0.jre11"
+testcontainersVersion = "2.0.5"
 
 [libraries]
 #annotation processing
@@ -14,6 +21,7 @@ autoservice = { group = "com.google.auto.service", name = "auto-service", versio
 #implementation
 javapoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javapoetVersion" }
 jspecify = { group = "org.jspecify", name =  "jspecify", version.ref = "jspecifyVersion" }
+
 
 #testImplementation
 assertj-core = { group = "org.assertj", name = "assertj-core", version.ref = "assertjVersion" }
@@ -25,5 +33,25 @@ junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-para
 junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoVersion" }
 mockito-junit-jupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockitoVersion" }
+
+## integration test
+datafaker = { group = "net.datafaker", name = "datafaker", version.ref = "datafaker" }
+flyway-core = { group = "org.flywaydb", name = "flyway-core", version.ref = "flywayVersion" }
+flyway-mysql = { group = "org.flywaydb", name = "flyway-mysql", version.ref = "flywayVersion" }
+flyway-oracle = { group = "org.flywaydb", name = "flyway-database-oracle", version.ref = "flywayVersion" }
+flyway-postgresql = { group = "org.flywaydb", name = "flyway-database-postgresql", version.ref = "flywayVersion" }
+flyway-sqlserver = { group = "org.flywaydb", name = "flyway-sqlserver", version.ref = "flywayVersion" }
+mysql = { group = "com.mysql", name = "mysql-connector-j", version.ref = "mysqlVersion"}
+oracle = { group = "com.oracle.database.jdbc", name = "ojdbc11", version.ref = "oracleVersion" }
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresqlVersion" }
+sqlserver = { group = "com.microsoft.sqlserver", name = "mssql-jdbc", version.ref = "sqlserverVersion" }
+
+
+testcontainers = { group = "org.testcontainers", name = "testcontainers", version.ref = "testcontainersVersion"}
+testcontainers-junit-jupiter = { group = "org.testcontainers", name = "testcontainers-junit-jupiter", version.ref = "testcontainersVersion" }
+testcontainers-mysql = { group = "org.testcontainers", name = "testcontainers-mysql", version.ref = "testcontainersVersion" }
+testcontainers-oracle = { group = "org.testcontainers", name = "testcontainers-oracle-free", version.ref = "testcontainersVersion" }
+testcontainers-postgresql = { group = "org.testcontainers", name = "testcontainers-postgresql", version.ref = "testcontainersVersion" }
+testcontainers-sqlserver = { group = "org.testcontainers", name = "testcontainers-mssqlserver", version.ref = "testcontainersVersion" }
 
 
