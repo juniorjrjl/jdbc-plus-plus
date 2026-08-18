@@ -9,10 +9,12 @@ import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import br.com.jdbcpp.processor.util.JDBCUtil;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static java.util.Objects.requireNonNull;
 
 public class StatementBuilder {
@@ -28,7 +30,9 @@ public class StatementBuilder {
                       final String connectionVar,
                       final String connectionCall,
                       final String statementVar,
-                      final String resultSetVar) {
+                      final String resultSetVar,
+                      @Nullable
+                      final String pkNameOrIndex) {
         final var statement = methodInfo.getStatement();
         final var readMethod = methodInfo instanceof SelectNullableMethodInfo ||
                 methodInfo instanceof SelectCollectionMethodInfo ||
@@ -69,7 +73,8 @@ public class StatementBuilder {
                 statementResolver,
                 connectionVar,
                 connectionCall,
-                statementVar
+                statementVar,
+                pkNameOrIndex
         );
     }
 
@@ -80,7 +85,19 @@ public class StatementBuilder {
                                 final String statementVar,
                                 final String resultSetVar,
                                 final boolean readMethod){
-        methodBuilder.addStatement("final var $N = $S", STATEMENT_COMMAND_VAR, statement);
+        if (statement.contains("\n")){methodBuilder.addStatement(
+                "final var $N = $L",
+                STATEMENT_COMMAND_VAR,
+                "\"\"\"\n" + statement + "\"\"\""
+        );
+        } else {
+            methodBuilder.addStatement(
+                    "final var $N = $S",
+                    STATEMENT_COMMAND_VAR,
+                    statement
+            );
+        }
+
         if (readMethod) {
             methodBuilder.beginControlFlow("""
                         try(final var $N = $N;
@@ -111,28 +128,67 @@ public class StatementBuilder {
                                         final StatementResolver statementResolver,
                                         final String connectionVar,
                                         final String connectionCall,
-                                        final String statementVar){
+                                        final String statementVar,
+                                        @Nullable
+                                        final String pkNameOrIndex){
         if (statementInfo.sqlNotSplit()){
-            methodBuilder.addStatement(
-                    "final var $N = $S",
+
+            if (statementInfo.getNoSplitFullSQL().contains("\n")){methodBuilder.addStatement(
+                    "final var $N = $L",
                     STATEMENT_COMMAND_VAR,
-                    statementInfo.getNoSplitFullSQL()
+                    "\"\"\"\n" + statementInfo.getNoSplitFullSQL() + "\"\"\""
             );
+            } else {
+                methodBuilder.addStatement(
+                        "final var $N = $S",
+                        STATEMENT_COMMAND_VAR,
+                        statementInfo.getNoSplitFullSQL()
+                );
+            }
         } else {
             statementResolver.buildCollectionSizes(methodBuilder, statementInfo.sql());
             methodBuilder.addStatement("final var $N = preStatement.toString()", STATEMENT_COMMAND_VAR);
         }
-        methodBuilder.beginControlFlow("""
+
+        if (nonNull(pkNameOrIndex)){
+            if (pkNameOrIndex.chars().allMatch(Character::isDigit)){
+                methodBuilder.beginControlFlow("""
                     try (final var $N = $N;
-                    final var $N = $N.prepareStatement($N))
+                    final var $N = $N.prepareStatement($N, new int[] { $L }))
                     """,
                         connectionVar,
                         connectionCall,
                         statementVar,
                         connectionVar,
-                        STATEMENT_COMMAND_VAR
-                )
-                .addStatement("var paramIndex = 1");
+                        STATEMENT_COMMAND_VAR,
+                        pkNameOrIndex
+                );
+            } else {
+                methodBuilder.beginControlFlow("""
+                    try (final var $N = $N;
+                    final var $N = $N.prepareStatement($N, new String[] { $S }))
+                    """,
+                        connectionVar,
+                        connectionCall,
+                        statementVar,
+                        connectionVar,
+                        STATEMENT_COMMAND_VAR,
+                        pkNameOrIndex
+                );
+            }
+        } else {
+            methodBuilder.beginControlFlow("""
+                    try (final var $N = $N;
+                    final var $N = $N.prepareStatement($N))
+                    """,
+                    connectionVar,
+                    connectionCall,
+                    statementVar,
+                    connectionVar,
+                    STATEMENT_COMMAND_VAR
+            );
+        }
+        methodBuilder.addStatement("var paramIndex = 1");
         for(final var param: statementInfo.params()){
             final var leafParam = statementResolver.getParamInfo(param.name());
             final var path = statementResolver.resolveParamPath(param.name());

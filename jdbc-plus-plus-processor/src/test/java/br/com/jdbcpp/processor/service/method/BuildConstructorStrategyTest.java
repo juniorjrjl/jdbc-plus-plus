@@ -60,10 +60,10 @@ class BuildConstructorStrategyTest {
         assertThat(result.getFirst()).isInstanceOf(ConstructorStrategy.class);
         assertThat(result.getFirst().getName()).isEqualTo("id");
         assertThat(result.getFirst().getParamKind()).isEqualTo(ParamKind.JAVA_TYPE);
-        assertThat(result.getFirst().getResultSetIndex()).isZero();
+        assertThat(result.getFirst().getResultSetIndex()).isOne();
         assertThat(result.get(1).getName()).isEqualTo("name");
         assertThat(result.get(1).getParamKind()).isEqualTo(ParamKind.JAVA_TYPE);
-        assertThat(result.get(1).getResultSetIndex()).isEqualTo(1);
+        assertThat(result.get(1).getResultSetIndex()).isEqualTo(2);
     }
 
     private static final List<Arguments> shouldThrowExceptionWhenUsingInvalidClassConfiguration =

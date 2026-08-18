@@ -50,7 +50,8 @@ public class DeleteMethodGenerator implements MethodGenerator<DeleteMethod> {
                 "conn",
                 connectionCall,
                 statementVar,
-                "rs"
+                "rs",
+                null
         );
         final var statementCommandVar = statementBuilder.getStatementCommandVar();
         final var executeCall = methodInfo.unParameterizedStatement() ?

@@ -66,10 +66,10 @@ public class BuildSetterStrategyTest {
     }
 
     static class UserWithIndexBasedAccess {
-        @PropStrategy(resultSetIndex = 0)
+        @PropStrategy(resultSetIndex = 1)
         private Long id;
 
-        @PropStrategy(resultSetIndex = 1)
+        @PropStrategy(resultSetIndex = 2)
         private String name;
 
         public void setId(Long id) {
@@ -82,10 +82,10 @@ public class BuildSetterStrategyTest {
     }
 
     static class UserWithInvalidIndexStart {
-        @PropStrategy(resultSetIndex = 1)
+        @PropStrategy(resultSetIndex = 2)
         private Long id;
 
-        @PropStrategy(resultSetIndex = 2)
+        @PropStrategy(resultSetIndex = 3)
         private String name;
 
         public void setId(Long id) {
@@ -98,10 +98,10 @@ public class BuildSetterStrategyTest {
     }
 
     static class UserWithNonSequentialIndexes {
-        @PropStrategy(resultSetIndex = 0)
+        @PropStrategy(resultSetIndex = 1)
         private Long id;
 
-        @PropStrategy(resultSetIndex = 2)
+        @PropStrategy(resultSetIndex = 3)
         private String name;
 
         public void setId(Long id) {

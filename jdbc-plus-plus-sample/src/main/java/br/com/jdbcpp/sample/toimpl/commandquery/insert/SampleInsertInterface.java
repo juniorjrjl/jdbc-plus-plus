@@ -8,7 +8,7 @@ import br.com.jdbcpp.sample.exception.CustomException;
 
 import java.sql.SQLException;
 
-@DAO
+//@DAO
 public interface SampleInsertInterface {
 
     @Command(value = """

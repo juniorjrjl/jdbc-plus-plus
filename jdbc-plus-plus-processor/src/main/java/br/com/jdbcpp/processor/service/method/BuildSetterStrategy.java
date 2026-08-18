@@ -115,12 +115,13 @@ public final class BuildSetterStrategy {
         final var rsIndexes = fields.stream().map(f -> f.getAnnotation(PropStrategy.class))
                 .filter(Objects::nonNull)
                 .map(PropStrategy::resultSetIndex)
+                .filter(i -> i != -1)
                 .toList();
 
         final var min = Collections.min(rsIndexes);
-        if (min != 0){
+        if (min != 1){
             final var message = String.format(
-                    "A class %s must have a minimum result set index of 0",
+                    "A class %s must have a minimum result set index of 1",
                     typeElement.getQualifiedName()
             );
             throw new InvalidSelectResultMappingException(message);

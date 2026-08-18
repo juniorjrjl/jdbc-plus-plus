@@ -10,7 +10,7 @@ import java.sql.SQLException;
 
 import static br.com.jdbcpp.api.CommandType.DELETE;
 
-@DAO
+//@DAO
 public interface SampleDeleteInterface {
 
     @Command(value = "DELETE FROM user WHERE id = :id:;", commandType = DELETE)

@@ -2,6 +2,7 @@ package br.com.jdbcpp.processor.service.method;
 
 import br.com.jdbcpp.api.Command;
 import br.com.jdbcpp.api.Query;
+import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.parameter.ClassParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
@@ -106,7 +107,8 @@ public class MethodInfoDelegator {
                 method,
                 methodInfo.getClassPropertyMap(),
                 command.returnRowsAffected(),
-                command.commandType().name()
+                command.commandType().name(),
+                methodInfo instanceof InsertMethod
         );
         return methodInfo;
     }

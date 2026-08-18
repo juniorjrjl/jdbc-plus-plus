@@ -14,6 +14,7 @@ import static java.util.Objects.requireNonNull;
 public non-sealed class InsertMethod extends MethodInfo{
 
     private final boolean returnRowsAffected;
+    private final String pkNameOrIndex;
 
     public InsertMethod(final String name,
                         final TypeMirror returnType,
@@ -21,19 +22,28 @@ public non-sealed class InsertMethod extends MethodInfo{
                         final Map<String, List<ParamInfo>> classPropertyMap,
                         final StatementInfo statement,
                         final TypeMirror packException,
-                        final boolean returnRowsAffected) {
+                        final boolean returnRowsAffected,
+                        @Nullable
+                        final String pkNameOrIndex) {
         super(name, returnType, params, classPropertyMap, statement, packException);
         this.returnRowsAffected = returnRowsAffected;
+        this.pkNameOrIndex = pkNameOrIndex;
     }
 
     public boolean isReturnRowsAffected() {
         return returnRowsAffected;
     }
 
+    public String getPkNameOrIndex() {
+        return pkNameOrIndex;
+    }
+
     public static class InsertMethodBuilder extends MethodInfo.MethodInfoBuilder {
 
         @Nullable
         private Boolean returnRowsAffected;
+        @Nullable
+        private String pkNameOrIndex;
 
         public InsertMethodBuilder(final MethodInfoBuilder baseBuilder) {
             this.name = baseBuilder.name;
@@ -49,6 +59,11 @@ public non-sealed class InsertMethod extends MethodInfo{
             return this;
         }
 
+        public  InsertMethodBuilder withPkNameOrIndex(@Nullable final String pkNameOrIndex) {
+            this.pkNameOrIndex = pkNameOrIndex;
+            return this;
+        }
+
         public InsertMethod build() {
             return new InsertMethod(
                     requireNonNull(name, "name is required"),
@@ -57,7 +72,8 @@ public non-sealed class InsertMethod extends MethodInfo{
                     classPropertyMap,
                     requireNonNull(statement, "statement is required"),
                     requireNonNull(packException, "packException is required"),
-                    requireNonNull(returnRowsAffected, "returnRowsAffected is required")
+                    requireNonNull(returnRowsAffected, "returnRowsAffected is required"),
+                    pkNameOrIndex
             );
         }
 

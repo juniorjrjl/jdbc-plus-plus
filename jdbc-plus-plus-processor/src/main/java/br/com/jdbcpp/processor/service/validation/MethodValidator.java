@@ -56,7 +56,8 @@ public final class MethodValidator {
     public void validateWriteReturn(final ExecutableElement method,
                                     final Map<String, List<ParamInfo>> classPropertyMap,
                                     final boolean returnRowsAffected,
-                                    final String operation) throws InvalidMethodSignatureException {
+                                    final String operation,
+                                    final boolean isInsert) throws InvalidMethodSignatureException {
         final var returnType = method.getReturnType();
 
         if (returnRowsAffected){
@@ -70,10 +71,12 @@ public final class MethodValidator {
             }
         } else {
 
-            if ((!classPropertyMap.isEmpty() &&
-                    (returnType.getKind() != TypeKind.VOID)
-                    && !types.isSameType(returnType, method.getParameters().getFirst().asType()))
-                    || allowedReturnsRowsAffected.contains(returnType)
+            if (!isInsert &&
+                    ((
+                            !classPropertyMap.isEmpty() && returnType.getKind() != TypeKind.VOID &&
+                                    !types.isSameType(returnType, method.getParameters().getFirst().asType())
+                    )
+                    || allowedReturnsRowsAffected.contains(returnType))
             ) {
                 final var message = String.format("""
                         A method %s, without rowsAffected result has invalid config, use a follow configurations:
@@ -104,7 +107,11 @@ public final class MethodValidator {
                         .map(SimpleParamInfo.class::cast)
                         .map(MethodValidator::extractParamName)
                         .collect(Collectors.toSet()) :
-                classPropertyMap.keySet().stream().map(StringUtil::camelToSnakeCase).toList();
+                classPropertyMap.values().stream()
+                        .map(List::getLast)
+                        .map(SimpleParamInfo.class::cast)
+                        .map(SimpleParamInfo::getQueryParamName)
+                        .toList();
 
         final var extraInStatement = new HashSet<>(statementParamsNames);
         extraInStatement.removeAll(paramsNames);

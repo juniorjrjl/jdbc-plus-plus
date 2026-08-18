@@ -78,7 +78,7 @@ public final class BuildConstructorStrategy {
                     .map(collectionUtil::getCollectionElementType)
                     .orElse(null);
 
-            strategies.add(new ConstructorStrategy(paramName, paramType, paramKind, List.of(), genericType, i));
+            strategies.add(new ConstructorStrategy(paramName, paramType, paramKind, List.of(), genericType, i + 1));
         }
         return strategies;
     }

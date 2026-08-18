@@ -119,13 +119,13 @@ class BuildSetterStrategyTest {
         final var result = strategy.generateStrategyInfo(typeElement);
 
         assertThat(result).hasSize(2);
-        assertThat(result.getFirst().getResultSetIndex()).isZero();
-        assertThat(result.get(1).getResultSetIndex()).isEqualTo(1);
+        assertThat(result.getFirst().getResultSetIndex()).isOne();
+        assertThat(result.get(1).getResultSetIndex()).isEqualTo(2);
     }
 
     @ParameterizedTest
     @CsvSource(value = {
-            "UserWithInvalidIndexStart, must have a minimum result set index of 0",
+            "UserWithInvalidIndexStart, must have a minimum result set index of 1",
             "UserWithNonSequentialIndexes, not using sequential numbers",
             "UserWithNoFields, No fields found"
     }, delimiter = ',')

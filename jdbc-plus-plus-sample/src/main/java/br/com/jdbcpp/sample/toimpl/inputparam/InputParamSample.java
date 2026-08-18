@@ -12,7 +12,7 @@ import static br.com.jdbcpp.api.CommandType.DELETE;
 import static br.com.jdbcpp.api.CommandType.INSERT;
 import static br.com.jdbcpp.api.CommandType.UPDATE;
 
-@DAO
+//@DAO
 public interface InputParamSample {
 
     @Command(value = "DELETE FROM user WHERE id = :id:;", commandType = DELETE)

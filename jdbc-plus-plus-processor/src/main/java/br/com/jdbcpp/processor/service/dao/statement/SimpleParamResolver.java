@@ -32,7 +32,7 @@ public class SimpleParamResolver implements StatementResolver{
     @Override
     public SimpleParamInfo getParamInfo(final String queryParamName) {
         return params.stream()
-                .filter(p -> p.getQueryParamName().equals(queryParamName))
+                .filter(p -> p.getName().equals(queryParamName))
                 .findFirst()
                 .orElseThrow(() -> {
                     final var message = String.format(

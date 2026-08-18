@@ -10,7 +10,7 @@ import br.com.jdbcpp.sample.domain.ProductIndexedClass;
 
 import java.sql.SQLException;
 
-@DAO
+//@DAO
 public interface SelectMapping {
 
 

@@ -9,9 +9,9 @@ import com.palantir.javapoet.TypeName;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
 public class ClassParamResolver implements StatementResolver{
@@ -30,15 +30,8 @@ public class ClassParamResolver implements StatementResolver{
 
     @Override
     public String resolveParamPath(final String queryParamName) {
-        final var selectedParam = Optional.ofNullable(classPropertyMap.get(queryParamName))
-                .orElseThrow(() -> {
-                    final var message = String.format(
-                            "Param %s not found in method %s",
-                            queryParamName,
-                            methodName
-                    );
-                    return new IllegalArgumentException(message);
-                });
+        final var selectedParam = getParams(queryParamName);
+
         final var root = selectedParam.getFirst().getConvertMethod();
         return root + "." + selectedParam.stream()
                 .skip(1)
@@ -48,7 +41,7 @@ public class ClassParamResolver implements StatementResolver{
 
     @Override
     public SimpleParamInfo getParamInfo(final String queryParamName) {
-        return (SimpleParamInfo)classPropertyMap.get(queryParamName).getLast();
+        return (SimpleParamInfo) getParams(queryParamName).getLast();
     }
 
     @Override
@@ -84,6 +77,18 @@ public class ClassParamResolver implements StatementResolver{
             methodBuilder.addStatement(preStatementAppend, sqlStatement.removeFirst());
         }
         methodBuilder.addStatement(preStatementAppend, sqlStatement.removeFirst());
+    }
+
+    private List<ParamInfo> getParams(final String queryParamName) {
+        final var params =  classPropertyMap.values().stream()
+                .filter(paramInfos -> ((SimpleParamInfo) paramInfos.getLast()).getQueryParamName().equals(queryParamName))
+                .findFirst().orElseGet(() -> classPropertyMap.get(queryParamName));
+        if (isNull(params)) {
+            final var message = String.format("Param %s not found in method %s", queryParamName, methodName);
+            throw new IllegalArgumentException(message);
+        }
+
+        return params;
     }
 
 }

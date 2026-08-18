@@ -57,7 +57,8 @@ public class SelectOptionalMethodGenerator implements MethodGenerator<SelectOpti
                 "conn",
                 connectionCall,
                 statementVar,
-                resultSetVar
+                resultSetVar,
+                null
         );
         if (!methodInfo.unParameterizedStatement()) {
             methodBuilder.beginControlFlow("try (final var $N = $N.executeQuery())", resultSetVar, statementVar);

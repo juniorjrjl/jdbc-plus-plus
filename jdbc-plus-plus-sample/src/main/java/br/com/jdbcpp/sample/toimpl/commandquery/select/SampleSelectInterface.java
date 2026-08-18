@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-@DAO
+//@DAO
 public interface SampleSelectInterface {
 
     @Query("""

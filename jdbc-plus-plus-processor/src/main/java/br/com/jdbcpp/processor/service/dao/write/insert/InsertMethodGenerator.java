@@ -4,10 +4,12 @@ import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
+import br.com.jdbcpp.processor.util.JDBCUtil;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
 
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import static javax.lang.model.element.Modifier.FINAL;
@@ -17,6 +19,7 @@ public class InsertMethodGenerator implements MethodGenerator<InsertMethod> {
 
     private final StatementBuilder statementBuilder;
     private final TypeName sqlException;
+
 
     public InsertMethodGenerator(final StatementBuilder statementBuilder,
                                  final TypeMirror sqlException){
@@ -50,38 +53,49 @@ public class InsertMethodGenerator implements MethodGenerator<InsertMethod> {
                 "conn",
                 connectionCall,
                 statementVar,
-                "rs"
+                "rs",
+                methodInfo.getPkNameOrIndex()
         );
         final var statementCommandVar = statementBuilder.getStatementCommandVar();
         final String executeCall = methodInfo.unParameterizedStatement()
                 ? "$N.executeUpdate(" + statementCommandVar + ")"
                 : "$N.executeUpdate()";
 
-        methodInfo.getParams().stream()
-                .filter(p -> p.getType().equals(methodInfo.getReturnType()))
-                .findFirst()
-                .ifPresentOrElse(
-                        p -> {
-                            methodBuilder.addStatement(executeCall, statementVar);
-                            methodBuilder.addStatement("return $N", p.getName());
-                        },
-                        () -> {
-                            if (methodInfo.isReturnRowsAffected()){
-                                if (TypeName.get(methodInfo.getReturnType()).isBoxedPrimitive() &&
-                                        TypeName.get(methodInfo.getReturnType()).equals(ClassName.get(Long.class))){
-                                    methodBuilder.addStatement(
-                                            "return $T.valueOf(" + executeCall + ")",
-                                            Long.class,
-                                            statementVar
-                                    );
-                                } else {
-                                    methodBuilder.addStatement("return " + executeCall, statementVar);
-                                }
-                            } else {
-                                methodBuilder.addStatement(executeCall, statementVar);
-                            }
-                        }
+        if (methodInfo.isReturnRowsAffected()) {
+            if (TypeName.get(methodInfo.getReturnType()).isBoxedPrimitive() &&
+                    TypeName.get(methodInfo.getReturnType()).equals(ClassName.get(Long.class))){
+                methodBuilder.addStatement(
+                        "return $T.valueOf(" + executeCall + ")",
+                        Long.class,
+                        statementVar
                 );
+            } else {
+                methodBuilder.addStatement("return " + executeCall, statementVar);
+            }
+        } else if (methodInfo.getReturnType().getKind() == TypeKind.VOID) {
+            methodBuilder.addStatement(executeCall, statementVar);
+        } else {
+            final var generatedPK = "generatedPK";
+            final var generatedKeys = "generatedKeys";
+            final var returnType = TypeName.get(methodInfo.getReturnType());
+            methodBuilder.addStatement(executeCall, statementVar);
+            methodBuilder.beginControlFlow("try (final var $N = $N.getGeneratedKeys())", generatedKeys, statementVar);
+            methodBuilder.beginControlFlow("if ($N.next())", generatedKeys);
+            JDBCUtil.getResultSetGetter(
+                    returnType,
+                    "1",
+                    generatedKeys,
+                    generatedPK,
+                    false,
+                    methodBuilder
+                    );
+            methodBuilder.addStatement("return $N", generatedPK);
+            methodBuilder.nextControlFlow("else");
+            methodBuilder.addStatement("throw new $T($S)", IllegalStateException.class, "Generated keys not found");
+            methodBuilder.endControlFlow();
+            methodBuilder.endControlFlow();
+        }
+
         methodBuilder.nextControlFlow("catch (final $T e)", sqlException);
 
         if (receivedException.equals(sqlException)){

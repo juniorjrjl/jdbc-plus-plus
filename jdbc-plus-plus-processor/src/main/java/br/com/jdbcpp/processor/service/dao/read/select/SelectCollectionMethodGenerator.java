@@ -63,7 +63,8 @@ public class SelectCollectionMethodGenerator implements MethodGenerator<SelectCo
                 "conn",
                 connectionCall,
                 statementVar,
-                resultSetVar
+                resultSetVar,
+                null
         );
 
         if (!methodInfo.unParameterizedStatement()) {

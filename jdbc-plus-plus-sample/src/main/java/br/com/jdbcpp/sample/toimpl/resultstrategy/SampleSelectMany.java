@@ -12,7 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-@DAO
+//@DAO
 public interface SampleSelectMany {
 
     @Query("""

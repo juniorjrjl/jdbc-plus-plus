@@ -43,7 +43,35 @@ dependencies {
 
 }
 
+val postgreSQLTest = tasks.register<Test>("PostgreSQLTest") {
+    group = "verification"
+    description = "Run all PostgreSQL tests."
+    useJUnitPlatform { includeTags("PostgreSQLTest") }
+}
+
+val mySQLTest = tasks.register<Test>("MySQLTest") {
+    group = "verification"
+    description = "Run all MySQL tests."
+    useJUnitPlatform { includeTags("MySQLTest") }
+    mustRunAfter(postgreSQLTest)
+}
+
+val sqlServerTest = tasks.register<Test>("SQLServerTest") {
+    group = "verification"
+    description = "Run all SQL Server tests."
+    useJUnitPlatform { includeTags("SQLServerTest") }
+    mustRunAfter(mySQLTest)
+}
+
+val oracleTest = tasks.register<Test>("OracleTest") {
+    group = "verification"
+    description = "Run all Oracle tests."
+    useJUnitPlatform { includeTags("OracleTest") }
+    mustRunAfter(sqlServerTest)
+}
+
 tasks.test {
     useJUnitPlatform()
     systemProperty("test.seed", System.getProperty("test.seed") ?: "")
+    dependsOn(postgreSQLTest, mySQLTest, sqlServerTest, oracleTest)
 }

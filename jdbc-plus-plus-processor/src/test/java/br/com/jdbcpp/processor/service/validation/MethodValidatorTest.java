@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -64,26 +65,28 @@ class MethodValidatorTest {
 
     private static Stream<Arguments> shouldValidateReturnWhenRowsAffectedTrue() {
         return Stream.of(
-                Arguments.of("methodReturningInt", "INSERT"),
-                Arguments.of("methodReturningInteger", "INSERT"),
-                Arguments.of("methodReturningLongWrapper", "INSERT"),
-                Arguments.of("methodReturningLong", "INSERT"),
+                Arguments.of("methodReturningInt", "INSERT", true),
+                Arguments.of("methodReturningInteger", "INSERT", true),
+                Arguments.of("methodReturningLongWrapper", "INSERT", true),
+                Arguments.of("methodReturningLong", "INSERT", true),
 
-                Arguments.of("methodReturningInt", "UPDATE"),
-                Arguments.of("methodReturningInteger", "UPDATE"),
-                Arguments.of("methodReturningLongWrapper", "UPDATE"),
-                Arguments.of("methodReturningLong", "UPDATE"),
+                Arguments.of("methodReturningInt", "UPDATE", false),
+                Arguments.of("methodReturningInteger", "UPDATE", false),
+                Arguments.of("methodReturningLongWrapper", "UPDATE", false),
+                Arguments.of("methodReturningLong", "UPDATE", false),
 
-                Arguments.of("methodReturningInt", "DELETE"),
-                Arguments.of("methodReturningInteger", "DELETE"),
-                Arguments.of("methodReturningLongWrapper", "DELETE"),
-                Arguments.of("methodReturningLong", "DELETE")
+                Arguments.of("methodReturningInt", "DELETE", false),
+                Arguments.of("methodReturningInteger", "DELETE", false),
+                Arguments.of("methodReturningLongWrapper", "DELETE", false),
+                Arguments.of("methodReturningLong", "DELETE", false)
         );
     }
 
     @ParameterizedTest
     @MethodSource
-    void shouldValidateReturnWhenRowsAffectedTrue(final String methodName, final String operation) {
+    void shouldValidateReturnWhenRowsAffectedTrue(final String methodName,
+                                                  final String operation,
+                                                  final boolean isInsert) {
         final var methodValidator = createMethodValidator();
         final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
                 .stream()
@@ -92,20 +95,28 @@ class MethodValidatorTest {
                 .orElseThrow();
 
         assertThatNoException().isThrownBy(() ->
-                methodValidator.validateWriteReturn(method, Collections.emptyMap(), true, operation));
+                methodValidator.validateWriteReturn(
+                        method,
+                        Collections.emptyMap(),
+                        true,
+                        operation,
+                        isInsert
+                ));
     }
 
     private static Stream<Arguments> shouldThrowExceptionWhenRowsAffectedTrueAndInvalidReturn() {
         return Stream.of(
-                Arguments.of("methodReturningString", "INSERT"),
-                Arguments.of("methodReturningObject", "UPDATE"),
-                Arguments.of("methodReturningVoid", "DELETE")
+                Arguments.of("methodReturningString", "INSERT", true),
+                Arguments.of("methodReturningObject", "UPDATE", false),
+                Arguments.of("methodReturningVoid", "DELETE", false)
         );
     }
 
     @ParameterizedTest
     @MethodSource
-    void shouldThrowExceptionWhenRowsAffectedTrueAndInvalidReturn(final String methodName, final String operation) {
+    void shouldThrowExceptionWhenRowsAffectedTrueAndInvalidReturn(final String methodName,
+                                                                  final String operation,
+                                                                  final boolean isInsert) {
         final var methodValidator = createMethodValidator();
         final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
                 .stream()
@@ -113,24 +124,33 @@ class MethodValidatorTest {
                 .findFirst()
                 .orElseThrow();
 
-        assertThatThrownBy(() -> methodValidator.validateWriteReturn(method, Collections.emptyMap(), true, operation))
+        assertThatThrownBy(() -> methodValidator.validateWriteReturn(
+                method,
+                Collections.emptyMap(),
+                true,
+                operation,
+                isInsert
+                ))
                 .isInstanceOf(InvalidMethodSignatureException.class)
                 .hasMessageContaining("is defined to return rows affected, but return is not int or long");
     }
 
     private static Stream<Arguments> shouldValidateReturnWhenRowsAffectedFalse() {
         return Stream.of(
-                Arguments.of("methodReturningVoid", "INSERT", Collections.emptyMap()),
-                Arguments.of("methodReturningStringWithClassParam", "INSERT", Map.of("param", List.of())),
-                Arguments.of("methodReturningVoid", "UPDATE", Collections.emptyMap()),
-                Arguments.of("methodReturningStringWithClassParam", "UPDATE", Map.of("param", List.of())),
-                Arguments.of("methodReturningVoid", "DELETE", Collections.emptyMap())
+                Arguments.of("methodReturningVoid", "INSERT", Collections.emptyMap(), true),
+                Arguments.of("methodReturningStringWithClassParam", "INSERT", Map.of("param", List.of()), true),
+                Arguments.of("methodReturningVoid", "UPDATE", Collections.emptyMap(), false),
+                Arguments.of("methodReturningStringWithClassParam", "UPDATE", Map.of("param", List.of()), false),
+                Arguments.of("methodReturningVoid", "DELETE", Collections.emptyMap(), false)
         );
     }
 
     @ParameterizedTest
     @MethodSource
-    void shouldValidateReturnWhenRowsAffectedFalse(final String methodName, final String operation, final Map<String, List<ParamInfo>> classPropertyMap) {
+    void shouldValidateReturnWhenRowsAffectedFalse(final String methodName,
+                                                   final String operation,
+                                                   final Map<String, List<ParamInfo>> classPropertyMap,
+                                                   final boolean isInsert) {
         final var methodValidator = createMethodValidator();
         final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
                 .stream()
@@ -139,8 +159,33 @@ class MethodValidatorTest {
                 .orElseThrow();
 
         assertThatNoException().isThrownBy(() ->
-                methodValidator.validateWriteReturn(method, classPropertyMap, false, operation)
+                methodValidator.validateWriteReturn(
+                        method,
+                        classPropertyMap,
+                        false,
+                        operation,
+                        isInsert
+                        )
         );
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"methodReturningInt", "methodReturningLong", "methodReturningInteger", "methodReturningLongWrapper"})
+    void shouldDoesNotThrowExceptionWhenRowsAffectedFalseAndInvalidReturn(final String methodName) {
+        final var methodValidator = createMethodValidator();
+        final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
+                .stream()
+                .filter(m -> m.getSimpleName().toString().equals(methodName))
+                .findFirst()
+                .orElseThrow();
+
+        assertThatCode(() -> methodValidator.validateWriteReturn(
+                method,
+                Collections.emptyMap(),
+                false,
+                "INSERT",
+                true
+        )).doesNotThrowAnyException();
     }
 
     @ParameterizedTest
@@ -153,7 +198,13 @@ class MethodValidatorTest {
                 .findFirst()
                 .orElseThrow();
 
-        assertThatThrownBy(() -> methodValidator.validateWriteReturn(method, Collections.emptyMap(), false, "INSERT"))
+        assertThatThrownBy(() -> methodValidator.validateWriteReturn(
+                method,
+                Collections.emptyMap(),
+                false,
+                "UPDATE",
+                false
+        ))
                 .isInstanceOf(InvalidMethodSignatureException.class)
                 .hasMessageContaining("without rowsAffected result has invalid config");
     }
@@ -213,18 +264,44 @@ class MethodValidatorTest {
                         .withConvertMethod("getEmail")
                         .build()
         );
+        final Function<ProcessingEnvironment, Map<String, List<ParamInfo>>> emptyMapCallback = env -> Collections.emptyMap();
+        final Function<ProcessingEnvironment, Map<String, List<ParamInfo>>> classPropertyMapCallback = env -> Map.of(
+                "name", List.of(
+                        SimpleParamInfo.builder()
+                                .withName("name")
+                                .withType(env.getElementUtils().getTypeElement("java.lang.String").asType())
+                                .withCustomEnum(true)
+                                .withQueryParamName("name")
+                                .withConvertMethod("getName")
+                                .build()
+                ),
+                "age", List.of(
+                        SimpleParamInfo.builder()
+                                .withName("age")
+                                .withType(env.getElementUtils().getTypeElement("java.lang.Integer").asType())
+                                .withCustomEnum(true)
+                                .withQueryParamName("age")
+                                .withConvertMethod("getAge")
+                                .build()
+                ),
+                "email", List.of(
+                        SimpleParamInfo.builder()
+                                .withName("email")
+                                .withType(env.getElementUtils().getTypeElement("java.lang.String").asType())
+                                .withCustomEnum(true)
+                                .withQueryParamName("email")
+                                .withConvertMethod("getEmail")
+                                .build()
+                )
+        );
         return Stream.of(
                 Arguments.of(
                         listCallback,
-                        Collections.emptyMap()
+                        emptyMapCallback
                 ),
                 Arguments.of(
                         listCallback,
-                        Map.of(
-                                "name", List.of(),
-                                "age", List.of(),
-                                "email", List.of()
-                        )
+                        classPropertyMapCallback
                 )
         );
     }
@@ -232,7 +309,7 @@ class MethodValidatorTest {
     @ParameterizedTest
     @MethodSource
     void shouldValidateParamsWhenMatching(final Function<ProcessingEnvironment, List<ParamInfo>> paramsCallback,
-                                          final Map<String, List<ParamInfo>> classPropertyMap) {
+                                          final Function<ProcessingEnvironment, Map<String, List<ParamInfo>>> classPropertyMapCallback) {
         final var methodValidator = createMethodValidator();
         final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
                 .stream()
@@ -249,7 +326,7 @@ class MethodValidatorTest {
         );
 
         assertThatNoException().isThrownBy(() ->
-                methodValidator.validateParams(method, params, classPropertyMap, statementParams));
+                methodValidator.validateParams(method, params, classPropertyMapCallback.apply(processingEnv), statementParams));
     }
 
 
@@ -277,18 +354,44 @@ class MethodValidatorTest {
                         .withConvertMethod("getEmail")
                         .build()
         );
+        final Function<ProcessingEnvironment, Map<String, List<ParamInfo>>> emptyMapCallback = env -> Collections.emptyMap();
+        final Function<ProcessingEnvironment, Map<String, List<ParamInfo>>> classPropertyMapCallback = env -> Map.of(
+                "name", List.of(
+                        SimpleParamInfo.builder()
+                                .withName("name")
+                                .withType(env.getElementUtils().getTypeElement("java.lang.String").asType())
+                                .withCustomEnum(true)
+                                .withQueryParamName("name")
+                                .withConvertMethod("getName")
+                                .build()
+                ),
+                "age", List.of(
+                        SimpleParamInfo.builder()
+                                .withName("age")
+                                .withType(env.getElementUtils().getTypeElement("java.lang.Integer").asType())
+                                .withCustomEnum(true)
+                                .withQueryParamName("age")
+                                .withConvertMethod("getAge")
+                                .build()
+                ),
+                "email", List.of(
+                        SimpleParamInfo.builder()
+                                .withName("email")
+                                .withType(env.getElementUtils().getTypeElement("java.lang.Integer").asType())
+                                .withCustomEnum(true)
+                                .withQueryParamName("email")
+                                .withConvertMethod("getEmail")
+                                .build()
+                )
+        );
         return Stream.of(
                 Arguments.of(
                         listCallback,
-                        Collections.emptyMap()
+                        emptyMapCallback
                 ),
                 Arguments.of(
                         listCallback,
-                        Map.of(
-                                "name", Collections.emptyList(),
-                                "age", Collections.emptyList(),
-                                "email", Collections.emptyList()
-                        )
+                        classPropertyMapCallback
                 )
         );
     }
@@ -296,7 +399,7 @@ class MethodValidatorTest {
     @ParameterizedTest
     @MethodSource
     void shouldThrowExceptionWhenExtraMethodParams(final Function<ProcessingEnvironment, List<ParamInfo>> paramsCallback,
-                                                   final Map<String, List<ParamInfo>> classPropertyMap) {
+                                                   final Function<ProcessingEnvironment, Map<String, List<ParamInfo>>> classPropertyMapCallback) {
         final var methodValidator = createMethodValidator();
         final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
                 .stream()
@@ -311,7 +414,7 @@ class MethodValidatorTest {
                 StatementParam.simple("age")
         );
 
-        assertThatThrownBy(() -> methodValidator.validateParams(method, params, classPropertyMap, statementParams))
+        assertThatThrownBy(() -> methodValidator.validateParams(method, params, classPropertyMapCallback.apply(processingEnv), statementParams))
                 .isInstanceOf(MoreParamsThanStatementNeedException.class)
                 .hasMessageContaining("received a follow ignored params");
     }
@@ -333,17 +436,35 @@ class MethodValidatorTest {
                         .withConvertMethod("getAge")
                         .build()
         );
+        final Function<ProcessingEnvironment, Map<String, List<ParamInfo>>> emptyMapCallback = env -> Collections.emptyMap();
+        final Function<ProcessingEnvironment, Map<String, List<ParamInfo>>> classPropertyMapCallback = env -> Map.of(
+                "name", List.of(
+                        SimpleParamInfo.builder()
+                                .withName("name")
+                                .withType(env.getElementUtils().getTypeElement("java.lang.String").asType())
+                                .withCustomEnum(true)
+                                .withQueryParamName("name")
+                                .withConvertMethod("getName")
+                                .build()
+                ),
+                "age", List.of(
+                        SimpleParamInfo.builder()
+                                .withName("age")
+                                .withType(env.getElementUtils().getTypeElement("java.lang.String").asType())
+                                .withCustomEnum(true)
+                                .withQueryParamName("age")
+                                .withConvertMethod("getAge")
+                                .build()
+                )
+        );
         return Stream.of(
                 Arguments.of(
                         listCallback,
-                        Collections.emptyMap()
+                        emptyMapCallback
                 ),
                 Arguments.of(
                         listCallback,
-                        Map.of(
-                                "name", Collections.emptyList(),
-                                "age", Collections.emptyList()
-                        )
+                        classPropertyMapCallback
                 )
         );
     }
@@ -351,7 +472,7 @@ class MethodValidatorTest {
     @ParameterizedTest
     @MethodSource
     void shouldThrowExceptionWhenExtraStatementParams(final Function<ProcessingEnvironment, List<ParamInfo>> paramsCallback,
-                                                      final Map<String, List<ParamInfo>> classPropertyMap) {
+                                                      final Function<ProcessingEnvironment, Map<String, List<ParamInfo>>> classPropertyMapCallback) {
         final var methodValidator = createMethodValidator();
         final var method = ElementFilter.methodsIn(fixture.getEnclosedElements())
                 .stream()
@@ -365,7 +486,7 @@ class MethodValidatorTest {
                 StatementParam.simple("userAge")
         );
 
-        assertThatThrownBy(() -> methodValidator.validateParams(method, params, classPropertyMap, statementParams))
+        assertThatThrownBy(() -> methodValidator.validateParams(method, params, classPropertyMapCallback.apply(processingEnv), statementParams))
                 .isInstanceOf(InvalidInputParamException.class)
                 .hasMessageContaining("has a follow params not found in method params");
     }

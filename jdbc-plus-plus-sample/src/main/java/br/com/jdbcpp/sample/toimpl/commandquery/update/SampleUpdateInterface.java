@@ -11,7 +11,7 @@ import java.util.List;
 
 import static br.com.jdbcpp.api.CommandType.UPDATE;
 
-@DAO
+//@DAO
 public interface SampleUpdateInterface {
 
     @Command(value = """

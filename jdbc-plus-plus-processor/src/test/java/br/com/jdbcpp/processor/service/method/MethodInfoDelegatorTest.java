@@ -89,6 +89,7 @@ class MethodInfoDelegatorTest {
                 .withPackException(packException)
                 .<InsertMethod.InsertMethodBuilder>asWriteType(CommandType.INSERT)
                 .withReturnRowsAffected(false)
+                .withPkNameOrIndex("id")
                 .build();
 
         when(parameterInfoDelegator.create(method)).thenReturn(params);
@@ -103,7 +104,13 @@ class MethodInfoDelegatorTest {
         verify(writeMethodInfoFactory).create(builderCaptor.capture(), eq(command), eq(packException));
         assertBuilderFields(builderCaptor.getValue(), "insertUser", params, classPropertyMap);
 
-        verify(methodValidator).validateWriteReturn(method, classPropertyMap, command.returnRowsAffected(), "INSERT");
+        verify(methodValidator).validateWriteReturn(
+                method,
+                classPropertyMap,
+                command.returnRowsAffected(),
+                "INSERT",
+                true
+        );
         verify(methodValidator).validateParams(method, params, classPropertyMap, statementInfo.params());
         verify(methodValidator).validateExceptionThrow(method, packException);
     }
@@ -141,7 +148,13 @@ class MethodInfoDelegatorTest {
         verify(writeMethodInfoFactory).create(builderCaptor.capture(), eq(command), eq(packException));
         assertBuilderFields(builderCaptor.getValue(), "updateUser", params, classPropertyMap);
 
-        verify(methodValidator).validateWriteReturn(method, classPropertyMap, command.returnRowsAffected(), "UPDATE");
+        verify(methodValidator).validateWriteReturn(
+                method,
+                classPropertyMap,
+                command.returnRowsAffected(),
+                "UPDATE",
+                false
+        );
         verify(methodValidator).validateParams(method, params, classPropertyMap, statementInfo.params());
         verify(methodValidator).validateExceptionThrow(method, packException);
     }
@@ -179,7 +192,13 @@ class MethodInfoDelegatorTest {
         verify(writeMethodInfoFactory).create(builderCaptor.capture(), eq(command), eq(packException));
         assertBuilderFields(builderCaptor.getValue(), "deleteUser", params, classPropertyMap);
 
-        verify(methodValidator).validateWriteReturn(method, classPropertyMap, command.returnRowsAffected(), "DELETE");
+        verify(methodValidator).validateWriteReturn(
+                method,
+                classPropertyMap,
+                command.returnRowsAffected(),
+                "DELETE",
+                false
+        );
         verify(methodValidator).validateParams(method, params, classPropertyMap, statementInfo.params());
         verify(methodValidator).validateExceptionThrow(method, packException);
     }
@@ -248,6 +267,7 @@ class MethodInfoDelegatorTest {
                 .withPackException(packException)
                 .<InsertMethod.InsertMethodBuilder>asWriteType(CommandType.INSERT)
                 .withReturnRowsAffected(false)
+                .withPkNameOrIndex("id")
                 .build();
 
         when(parameterInfoDelegator.create(method)).thenReturn(params);
@@ -264,7 +284,12 @@ class MethodInfoDelegatorTest {
         assertBuilderFields(builderCaptor.getValue(), "insertUserWithClassParam", params, classPropertyMap);
 
         verify(paramPathExtractor).build(classParamInfo);
-        verify(methodValidator).validateWriteReturn(method, classPropertyMap, false, "INSERT");
+        verify(methodValidator).validateWriteReturn(
+                method,
+                classPropertyMap,
+                false,
+                "INSERT",
+                true);
         verify(methodValidator).validateParams(method, params, classPropertyMap, statementInfo.params());
         verify(methodValidator).validateExceptionThrow(method, packException);
     }

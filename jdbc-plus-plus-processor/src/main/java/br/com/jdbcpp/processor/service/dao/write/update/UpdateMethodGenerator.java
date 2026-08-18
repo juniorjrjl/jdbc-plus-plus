@@ -51,7 +51,8 @@ public class UpdateMethodGenerator implements MethodGenerator<UpdateMethod> {
                 "conn",
                 connectionCall,
                 statementVar,
-                "rs"
+                "rs",
+                null
         );
         final var statementCommandVar = statementBuilder.getStatementCommandVar();
         final String executeCall = methodInfo.unParameterizedStatement()

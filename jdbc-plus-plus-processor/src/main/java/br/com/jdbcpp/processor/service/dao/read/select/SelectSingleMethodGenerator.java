@@ -54,7 +54,8 @@ public class SelectSingleMethodGenerator implements MethodGenerator<SelectNullab
                 "conn",
                 connectionCall,
                 statementVar,
-                resultSetVar
+                resultSetVar,
+                null
         );
         if (!methodInfo.unParameterizedStatement()) {
             methodBuilder.beginControlFlow("try (final var $N = $N.executeQuery())", resultSetVar, statementVar);
