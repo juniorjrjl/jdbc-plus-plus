@@ -5,13 +5,18 @@ import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
 import br.com.jdbcpp.processor.util.JDBCUtil;
+import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
+import java.util.Optional;
+
+import static java.util.Objects.isNull;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
@@ -44,7 +49,23 @@ public class InsertMethodGenerator implements MethodGenerator<InsertMethod> {
             methodBuilder.addException(sqlException);
         }
 
-        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(TypeName.get(p.getType()), p.getName(), FINAL));
+        methodInfo.getAnnotations().stream()
+                .map(AnnotationSpec::get)
+                .forEach(methodBuilder::addAnnotation);
+
+        methodInfo.getParams().forEach(p -> {
+            final var paramBuilder = ParameterSpec.builder(
+                    TypeName.get(p.getType()),
+                    p.getName(),
+                    FINAL
+            );
+
+            p.getAnnotations().stream()
+                    .map(AnnotationSpec::get)
+                    .forEach(paramBuilder::addAnnotation);
+
+            methodBuilder.addParameter(paramBuilder.build());
+        });
 
         final var statementVar = "stmt";
         statementBuilder.build(
@@ -78,11 +99,14 @@ public class InsertMethodGenerator implements MethodGenerator<InsertMethod> {
             final var generatedPK = "generatedPK";
             final var generatedKeys = "generatedKeys";
             final var returnType = TypeName.get(methodInfo.getReturnType());
+            final var customReturnType = Optional.ofNullable(methodInfo.getCustomReturnType())
+                            .map(ClassName::bestGuess)
+                            .orElse(null);
             methodBuilder.addStatement(executeCall, statementVar);
             methodBuilder.beginControlFlow("try (final var $N = $N.getGeneratedKeys())", generatedKeys, statementVar);
             methodBuilder.beginControlFlow("if ($N.next())", generatedKeys);
             JDBCUtil.getResultSetGetter(
-                    returnType,
+                    isNull(customReturnType) ? returnType : customReturnType,
                     "1",
                     generatedKeys,
                     generatedPK,

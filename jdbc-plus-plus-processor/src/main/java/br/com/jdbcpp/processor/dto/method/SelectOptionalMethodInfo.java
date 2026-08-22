@@ -1,6 +1,6 @@
 package br.com.jdbcpp.processor.dto.method;
 
-import br.com.jdbcpp.api.ResultBuildStrategyType;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
@@ -10,11 +10,14 @@ import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import br.com.jdbcpp.processor.service.dao.read.select.result.ResultSetInfo;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
 public non-sealed class SelectOptionalMethodInfo extends MethodInfo implements ResultSetInfo {
@@ -29,10 +32,11 @@ public non-sealed class SelectOptionalMethodInfo extends MethodInfo implements R
                                      final Map<String, List<ParamInfo>> classPropertyMap,
                                      final StatementInfo statement,
                                      final TypeMirror packException,
+                                     final List<? extends AnnotationMirror> annotations,
                                      final List<SelectReturnStrategy<?>> strategies,
                                      final ResultBuildStrategyType strategyType,
                                      final TypeMirror containerReturnTypeMirror) {
-        super(name, returnType, params, classPropertyMap, statement, packException);
+        super(name, returnType, params, classPropertyMap, statement, packException, annotations);
         this.strategies = strategies;
         this.strategyType = strategyType;
         this.containerReturnTypeMirror = containerReturnTypeMirror;
@@ -86,6 +90,7 @@ public non-sealed class SelectOptionalMethodInfo extends MethodInfo implements R
             this.classPropertyMap.putAll(baseBuilder.classPropertyMap);
             this.statement = baseBuilder.statement;
             this.packException = baseBuilder.packException;
+            this.annotations = baseBuilder.annotations;
         }
 
         public SelectOptionalMethodInfoBuilder withStrategies(final List<SelectReturnStrategy<?>> strategies) {
@@ -116,6 +121,7 @@ public non-sealed class SelectOptionalMethodInfo extends MethodInfo implements R
                     classPropertyMap,
                     requireNonNull(statement, "statement is required"),
                     requireNonNull(packException, "packException is required"),
+                    isNull(annotations) ? Collections.emptyList() : annotations,
                     strategies,
                     requireNonNull(strategyType, "strategyType is required"),
                     requireNonNull(containerReturnTypeMirror, "containerReturnTypeMirror is required")

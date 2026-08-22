@@ -1,11 +1,12 @@
 package br.com.jdbcpp.processor.dto.method;
 
-import br.com.jdbcpp.api.CommandType;
+import br.com.jdbcpp.api.method.write.CommandType;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,19 +22,22 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
     protected final Map<String, List<ParamInfo>> classPropertyMap;
     protected final StatementInfo statement;
     protected final TypeMirror packException;
+    protected List<? extends AnnotationMirror> annotations;
 
     protected MethodInfo(final String name,
                          final TypeMirror returnType,
                          final List<ParamInfo> params,
                          final Map<String, List<ParamInfo>> classPropertyMap,
                          final StatementInfo statement,
-                         final TypeMirror packException) {
+                         final TypeMirror packException,
+                         final List<? extends AnnotationMirror> annotations) {
         this.name = name;
         this.returnType = returnType;
         this.classPropertyMap = classPropertyMap;
         this.params = params;
         this.statement = statement;
         this.packException = packException;
+        this.annotations = annotations;
     }
 
     public static MethodInfoBuilder builder() {
@@ -79,6 +83,10 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
         return params.isEmpty() && classPropertyMap.isEmpty();
     }
 
+    public List<? extends AnnotationMirror> getAnnotations() {
+        return annotations;
+    }
+
     public static class MethodInfoBuilder {
 
         @Nullable
@@ -91,6 +99,8 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
         protected StatementInfo statement;
         @Nullable
         protected TypeMirror packException;
+        @Nullable
+        protected List<? extends AnnotationMirror> annotations;
 
         public MethodInfoBuilder withName(final String name) {
             this.name = name;
@@ -119,6 +129,11 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
 
         public MethodInfoBuilder withPackException(final TypeMirror packException) {
             this.packException = packException;
+            return this;
+        }
+
+        public MethodInfoBuilder withAnnotations(final List<? extends AnnotationMirror> annotations) {
+            this.annotations = annotations;
             return this;
         }
 

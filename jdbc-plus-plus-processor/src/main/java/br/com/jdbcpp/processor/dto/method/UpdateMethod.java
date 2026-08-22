@@ -5,10 +5,13 @@ import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeMirror;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
 public non-sealed class UpdateMethod extends MethodInfo{
@@ -21,8 +24,9 @@ public non-sealed class UpdateMethod extends MethodInfo{
                         final Map<String, List<ParamInfo>> classPropertyMap,
                         final StatementInfo statement,
                         final TypeMirror packException,
+                        final List<? extends AnnotationMirror> annotations,
                         final boolean returnRowsAffected) {
-        super(name, returnType, params, classPropertyMap, statement, packException);
+        super(name, returnType, params, classPropertyMap, statement, packException, annotations);
         this.returnRowsAffected = returnRowsAffected;
     }
 
@@ -42,6 +46,7 @@ public non-sealed class UpdateMethod extends MethodInfo{
             this.classPropertyMap.putAll(baseBuilder.classPropertyMap);
             this.statement = baseBuilder.statement;
             this.packException = baseBuilder.packException;
+            this.annotations = baseBuilder.annotations;
         }
 
         public UpdateMethodBuilder withReturnRowsAffected(final boolean returnRowsAffected) {
@@ -57,6 +62,7 @@ public non-sealed class UpdateMethod extends MethodInfo{
                     classPropertyMap,
                     requireNonNull(statement, "statement is required"),
                     requireNonNull(packException, "packException is required"),
+                    isNull(annotations) ? Collections.emptyList() : annotations,
                     requireNonNull(returnRowsAffected, "returnRowsAffected is required")
             );
         }

@@ -1,6 +1,6 @@
 package br.com.jdbcpp.sample.domain;
 
-import br.com.jdbcpp.api.PropStrategy;
+import br.com.jdbcpp.api.output.PropStrategy;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;

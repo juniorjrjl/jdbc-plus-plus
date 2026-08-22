@@ -1,9 +1,8 @@
 package br.com.jdbcpp.sample.toimpl.commandquery.select;
 
-import br.com.jdbcpp.api.DAO;
-import br.com.jdbcpp.api.Query;
-import br.com.jdbcpp.api.ResultBuildStrategy;
-import br.com.jdbcpp.api.ResultBuildStrategyType;
+import br.com.jdbcpp.api.method.read.Query;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategy;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
 import br.com.jdbcpp.sample.domain.Employee;
 import br.com.jdbcpp.sample.domain.ProductClass;
 import br.com.jdbcpp.sample.exception.CustomException;

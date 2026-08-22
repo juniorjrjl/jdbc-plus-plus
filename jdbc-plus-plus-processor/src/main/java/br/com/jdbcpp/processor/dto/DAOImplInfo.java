@@ -4,8 +4,11 @@ import br.com.jdbcpp.processor.dto.constructor.ConstructorInfo;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.AnnotationMirror;
+import java.util.Collections;
 import java.util.List;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
 public record DAOImplInfo(
@@ -13,7 +16,8 @@ public record DAOImplInfo(
         String packageName,
         @Nullable
         ConstructorInfo constructor,
-        List<MethodInfo> methods
+        List<MethodInfo> methods,
+        List<? extends AnnotationMirror> annotations
 ) {
 
     public static DAOImplInfoBuilder builder() {
@@ -29,6 +33,8 @@ public record DAOImplInfo(
         private ConstructorInfo constructor;
         @Nullable
         private List<MethodInfo> methods;
+        @Nullable
+        private List<? extends AnnotationMirror> annotations;
 
         public DAOImplInfoBuilder name(final String name) {
             this.name = name;
@@ -50,12 +56,18 @@ public record DAOImplInfo(
             return this;
         }
 
+        public  DAOImplInfoBuilder annotations(final List<? extends AnnotationMirror> annotations) {
+            this.annotations = annotations;
+            return this;
+        }
+
         public DAOImplInfo build() {
             return new DAOImplInfo(
                     requireNonNull(name, "name is required"),
                     requireNonNull(packageName, "packageName is required"),
                     constructor,
-                    requireNonNull(methods, "methods is required")
+                    requireNonNull(methods, "methods is required"),
+                    isNull(annotations) ? Collections.emptyList() : annotations
             );
         }
     }

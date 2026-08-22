@@ -1,6 +1,6 @@
 package br.com.jdbcpp.processor.service.method;
 
-import br.com.jdbcpp.api.Command;
+import br.com.jdbcpp.api.method.write.Command;
 import br.com.jdbcpp.processor.dto.method.DeleteMethod;
 import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;

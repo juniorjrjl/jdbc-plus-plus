@@ -32,16 +32,19 @@ public class SimpleParamResolver implements StatementResolver{
     @Override
     public SimpleParamInfo getParamInfo(final String queryParamName) {
         return params.stream()
-                .filter(p -> p.getName().equals(queryParamName))
+                .filter(p -> p.getQueryParamName().equals(queryParamName))
                 .findFirst()
-                .orElseThrow(() -> {
-                    final var message = String.format(
-                            "Param %s not found in method %s",
-                            queryParamName,
-                            methodName
-                    );
-                    return new IllegalArgumentException(message);
-                });
+                .orElseGet(() -> params.stream()
+                        .filter(p -> p.getName().equals(queryParamName))
+                        .findFirst()
+                        .orElseThrow(() -> {
+                            final var message = String.format(
+                                    "Param %s not found in method %s",
+                                    queryParamName,
+                                    methodName
+                            );
+                            return new IllegalArgumentException(message);
+                        }));
     }
 
     @Override

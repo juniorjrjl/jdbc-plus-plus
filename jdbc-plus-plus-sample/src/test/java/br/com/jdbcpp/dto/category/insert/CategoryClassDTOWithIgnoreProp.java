@@ -1,6 +1,6 @@
 package br.com.jdbcpp.dto.category.insert;
 
-import br.com.jdbcpp.api.InputParam;
+import br.com.jdbcpp.api.input.InputParam;
 
 import java.time.OffsetDateTime;
 

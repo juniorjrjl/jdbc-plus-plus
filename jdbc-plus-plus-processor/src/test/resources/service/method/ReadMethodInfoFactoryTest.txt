@@ -1,8 +1,8 @@
 package com.example;
 
-import br.com.jdbcpp.api.Query;
-import br.com.jdbcpp.api.ResultBuildStrategy;
-import br.com.jdbcpp.api.ResultBuildStrategyType;
+import br.com.jdbcpp.api.method.read.Query;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategy;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;

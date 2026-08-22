@@ -1,4 +1,4 @@
-package br.com.jdbcpp.api;
+package br.com.jdbcpp.api.method.read;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -32,6 +32,9 @@ public @interface Query {
      */
     String value() default "";
 
+    /**
+     * Used to customize Exception thrown by method
+     * */
     Class<? extends RuntimeException> packException() default None.class;
 
     final class None extends RuntimeException {}

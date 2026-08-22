@@ -1,8 +1,8 @@
 package br.com.jdbcpp.processor.service.method;
 
-import br.com.jdbcpp.api.Query;
-import br.com.jdbcpp.api.ResultBuildStrategy;
-import br.com.jdbcpp.api.ResultBuildStrategyType;
+import br.com.jdbcpp.api.method.read.Query;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategy;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectCollectionMethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectMethodInfoBuilder;
@@ -24,9 +24,9 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static br.com.jdbcpp.api.ResultBuildStrategyType.CONSTRUCTOR;
-import static br.com.jdbcpp.api.ResultBuildStrategyType.SETTER;
-import static br.com.jdbcpp.api.ResultBuildStrategyType.SIMPLE_RESULT;
+import static br.com.jdbcpp.api.method.read.ResultBuildStrategyType.CONSTRUCTOR;
+import static br.com.jdbcpp.api.method.read.ResultBuildStrategyType.SETTER;
+import static br.com.jdbcpp.api.method.read.ResultBuildStrategyType.SIMPLE_RESULT;
 import static br.com.jdbcpp.processor.dto.method.QueryType.COLLECTION;
 import static br.com.jdbcpp.processor.dto.method.QueryType.NULLABLE;
 import static br.com.jdbcpp.processor.dto.method.QueryType.OPTIONAL;

@@ -2,9 +2,12 @@ package br.com.jdbcpp.processor.dto.parameter;
 
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeMirror;
+import java.util.Collections;
 import java.util.List;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
 public non-sealed class ClassParamInfo extends ParamInfo {
@@ -18,8 +21,9 @@ public non-sealed class ClassParamInfo extends ParamInfo {
                            final TypeMirror containerType,
                            final List<ParamInfo> nestedProperties,
                            final boolean recordClass,
-                           final String convertMethod) {
-        super(name, type, containerType, convertMethod);
+                           final String convertMethod,
+                           final List<? extends AnnotationMirror> annotations) {
+        super(name, type, containerType, convertMethod, annotations);
         this.nestedProperties = nestedProperties;
         this.recordClass = recordClass;
     }
@@ -58,6 +62,8 @@ public non-sealed class ClassParamInfo extends ParamInfo {
         private Boolean recordClass;
         @Nullable
         private String convertMethod;
+        @Nullable
+        private List<? extends AnnotationMirror> annotations;
 
         public ClassParamInfoBuilder withName(final String name) {
             this.name = name;
@@ -89,6 +95,11 @@ public non-sealed class ClassParamInfo extends ParamInfo {
             return this;
         }
 
+        public  ClassParamInfoBuilder withAnnotations(final List<? extends AnnotationMirror> annotations) {
+            this.annotations = annotations;
+            return this;
+        }
+
         public ClassParamInfo build() {
             return new ClassParamInfo(
                     requireNonNull(name, "name is required"),
@@ -96,7 +107,8 @@ public non-sealed class ClassParamInfo extends ParamInfo {
                     containerType,
                     requireNonNull(nestedProperties, "nestedProperties is required"),
                     requireNonNull(recordClass, "recordClass is required"),
-                    requireNonNull(convertMethod, "convertMethod is required")
+                    requireNonNull(convertMethod, "convertMethod is required"),
+                    isNull(annotations) ? Collections.emptyList() : annotations
             );
         }
     }

@@ -1,7 +1,6 @@
 package br.com.jdbcpp.sample.toimpl.commandquery.insert;
 
-import br.com.jdbcpp.api.Command;
-import br.com.jdbcpp.api.DAO;
+import br.com.jdbcpp.api.method.write.Command;
 import br.com.jdbcpp.sample.domain.UserClass;
 import br.com.jdbcpp.sample.domain.UserRecord;
 import br.com.jdbcpp.sample.exception.CustomException;

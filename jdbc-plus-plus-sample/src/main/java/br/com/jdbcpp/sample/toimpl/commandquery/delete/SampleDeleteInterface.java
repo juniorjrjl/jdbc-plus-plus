@@ -1,14 +1,13 @@
 package br.com.jdbcpp.sample.toimpl.commandquery.delete;
 
-import br.com.jdbcpp.api.Command;
-import br.com.jdbcpp.api.DAO;
+import br.com.jdbcpp.api.method.write.Command;
 import br.com.jdbcpp.sample.domain.UserClass;
 import br.com.jdbcpp.sample.domain.UserRecord;
 import br.com.jdbcpp.sample.exception.CustomException;
 
 import java.sql.SQLException;
 
-import static br.com.jdbcpp.api.CommandType.DELETE;
+import static br.com.jdbcpp.api.method.write.CommandType.DELETE;
 
 //@DAO
 public interface SampleDeleteInterface {

@@ -1,8 +1,8 @@
 package br.com.jdbcpp.processor.facade;
 
-import br.com.jdbcpp.api.Command;
+import br.com.jdbcpp.api.method.write.Command;
 import br.com.jdbcpp.api.DAO;
-import br.com.jdbcpp.api.Query;
+import br.com.jdbcpp.api.method.read.Query;
 import br.com.jdbcpp.processor.dto.DAOImplInfo;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.exception.InvalidDAOException;
@@ -12,6 +12,7 @@ import br.com.jdbcpp.processor.service.DAOGenerator;
 import br.com.jdbcpp.processor.service.constructor.ConstructorFactory;
 import br.com.jdbcpp.processor.service.method.MethodInfoDelegator;
 import br.com.jdbcpp.processor.service.validation.DAOValidator;
+import br.com.jdbcpp.processor.util.AnnotationUtil;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.RoundEnvironment;
@@ -61,9 +62,15 @@ public class ProcessorFacade {
         }
 
         for (final var mappedDAO : mappedDAOs) {
+            final var daoAnnotations = mappedDAO.getAnnotationMirrors().stream()
+                    .filter(AnnotationUtil::isNotJdbcppAnnotation)
+                    .toList();
             final var packageName = elements.getPackageOf(mappedDAO).toString();
             final var className = elements.getTypeElement(mappedDAO.toString()).toString();
-            final var daoImplInfoBuilder = DAOImplInfo.builder().name(className).packageName(packageName);
+            final var daoImplInfoBuilder = DAOImplInfo.builder()
+                    .name(className)
+                    .packageName(packageName)
+                    .annotations(daoAnnotations);
             final var methods = ElementFilter.methodsIn(mappedDAO.getEnclosedElements()).stream()
                     .filter(m -> nonNull(m.getAnnotation(Query.class)) || nonNull(m.getAnnotation(Command.class)))
                     .toList();

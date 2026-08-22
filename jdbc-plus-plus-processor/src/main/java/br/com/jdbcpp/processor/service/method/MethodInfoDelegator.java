@@ -1,7 +1,7 @@
 package br.com.jdbcpp.processor.service.method;
 
-import br.com.jdbcpp.api.Command;
-import br.com.jdbcpp.api.Query;
+import br.com.jdbcpp.api.method.write.Command;
+import br.com.jdbcpp.api.method.read.Query;
 import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.parameter.ClassParamInfo;
@@ -13,6 +13,7 @@ import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
 import br.com.jdbcpp.processor.service.parameter.ParamPathExtractor;
 import br.com.jdbcpp.processor.service.parameter.ParameterInfoDelegator;
 import br.com.jdbcpp.processor.service.validation.MethodValidator;
+import br.com.jdbcpp.processor.util.AnnotationUtil;
 import br.com.jdbcpp.processor.util.TypeUtil;
 
 import javax.lang.model.element.ExecutableElement;
@@ -56,10 +57,15 @@ public class MethodInfoDelegator {
                         paramPathExtractor.build(classParamInfo) :
                         Collections.emptyMap();
 
+        final var methodAnnotations = method.getAnnotationMirrors().stream()
+                .filter(AnnotationUtil::isNotJdbcppAnnotation)
+                .toList();
+
         final var builder = MethodInfo.builder()
                 .withName(method.getSimpleName().toString())
                 .withParams(params)
-                .withClassPropertyMap(classPropertyMap);
+                .withClassPropertyMap(classPropertyMap)
+                .withAnnotations(methodAnnotations);
 
         final var command= method.getAnnotation(Command.class);
         final var query = method.getAnnotation(Query.class);

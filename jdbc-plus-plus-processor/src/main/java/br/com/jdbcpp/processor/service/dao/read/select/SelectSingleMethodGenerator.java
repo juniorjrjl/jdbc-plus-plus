@@ -5,7 +5,9 @@ import br.com.jdbcpp.processor.dto.method.SelectNullableMethodInfo;
 import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.read.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
+import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
@@ -44,7 +46,23 @@ public class SelectSingleMethodGenerator implements MethodGenerator<SelectNullab
             methodBuilder.addException(sqlException);
         }
 
-        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(TypeName.get(p.getType()), p.getName(), FINAL));
+        methodInfo.getAnnotations().stream()
+                .map(AnnotationSpec::get)
+                .forEach(methodBuilder::addAnnotation);
+
+        methodInfo.getParams().forEach(p -> {
+            final var paramBuilder = ParameterSpec.builder(
+                    TypeName.get(p.getType()),
+                    p.getName(),
+                    FINAL
+            );
+
+            p.getAnnotations().stream()
+                    .map(AnnotationSpec::get)
+                    .forEach(paramBuilder::addAnnotation);
+
+            methodBuilder.addParameter(paramBuilder.build());
+        });
 
         final var statementVar = "stmt";
         final var resultSetVar = "rs";

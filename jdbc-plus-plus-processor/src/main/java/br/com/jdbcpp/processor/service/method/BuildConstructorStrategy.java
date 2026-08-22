@@ -1,5 +1,7 @@
 package br.com.jdbcpp.processor.service.method;
 
+import br.com.jdbcpp.api.JDBCITypeConverterEnum;
+import br.com.jdbcpp.api.output.PropStrategy;
 import br.com.jdbcpp.processor.dto.ParamKind;
 import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
@@ -78,7 +80,20 @@ public final class BuildConstructorStrategy {
                     .map(collectionUtil::getCollectionElementType)
                     .orElse(null);
 
-            strategies.add(new ConstructorStrategy(paramName, paramType, paramKind, List.of(), genericType, i + 1));
+            final var customReturnType = Optional.ofNullable(param.getAnnotation(PropStrategy.class))
+                    .map(PropStrategy::typeCustomize)
+                    .map(JDBCITypeConverterEnum::getType)
+                    .orElse(null);
+
+            strategies.add(new ConstructorStrategy(
+                    paramName,
+                    paramType,
+                    paramKind,
+                    List.of(),
+                    genericType,
+                    i + 1,
+                    customReturnType
+            ));
         }
         return strategies;
     }

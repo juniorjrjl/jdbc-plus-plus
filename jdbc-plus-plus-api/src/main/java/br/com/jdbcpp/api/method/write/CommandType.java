@@ -1,4 +1,4 @@
-package br.com.jdbcpp.api;
+package br.com.jdbcpp.api.method.write;
 
 /**
  * Represents the type of write operation for a {@link Command}.

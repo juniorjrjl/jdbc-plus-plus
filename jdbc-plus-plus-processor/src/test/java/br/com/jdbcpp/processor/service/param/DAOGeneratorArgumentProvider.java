@@ -11,6 +11,7 @@ import org.junit.jupiter.params.support.ParameterDeclarations;
 
 import javax.lang.model.util.Elements;
 import javax.sql.DataSource;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -34,11 +35,14 @@ public class DAOGeneratorArgumentProvider implements ArgumentsProvider {
                 .methods(List.of(mock(InsertMethod.class)))
                 .constructor(new ConstructorInfo(List.of(
                         new ConstructorParamInfo(
-                                "dataSource", e.getTypeElement(DataSource.class.getCanonicalName()).asType()
+                                "dataSource",
+                                e.getTypeElement(DataSource.class.getCanonicalName()).asType(),
+                                Collections.emptyList()
                         ),
                         new ConstructorParamInfo(
                                 "sample",
-                                e.getTypeElement(String.class.getCanonicalName()).asType()
+                                e.getTypeElement(String.class.getCanonicalName()).asType(),
+                                Collections.emptyList()
                         )
                 )))
                 .build();

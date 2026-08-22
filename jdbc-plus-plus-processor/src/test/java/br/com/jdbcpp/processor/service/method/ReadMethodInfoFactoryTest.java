@@ -1,6 +1,6 @@
 package br.com.jdbcpp.processor.service.method;
 
-import br.com.jdbcpp.api.Query;
+import br.com.jdbcpp.api.method.read.Query;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectCollectionMethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectNullableMethodInfo;
@@ -35,9 +35,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static br.com.jdbcpp.api.ResultBuildStrategyType.CONSTRUCTOR;
-import static br.com.jdbcpp.api.ResultBuildStrategyType.SETTER;
-import static br.com.jdbcpp.api.ResultBuildStrategyType.SIMPLE_RESULT;
+import static br.com.jdbcpp.api.method.read.ResultBuildStrategyType.CONSTRUCTOR;
+import static br.com.jdbcpp.api.method.read.ResultBuildStrategyType.SETTER;
+import static br.com.jdbcpp.api.method.read.ResultBuildStrategyType.SIMPLE_RESULT;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;

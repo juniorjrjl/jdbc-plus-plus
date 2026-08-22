@@ -1,7 +1,9 @@
 package br.com.jdbcpp.dao;
 
-import br.com.jdbcpp.api.Command;
+import br.com.jdbcpp.api.method.write.Command;
 import br.com.jdbcpp.api.DAO;
+import br.com.jdbcpp.api.input.InputParam;
+import br.com.jdbcpp.dto.category.CategoryTypeEnum;
 import br.com.jdbcpp.dto.category.insert.CategoryClassDTO;
 import br.com.jdbcpp.dto.category.insert.CategoryClassDTOWithIgnoreProp;
 import br.com.jdbcpp.dto.category.insert.CategoryDTO;
@@ -50,6 +52,16 @@ public interface InsertCategoryDAO {
     long insertFixDataReturnRecord(final String name,
                                    final OffsetDateTime createdAt,
                                    final OffsetDateTime updatedAt) throws SQLException;
+
+    @Command(value = "INSERT INTO categories (name, priority) VALUES (:name:, :priority:)")
+    void insertInsertEnumToStringAndInt(@InputParam(statementField = "priority", enumMethodValue = "ordinal")
+                                        final CategoryTypeEnum categoryOrder,
+                                        @InputParam(statementField = "name")
+                                        final CategoryTypeEnum categoryName) throws SQLException;
+
+    @Command(value = "INSERT INTO categories (name) VALUES (:name:)")
+    void insertInsertEnumCustomMethod(@InputParam(statementField = "name", enumMethodValue = "getEnumNameLowerCase") final CategoryTypeEnum category) throws SQLException;
+
 
     @Command(value = """
             INSERT INTO categories (name, created_at, updated_at)

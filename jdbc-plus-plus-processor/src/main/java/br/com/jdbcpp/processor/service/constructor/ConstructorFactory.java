@@ -2,6 +2,7 @@ package br.com.jdbcpp.processor.service.constructor;
 
 import br.com.jdbcpp.processor.dto.constructor.ConstructorInfo;
 import br.com.jdbcpp.processor.dto.constructor.ConstructorParamInfo;
+import br.com.jdbcpp.processor.util.AnnotationUtil;
 import br.com.jdbcpp.processor.util.ArrayUtil;
 import br.com.jdbcpp.processor.util.CollectionUtil;
 import org.jspecify.annotations.Nullable;
@@ -43,7 +44,10 @@ public class ConstructorFactory {
                     }
                     return new ConstructorParamInfo(
                             p.getSimpleName().toString(),
-                            type
+                            type,
+                            p.getAnnotationMirrors().stream()
+                                    .filter(AnnotationUtil::isNotJdbcppAnnotation)
+                                    .toList()
                     );
                 })
                 .toList();

@@ -1,7 +1,7 @@
 package br.com.jdbcpp.processor.facade;
 
 import br.com.jdbcpp.api.DAO;
-import br.com.jdbcpp.api.Query;
+import br.com.jdbcpp.api.method.read.Query;
 import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.SelectNullableMethodInfo;
 import br.com.jdbcpp.processor.exception.InvalidDAOException;

@@ -1,6 +1,6 @@
 package br.com.jdbcpp.processor.service.parameter;
 
-import br.com.jdbcpp.api.InputParam;
+import br.com.jdbcpp.api.input.InputParam;
 import br.com.jdbcpp.processor.dto.parameter.ClassParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;

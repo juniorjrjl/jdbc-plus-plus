@@ -1,4 +1,4 @@
-package br.com.jdbcpp.api;
+package br.com.jdbcpp.api.method.read;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

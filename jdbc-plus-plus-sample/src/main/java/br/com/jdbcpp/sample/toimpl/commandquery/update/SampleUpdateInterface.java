@@ -1,7 +1,6 @@
 package br.com.jdbcpp.sample.toimpl.commandquery.update;
 
-import br.com.jdbcpp.api.Command;
-import br.com.jdbcpp.api.DAO;
+import br.com.jdbcpp.api.method.write.Command;
 import br.com.jdbcpp.sample.domain.UserClass;
 import br.com.jdbcpp.sample.domain.UserRecord;
 import br.com.jdbcpp.sample.exception.CustomException;
@@ -9,7 +8,7 @@ import br.com.jdbcpp.sample.exception.CustomException;
 import java.sql.SQLException;
 import java.util.List;
 
-import static br.com.jdbcpp.api.CommandType.UPDATE;
+import static br.com.jdbcpp.api.method.write.CommandType.UPDATE;
 
 //@DAO
 public interface SampleUpdateInterface {

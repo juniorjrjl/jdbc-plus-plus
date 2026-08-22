@@ -1,4 +1,7 @@
-package br.com.jdbcpp.api;
+package br.com.jdbcpp.api.output;
+
+import br.com.jdbcpp.api.JDBCITypeConverterEnum;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -21,7 +24,7 @@ public @interface PropStrategy {
     /**
      * The name of a custom setter method to use for setting this property.
      * <p>
-     * When using {@link br.com.jdbcpp.api.ResultBuildStrategyType#SETTER},
+     * When using {@link ResultBuildStrategyType#SETTER},
      * this specifies the method name to invoke instead of the standard JavaBean setter.
      * For example, specifying "changeId" would invoke the {@code changeId()} method
      * instead of the default {@code setId()} method.
@@ -48,5 +51,10 @@ public @interface PropStrategy {
      * @return {@code true} to ignore this property, {@code false} otherwise
      */
     boolean ignore() default false;
+
+    /**
+     * Used to customize Output type in result set.
+     */
+    JDBCITypeConverterEnum typeCustomize() default JDBCITypeConverterEnum.NONE;
 
 }

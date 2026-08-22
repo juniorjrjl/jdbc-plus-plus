@@ -1,6 +1,6 @@
 package com.example;
 
-import br.com.jdbcpp.api.PropStrategy;
+import br.com.jdbcpp.api.output.PropStrategy;
 import java.util.List;
 
 public class BuildSetterStrategyTest {

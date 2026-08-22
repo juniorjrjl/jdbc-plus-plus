@@ -1,6 +1,6 @@
 package br.com.jdbcpp.processor.service.method;
 
-import br.com.jdbcpp.api.PropStrategy;
+import br.com.jdbcpp.api.output.PropStrategy;
 import br.com.jdbcpp.processor.dto.ParamKind;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 import br.com.jdbcpp.processor.dto.result.SetterStrategy;
@@ -79,6 +79,7 @@ public final class BuildSetterStrategy {
 
                 strategies.add(new SetterStrategy(
                         setterMethod.get().getSimpleName().toString(),
+                        propStrategy.typeCustomize().getType(),
                         fieldName,
                         fieldType,
                         paramKind,

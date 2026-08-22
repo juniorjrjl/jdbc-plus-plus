@@ -1,9 +1,8 @@
 package br.com.jdbcpp.sample.toimpl.propstrategy;
 
-import br.com.jdbcpp.api.DAO;
-import br.com.jdbcpp.api.Query;
-import br.com.jdbcpp.api.ResultBuildStrategy;
-import br.com.jdbcpp.api.ResultBuildStrategyType;
+import br.com.jdbcpp.api.method.read.Query;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategy;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
 import br.com.jdbcpp.sample.domain.ProductClass;
 import br.com.jdbcpp.sample.domain.ProductCustomSetter;
 import br.com.jdbcpp.sample.domain.ProductIndexedClass;

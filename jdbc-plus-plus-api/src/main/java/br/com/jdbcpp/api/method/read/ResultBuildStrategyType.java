@@ -1,4 +1,4 @@
-package br.com.jdbcpp.api;
+package br.com.jdbcpp.api.method.read;
 
 /**
  * Strategy for building query result objects.

@@ -1,4 +1,8 @@
-package br.com.jdbcpp.api;
+package br.com.jdbcpp.api.input;
+
+import br.com.jdbcpp.api.JDBCITypeConverterEnum;
+import br.com.jdbcpp.api.method.read.Query;
+import br.com.jdbcpp.api.method.write.Command;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -52,5 +56,10 @@ public @interface InputParam {
      * @return the enum value extraction strategy
      */
     String enumMethodValue() default "toString";
+
+    /**
+     * Used to customize InputParam type in statement.
+     */
+    JDBCITypeConverterEnum typeCustomize() default JDBCITypeConverterEnum.NONE;
 
 }

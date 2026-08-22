@@ -6,8 +6,10 @@ import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.read.select.result.SelectResultSetDelegator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
 import br.com.jdbcpp.processor.util.CollectionUtil;
+import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
@@ -52,7 +54,23 @@ public class SelectCollectionMethodGenerator implements MethodGenerator<SelectCo
             methodBuilder.addException(sqlException);
         }
 
-        methodInfo.getParams().forEach(p -> methodBuilder.addParameter(TypeName.get(p.getType()), p.getName(), FINAL));
+        methodInfo.getAnnotations().stream()
+                .map(AnnotationSpec::get)
+                .forEach(methodBuilder::addAnnotation);
+
+        methodInfo.getParams().forEach(p -> {
+            final var paramBuilder = ParameterSpec.builder(
+                    TypeName.get(p.getType()),
+                    p.getName(),
+                    FINAL
+            );
+
+            p.getAnnotations().stream()
+                    .map(AnnotationSpec::get)
+                    .forEach(paramBuilder::addAnnotation);
+
+            methodBuilder.addParameter(paramBuilder.build());
+        });
 
         final var statementVar = "stmt";
         final var resultSetVar = "rs";

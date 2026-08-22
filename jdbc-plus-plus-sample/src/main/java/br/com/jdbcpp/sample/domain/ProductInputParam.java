@@ -1,6 +1,6 @@
 package br.com.jdbcpp.sample.domain;
 
-import br.com.jdbcpp.api.InputParam;
+import br.com.jdbcpp.api.input.InputParam;
 
 import java.math.BigDecimal;
 

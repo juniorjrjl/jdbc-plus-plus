@@ -1,9 +1,9 @@
 package br.com.jdbcpp.processor.service.method;
 
-import br.com.jdbcpp.api.Command;
-import br.com.jdbcpp.api.CommandType;
-import br.com.jdbcpp.api.Query;
-import br.com.jdbcpp.api.ResultBuildStrategyType;
+import br.com.jdbcpp.api.method.write.Command;
+import br.com.jdbcpp.api.method.write.CommandType;
+import br.com.jdbcpp.api.method.read.Query;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
 import br.com.jdbcpp.processor.dto.method.DeleteMethod;
 import br.com.jdbcpp.processor.dto.method.InsertMethod;
 import br.com.jdbcpp.processor.dto.method.MethodInfo;

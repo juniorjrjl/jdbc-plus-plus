@@ -2,8 +2,13 @@ package br.com.jdbcpp.processor.dto.parameter;
 
 import org.jspecify.annotations.Nullable;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeMirror;
 
+import java.util.Collections;
+import java.util.List;
+
+import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
 public non-sealed class SimpleParamInfo extends ParamInfo {
@@ -21,10 +26,11 @@ public non-sealed class SimpleParamInfo extends ParamInfo {
                             final TypeMirror containerType,
                             final String queryParamName,
                             final String convertMethod,
+                            final List<? extends AnnotationMirror> annotations,
                             final boolean ignore,
                             @Nullable
                             final TypeMirror enumMethodType) {
-        super(name, type, containerType, convertMethod);
+        super(name, type, containerType, convertMethod, annotations);
         this.customEnum = customEnum;
         this.queryParamName = queryParamName;
         this.enumMethodType = enumMethodType;
@@ -69,6 +75,8 @@ public non-sealed class SimpleParamInfo extends ParamInfo {
         private String queryParamName;
         @Nullable
         private String convertMethod;
+        @Nullable
+        private List<? extends AnnotationMirror> annotations;
         private boolean ignore = false;
         @Nullable
         private TypeMirror enumMethodType = null;
@@ -108,6 +116,11 @@ public non-sealed class SimpleParamInfo extends ParamInfo {
             return this;
         }
 
+        public SimpleParamInfoBuilder withAnnotations(@Nullable final List<? extends AnnotationMirror> annotations) {
+            this.annotations = annotations;
+            return this;
+        }
+
         public SimpleParamInfoBuilder withEnumMethodType(@Nullable final TypeMirror enumMethodType) {
             this.enumMethodType = enumMethodType;
             return this;
@@ -121,6 +134,7 @@ public non-sealed class SimpleParamInfo extends ParamInfo {
                     containerType,
                     requireNonNull(queryParamName, "queryParamName is required"),
                     requireNonNull(convertMethod, "convertMethod is required"),
+                    isNull(annotations) ? Collections.emptyList() : annotations,
                     ignore,
                     enumMethodType
             );

@@ -1,6 +1,6 @@
 package br.com.jdbcpp.processor.service.dao.read.select.result;
 
-import br.com.jdbcpp.api.ResultBuildStrategyType;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
 import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SetterStrategy;
 import br.com.jdbcpp.processor.dto.result.SimpleResultStrategy;

@@ -1,6 +1,6 @@
 package com.example;
 
-import br.com.jdbcpp.api.InputParam;
+import br.com.jdbcpp.api.input.InputParam;
 import java.util.List;
 import java.util.Set;
 

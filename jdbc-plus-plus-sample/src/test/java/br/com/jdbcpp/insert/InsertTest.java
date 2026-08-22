@@ -4,6 +4,7 @@ import br.com.jdbcpp.dao.InsertCategoryDAO;
 import br.com.jdbcpp.dao.InsertCategoryDAOImpl;
 import br.com.jdbcpp.dao.SelectCategoryDAO;
 import br.com.jdbcpp.dao.SelectCategoryDAOImpl;
+import br.com.jdbcpp.dto.category.CategoryTypeEnum;
 import br.com.jdbcpp.dto.category.insert.CategoryClassDTO;
 import br.com.jdbcpp.dto.category.insert.CategoryClassDTOWithIgnoreProp;
 import br.com.jdbcpp.dto.category.insert.CategoryDTO;
@@ -123,6 +124,34 @@ abstract class InsertTest {
         assertThat(inserted.updatedAt()).isNotNull();
 
     }
+
+    @Test
+    void insertEnumIntAndStringValues() throws SQLException {
+        final var categoryEnum = customFaker.options().option(CategoryTypeEnum.class);
+
+        insertCategoryDAO.insertInsertEnumToStringAndInt(categoryEnum, categoryEnum);
+        final var categories = selectCategoryDAO.selectAllWithPriority();
+        assertThat(categories.size()).isOne();
+        final var category = categories.iterator().next();
+        assertThat(category.getName()).isEqualTo(categoryEnum.name());
+        assertThat(category.getPriority()).isEqualTo(categoryEnum.ordinal());
+        assertThat(category.getCreatedAt()).isNotNull();
+        assertThat(category.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void insertEnumCustomMethod() throws SQLException{
+        final var categoryEnum = customFaker.options().option(CategoryTypeEnum.class);
+
+        insertCategoryDAO.insertInsertEnumCustomMethod(categoryEnum);
+        final var categories = selectCategoryDAO.selectAll();
+        assertThat(categories.size()).isOne();
+        final var category = categories.getFirst();
+        assertThat(category.name()).isEqualTo(categoryEnum.getEnumNameLowerCase());
+        assertThat(category.createdAt()).isNotNull();
+        assertThat(category.updatedAt()).isNotNull();
+    }
+
 
     @Test
     void insertClassParamsReturnRecord() throws SQLException {

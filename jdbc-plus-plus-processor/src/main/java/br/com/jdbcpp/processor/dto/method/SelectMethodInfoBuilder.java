@@ -1,6 +1,6 @@
 package br.com.jdbcpp.processor.dto.method;
 
-import br.com.jdbcpp.api.ResultBuildStrategyType;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
 
 import java.util.List;

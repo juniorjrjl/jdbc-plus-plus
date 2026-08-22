@@ -1,7 +1,7 @@
 package br.com.jdbcpp.processor.context;
 
-import br.com.jdbcpp.api.Command;
-import br.com.jdbcpp.api.Query;
+import br.com.jdbcpp.api.method.write.Command;
+import br.com.jdbcpp.api.method.read.Query;
 import br.com.jdbcpp.processor.exception.ProcessorContextInitialization;
 import br.com.jdbcpp.processor.facade.ProcessorFacade;
 import br.com.jdbcpp.processor.service.DAOGenerator;

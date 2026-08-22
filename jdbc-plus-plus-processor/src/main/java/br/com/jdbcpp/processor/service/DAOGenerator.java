@@ -6,9 +6,11 @@ import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.exception.InvalidMethodInformationException;
 import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.util.LambdaUtil;
+import com.palantir.javapoet.AnnotationSpec;
 import com.palantir.javapoet.ClassName;
 import com.palantir.javapoet.JavaFile;
 import com.palantir.javapoet.MethodSpec;
+import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 import com.palantir.javapoet.TypeSpec;
 
@@ -43,6 +45,10 @@ public class DAOGenerator {
         } else {
             buildExtendSuperClass(daoBuilder, daoParent, constructor.params());
         }
+
+        daoImplInfo.annotations().stream()
+                .map(AnnotationSpec::get)
+                .forEach(daoBuilder::addAnnotation);
 
         final var connectionCall = Optional.ofNullable(constructor)
                 .stream()
@@ -86,7 +92,19 @@ public class DAOGenerator {
                                        final List<ConstructorParamInfo> constructorParams){
         final var ctorBuilder = MethodSpec.constructorBuilder().addModifiers(PUBLIC);
         constructorParams.forEach(
-                p -> ctorBuilder.addParameter(TypeName.get(p.type()), p.name(), FINAL)
+                p -> {
+                    final var paramBuilder = ParameterSpec.builder(
+                            TypeName.get(p.type()),
+                            p.name(),
+                            FINAL
+                    );
+
+                    p.annotations().stream()
+                            .map(AnnotationSpec::get)
+                            .forEach(paramBuilder::addAnnotation);
+
+                    ctorBuilder.addParameter(paramBuilder.build());
+                }
         );
         final var joinedParams = constructorParams.stream()
                 .map(ConstructorParamInfo::name)
