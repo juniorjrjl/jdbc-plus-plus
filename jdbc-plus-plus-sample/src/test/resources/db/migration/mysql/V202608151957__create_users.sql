@@ -1,5 +1,6 @@
 CREATE TABLE users (
-    id BINARY(16) PRIMARY KEY,
+    id BINARY(16) PRIMARY KEY DEFAULT (UUID_TO_BIN(UUID())),
+    user_identifier BINARY(16) NOT NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,

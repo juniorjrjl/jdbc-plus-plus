@@ -21,6 +21,8 @@ public non-sealed class InsertMethod extends MethodInfo{
     private final String pkNameOrIndex;
     @Nullable
     private final String customReturnType;
+    @Nullable
+    private final String methodToMapResult;
 
     public InsertMethod(final String name,
                         final TypeMirror returnType,
@@ -33,11 +35,14 @@ public non-sealed class InsertMethod extends MethodInfo{
                         @Nullable
                         final String pkNameOrIndex,
                         @Nullable
-                        final String customReturnType) {
+                        final String customReturnType,
+                        @Nullable
+                        final String methodToMapResult) {
         super(name, returnType, params, classPropertyMap, statement, packException, annotations);
         this.returnRowsAffected = returnRowsAffected;
         this.pkNameOrIndex = pkNameOrIndex;
         this.customReturnType = customReturnType;
+        this.methodToMapResult = methodToMapResult;
     }
 
     public boolean isReturnRowsAffected() {
@@ -54,6 +59,11 @@ public non-sealed class InsertMethod extends MethodInfo{
         return customReturnType;
     }
 
+    @Nullable
+    public String getMethodToMapResult() {
+        return methodToMapResult;
+    }
+
     public static class InsertMethodBuilder extends MethodInfo.MethodInfoBuilder {
 
         @Nullable
@@ -62,6 +72,8 @@ public non-sealed class InsertMethod extends MethodInfo{
         private String pkNameOrIndex;
         @Nullable
         private String customReturnType;
+        @Nullable
+        private String methodToMapResult;
 
         public InsertMethodBuilder(final MethodInfoBuilder baseBuilder) {
             this.name = baseBuilder.name;
@@ -88,6 +100,11 @@ public non-sealed class InsertMethod extends MethodInfo{
             return this;
         }
 
+        public InsertMethodBuilder withMethodToMapResult(@Nullable final String methodToMapResult) {
+            this.methodToMapResult = methodToMapResult;
+            return this;
+        }
+
         public InsertMethod build() {
             return new InsertMethod(
                     requireNonNull(name, "name is required"),
@@ -99,7 +116,8 @@ public non-sealed class InsertMethod extends MethodInfo{
                     isNull(annotations) ? Collections.emptyList() : annotations,
                     requireNonNull(returnRowsAffected, "returnRowsAffected is required"),
                     pkNameOrIndex,
-                    customReturnType
+                    customReturnType,
+                    methodToMapResult
             );
         }
 

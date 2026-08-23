@@ -24,16 +24,16 @@ public class DAOGeneratorArgumentProvider implements ArgumentsProvider {
     public Stream<? extends Arguments> provideArguments(final ParameterDeclarations parameters,
                                                         final ExtensionContext context) {
         final Function<Elements, DAOImplInfo> daoInterface = e -> DAOImplInfo.builder()
-                .name("com.example.DAOGeneratorTest.DAOInterface")
-                .packageName("com.example")
-                .methods(List.of(mock(InsertMethod.class)))
+                .withName("com.example.DAOGeneratorTest.DAOInterface")
+                .withPackageName("com.example")
+                .withMethods(List.of(mock(InsertMethod.class)))
                 .build();
 
         final Function<Elements, DAOImplInfo> daoClass = e -> DAOImplInfo.builder()
-                .name("com.example.DAOGeneratorTest.DAOClass")
-                .packageName("com.example")
-                .methods(List.of(mock(InsertMethod.class)))
-                .constructor(new ConstructorInfo(List.of(
+                .withName("com.example.DAOGeneratorTest.DAOClass")
+                .withPackageName("com.example")
+                .withMethods(List.of(mock(InsertMethod.class)))
+                .withConstructor(new ConstructorInfo(List.of(
                         new ConstructorParamInfo(
                                 "dataSource",
                                 e.getTypeElement(DataSource.class.getCanonicalName()).asType(),

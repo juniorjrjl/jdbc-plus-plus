@@ -68,9 +68,15 @@ public @interface Command {
     Class<? extends RuntimeException> packException() default None.class;
 
     /**
-     * For Insert methods who return PK when you need customization, ex. UUID in MySQL and Oracle
+     * For Insert methods who return PK when you need customization, ex. UUID in MySQL
      * */
     JDBCITypeConverterEnum typeCustomize() default JDBCITypeConverterEnum.NONE;
+
+    /*
+    * name of custom method to map return type when it returns PK, this method must have a {@link java.sql.ResultSet}
+    * in your parameters
+    * */
+    String methodToMapResult() default "";
 
     final class None extends RuntimeException {}
 

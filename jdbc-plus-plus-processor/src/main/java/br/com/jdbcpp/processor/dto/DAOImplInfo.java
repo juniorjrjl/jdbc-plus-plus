@@ -36,27 +36,27 @@ public record DAOImplInfo(
         @Nullable
         private List<? extends AnnotationMirror> annotations;
 
-        public DAOImplInfoBuilder name(final String name) {
+        public DAOImplInfoBuilder withName(final String name) {
             this.name = name;
             return this;
         }
 
-        public DAOImplInfoBuilder packageName(final String packageName) {
+        public DAOImplInfoBuilder withPackageName(final String packageName) {
             this.packageName = packageName;
             return this;
         }
 
-        public DAOImplInfoBuilder constructor(@Nullable final ConstructorInfo constructor) {
+        public DAOImplInfoBuilder withConstructor(@Nullable final ConstructorInfo constructor) {
             this.constructor = constructor;
             return this;
         }
 
-        public DAOImplInfoBuilder methods(final List<MethodInfo> methods) {
+        public DAOImplInfoBuilder withMethods(final List<MethodInfo> methods) {
             this.methods = methods;
             return this;
         }
 
-        public  DAOImplInfoBuilder annotations(final List<? extends AnnotationMirror> annotations) {
+        public  DAOImplInfoBuilder withAnnotations(final List<? extends AnnotationMirror> annotations) {
             this.annotations = annotations;
             return this;
         }

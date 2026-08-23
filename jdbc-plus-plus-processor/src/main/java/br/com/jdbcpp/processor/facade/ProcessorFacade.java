@@ -68,16 +68,16 @@ public class ProcessorFacade {
             final var packageName = elements.getPackageOf(mappedDAO).toString();
             final var className = elements.getTypeElement(mappedDAO.toString()).toString();
             final var daoImplInfoBuilder = DAOImplInfo.builder()
-                    .name(className)
-                    .packageName(packageName)
-                    .annotations(daoAnnotations);
+                    .withName(className)
+                    .withPackageName(packageName)
+                    .withAnnotations(daoAnnotations);
             final var methods = ElementFilter.methodsIn(mappedDAO.getEnclosedElements()).stream()
                     .filter(m -> nonNull(m.getAnnotation(Query.class)) || nonNull(m.getAnnotation(Command.class)))
                     .toList();
 
             daoValidator.validateAndResolve(mappedDAO)
                     .map(constructorFactory::build)
-                    .ifPresent(daoImplInfoBuilder::constructor);
+                    .ifPresent(daoImplInfoBuilder::withConstructor);
 
             if (methods.isEmpty()) {
                 final var message = String.format(
@@ -93,7 +93,7 @@ public class ProcessorFacade {
                 methodsInfo.add(methodInfo);
             }
 
-            final var daoImplInfo = daoImplInfoBuilder.methods(methodsInfo).build();
+            final var daoImplInfo = daoImplInfoBuilder.withMethods(methodsInfo).build();
             final var javaFile = daoGenerator.build(daoImplInfo);
             javaFile.writeTo(filer);
 

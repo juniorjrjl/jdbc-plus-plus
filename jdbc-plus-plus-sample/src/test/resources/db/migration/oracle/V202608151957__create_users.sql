@@ -1,5 +1,6 @@
 CREATE TABLE users (
-    id RAW(16) PRIMARY KEY,
+    id RAW(16) DEFAULT SYS_GUID() PRIMARY KEY,
+    user_identifier RAW(16) NOT NULL,
     first_name VARCHAR2(100) NOT NULL,
     last_name VARCHAR2(100) NOT NULL,
     email VARCHAR2(100) NOT NULL,

@@ -2,12 +2,17 @@ package br.com.jdbcpp.insert;
 
 import br.com.jdbcpp.dao.InsertCategoryDAO;
 import br.com.jdbcpp.dao.InsertCategoryDAOImpl;
+import br.com.jdbcpp.dao.InsertUserDAO;
+import br.com.jdbcpp.dao.InsertUserDAOImpl;
 import br.com.jdbcpp.dao.SelectCategoryDAO;
 import br.com.jdbcpp.dao.SelectCategoryDAOImpl;
+import br.com.jdbcpp.dao.SelectUserDAO;
+import br.com.jdbcpp.dao.SelectUserDAOImpl;
 import br.com.jdbcpp.dto.category.CategoryTypeEnum;
 import br.com.jdbcpp.dto.category.insert.CategoryClassDTO;
 import br.com.jdbcpp.dto.category.insert.CategoryClassDTOWithIgnoreProp;
 import br.com.jdbcpp.dto.category.insert.CategoryDTO;
+import br.com.jdbcpp.dto.user.insert.UserInsertPKUUIDDTO;
 import br.com.jdbcpp.util.DatabaseCapability;
 import br.com.jdbcpp.util.faker.CustomFaker;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +22,7 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,7 +34,9 @@ abstract class InsertTest {
     private static final CustomFaker customFaker = CustomFaker.getInstance();
 
     private InsertCategoryDAO insertCategoryDAO;
+    private InsertUserDAO insertUserDAO;
     private SelectCategoryDAO selectCategoryDAO;
+    private SelectUserDAO selectUserDAO;
 
     protected abstract List<DatabaseCapability> capabilities();
 
@@ -42,7 +50,9 @@ abstract class InsertTest {
     public void setUp() throws SQLException  {
         CustomFaker.getInstance().reseed();
         insertCategoryDAO = new InsertCategoryDAOImpl(getDataSource());
+        insertUserDAO = new InsertUserDAOImpl(getDataSource());
         selectCategoryDAO = new SelectCategoryDAOImpl(getDataSource());
+        selectUserDAO = new SelectUserDAOImpl(getDataSource());
     }
 
     @Test
@@ -227,6 +237,61 @@ abstract class InsertTest {
         assertThat(category.getName()).isEqualTo(name);
         assertThat(category.getCreatedAt()).isNotNull();
         assertThat(category.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    void insertReturnUUIDWithoutMap() throws SQLException {
+        assumeTrue(supportCapability(DatabaseCapability.RETURN_ID_UUID));
+
+        final var userIdentifier = UUID.randomUUID();
+        final var firstName = customFaker.name().firstName();
+        final var lastName = customFaker.name().lastName();
+        final var email = customFaker.internet().emailAddress();
+        final var birthDate = customFaker.timeAndDate().birthday();
+
+        final var dto = new UserInsertPKUUIDDTO(userIdentifier, firstName, lastName, email, birthDate);
+
+        final var returnedId = insertUserDAO.insertReturnUUIDPK(dto);
+
+        final var inserted = selectUserDAO.selectOptionalById(returnedId);
+
+        assertThat(inserted).isPresent()
+                            .hasValueSatisfying(u -> {
+                                assertThat(u.getId()).isNotNull();
+                                assertThat(u.getUserIdentifier()).isEqualTo(userIdentifier);
+                                assertThat(u.getFirstName()).isEqualTo(firstName);
+                                assertThat(u.getLastName()).isEqualTo(lastName);
+                                assertThat(u.getEmail()).isEqualTo(email);
+                                assertThat(u.getBirthDate()).isEqualTo(birthDate);
+                                assertThat(u.getCreatedAt()).isNotNull();
+                                assertThat(u.getUpdatedAt()).isNotNull();
+                            });
+    }
+
+    @Test
+    void insertMapUUID() throws SQLException {
+        assumeTrue(supportCapability(DatabaseCapability.MAP_DIRECT_UUID));
+
+        final var userIdentifier = UUID.randomUUID();
+        final var firstName = customFaker.name().firstName();
+        final var lastName = customFaker.name().lastName();
+        final var email = customFaker.internet().emailAddress();
+        final var birthDate = customFaker.timeAndDate().birthday();
+
+        final var dto = new UserInsertPKUUIDDTO(userIdentifier, firstName, lastName, email, birthDate);
+
+        insertUserDAO.insertSQLServer(dto);
+
+        final var inserted = selectUserDAO.findAll().getFirst();
+
+        assertThat(inserted.getId()).isNotNull();
+        assertThat(inserted.getUserIdentifier()).isEqualTo(userIdentifier);
+        assertThat(inserted.getFirstName()).isEqualTo(firstName);
+        assertThat(inserted.getLastName()).isEqualTo(lastName);
+        assertThat(inserted.getEmail()).isEqualTo(email);
+        assertThat(inserted.getBirthDate()).isEqualTo(birthDate);
+        assertThat(inserted.getCreatedAt()).isNotNull();
+        assertThat(inserted.getUpdatedAt()).isNotNull();
     }
 
 }

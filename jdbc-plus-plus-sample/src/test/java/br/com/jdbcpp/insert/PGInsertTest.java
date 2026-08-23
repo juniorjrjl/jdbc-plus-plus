@@ -11,8 +11,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import javax.sql.DataSource;
 import java.util.List;
 
-import static br.com.jdbcpp.util.DatabaseCapability.GENERATED_KEYS_BY_INDEX;
-
 @ExtendWith(PostgreSQLTestContainerExtension.class)
 @PostgreSQLTest
 public class PGInsertTest extends InsertTest{
@@ -22,7 +20,11 @@ public class PGInsertTest extends InsertTest{
 
     @Override
     protected List<DatabaseCapability> capabilities() {
-        return List.of(DatabaseCapability.PG_TEST_CLASS_GETTER_INSERT);
+        return List.of(
+                DatabaseCapability.PG_TEST_CLASS_GETTER_INSERT,
+                DatabaseCapability.RETURN_ID_UUID,
+                DatabaseCapability.MAP_DIRECT_UUID
+        );
     }
 
     public DataSource getDataSource(){
