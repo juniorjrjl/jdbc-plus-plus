@@ -10,6 +10,7 @@ import br.com.jdbcpp.processor.exception.InvalidInputParamException;
 import br.com.jdbcpp.processor.exception.InvalidMethodSignatureException;
 import br.com.jdbcpp.processor.exception.InvalidSelectResultMappingException;
 import br.com.jdbcpp.processor.exception.MoreParamsThanStatementNeedException;
+import br.com.jdbcpp.processor.service.method.customization.CustomizationFactory;
 import br.com.jdbcpp.processor.service.parameter.ParamPathExtractor;
 import br.com.jdbcpp.processor.service.parameter.ParameterInfoDelegator;
 import br.com.jdbcpp.processor.service.validation.MethodValidator;
@@ -61,11 +62,14 @@ public class MethodInfoDelegator {
                 .filter(AnnotationUtil::isNotJdbcppAnnotation)
                 .toList();
 
+        final var operationCustomize = CustomizationFactory.create(method);
+
         final var builder = MethodInfo.builder()
                 .withName(method.getSimpleName().toString())
                 .withParams(params)
                 .withClassPropertyMap(classPropertyMap)
-                .withAnnotations(methodAnnotations);
+                .withAnnotations(methodAnnotations)
+                .withOperationCustomize(operationCustomize);
 
         final var command= method.getAnnotation(Command.class);
         final var query = method.getAnnotation(Query.class);

@@ -1,4 +1,4 @@
-package br.com.jdbcpp.processor.service.dao.statement;
+package br.com.jdbcpp.processor.service.dao.statement.param;
 
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
@@ -9,7 +9,7 @@ import com.palantir.javapoet.TypeName;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SimpleParamResolver implements StatementResolver{
+public class SimpleParamResolver implements StatementParamResolver {
 
     private final String methodName;
     private final List<SimpleParamInfo> params;

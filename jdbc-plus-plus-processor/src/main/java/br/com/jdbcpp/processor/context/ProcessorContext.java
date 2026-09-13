@@ -14,7 +14,9 @@ import br.com.jdbcpp.processor.service.dao.read.select.result.SelectResultSimple
 import br.com.jdbcpp.processor.service.dao.read.select.result.SelectResultSimpleResultList;
 import br.com.jdbcpp.processor.service.dao.read.select.result.SelectResultUsingConstructor;
 import br.com.jdbcpp.processor.service.dao.read.select.result.SelectResultUsingSetter;
+import br.com.jdbcpp.processor.service.dao.statement.PrepareStatement;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
+import br.com.jdbcpp.processor.service.dao.statement.UnparameterizedStatement;
 import br.com.jdbcpp.processor.service.dao.write.delete.DeleteMethodGenerator;
 import br.com.jdbcpp.processor.service.dao.write.insert.InsertMethodGenerator;
 import br.com.jdbcpp.processor.service.dao.write.update.UpdateMethodGenerator;
@@ -118,7 +120,10 @@ public class ProcessorContext {
                 typeUtil
         );
 
-        final var statementBuilder = new StatementBuilder();
+        final var statementBuilder = new StatementBuilder(
+                new UnparameterizedStatement(),
+                new PrepareStatement()
+        );
         final var selectResultSetDelegator = new SelectResultSetDelegator(
                 new SelectResultUsingConstructor(),
                 new SelectResultUsingSetter(),

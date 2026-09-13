@@ -1,6 +1,7 @@
 package br.com.jdbcpp.processor.dto.method;
 
 
+import br.com.jdbcpp.processor.dto.method.customization.OperationCustomize;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import org.jspecify.annotations.Nullable;
@@ -14,8 +15,10 @@ import java.util.Map;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
-public non-sealed class UpdateMethod extends MethodInfo{
+public non-sealed class UpdateMethod extends MethodInfo {
 
+    @Nullable
+    private final String customReturnType;
     private final boolean returnRowsAffected;
 
     public UpdateMethod(final String name,
@@ -25,9 +28,19 @@ public non-sealed class UpdateMethod extends MethodInfo{
                         final StatementInfo statement,
                         final TypeMirror packException,
                         final List<? extends AnnotationMirror> annotations,
+                        @Nullable
+                        final String customReturnType,
+                        @Nullable
+                        final OperationCustomize operationCustomize,
                         final boolean returnRowsAffected) {
-        super(name, returnType, params, classPropertyMap, statement, packException, annotations);
+        super(name, returnType, params, classPropertyMap, statement, packException, annotations, operationCustomize);
+        this.customReturnType = customReturnType;
         this.returnRowsAffected = returnRowsAffected;
+    }
+
+    @Nullable
+    public String getCustomReturnType() {
+        return customReturnType;
     }
 
     public boolean isReturnRowsAffected() {
@@ -36,6 +49,8 @@ public non-sealed class UpdateMethod extends MethodInfo{
 
     public static class UpdateMethodBuilder extends MethodInfo.MethodInfoBuilder {
 
+        @Nullable
+        protected String customReturnType;
         @Nullable
         private Boolean returnRowsAffected;
 
@@ -47,6 +62,12 @@ public non-sealed class UpdateMethod extends MethodInfo{
             this.statement = baseBuilder.statement;
             this.packException = baseBuilder.packException;
             this.annotations = baseBuilder.annotations;
+            this.operationCustomize = baseBuilder.operationCustomize;
+        }
+
+        public UpdateMethodBuilder withCustomReturnType(@Nullable final String customReturnType) {
+            this.customReturnType = customReturnType;
+            return this;
         }
 
         public UpdateMethodBuilder withReturnRowsAffected(final boolean returnRowsAffected) {
@@ -63,6 +84,8 @@ public non-sealed class UpdateMethod extends MethodInfo{
                     requireNonNull(statement, "statement is required"),
                     requireNonNull(packException, "packException is required"),
                     isNull(annotations) ? Collections.emptyList() : annotations,
+                    customReturnType,
+                    operationCustomize,
                     requireNonNull(returnRowsAffected, "returnRowsAffected is required")
             );
         }

@@ -20,7 +20,7 @@ public class MySQLInsertTest extends InsertTest{
 
     @Override
     protected List<DatabaseCapability> capabilities() {
-        return List.of(DatabaseCapability.GENERATED_KEYS_BY_INDEX);
+        return List.of(DatabaseCapability.GENERATED_KEYS_BY_INDEX, DatabaseCapability.NEEDS_UUID_CAST);
     }
 
     public DataSource getDataSource(){

@@ -1,12 +1,14 @@
 package br.com.jdbcpp.processor.dto.method;
 
 
+import br.com.jdbcpp.processor.dto.method.customization.OperationCustomize;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
 import org.jspecify.annotations.Nullable;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeMirror;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -14,44 +16,30 @@ import java.util.Map;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
-public non-sealed class InsertMethod extends MethodInfo{
+public non-sealed class InsertMethod extends MethodInfo {
 
-    private final boolean returnRowsAffected;
-    @Nullable
-    private final String pkNameOrIndex;
     @Nullable
     private final String customReturnType;
-    @Nullable
-    private final String methodToMapResult;
+    private final boolean returnRowsAffected;
+    private final List<String> dataNameOrIndex;
 
-    public InsertMethod(final String name,
-                        final TypeMirror returnType,
-                        final List<ParamInfo> params,
-                        final Map<String, List<ParamInfo>> classPropertyMap,
-                        final StatementInfo statement,
-                        final TypeMirror packException,
-                        final List<? extends AnnotationMirror> annotations,
-                        final boolean returnRowsAffected,
-                        @Nullable
-                        final String pkNameOrIndex,
-                        @Nullable
-                        final String customReturnType,
-                        @Nullable
-                        final String methodToMapResult) {
-        super(name, returnType, params, classPropertyMap, statement, packException, annotations);
-        this.returnRowsAffected = returnRowsAffected;
-        this.pkNameOrIndex = pkNameOrIndex;
+    private InsertMethod(final String name,
+                         final TypeMirror returnType,
+                         final List<ParamInfo> params,
+                         final Map<String, List<ParamInfo>> classPropertyMap,
+                         final StatementInfo statement,
+                         final TypeMirror packException,
+                         final List<? extends AnnotationMirror> annotations,
+                         @Nullable
+                         final OperationCustomize operationCustomize,
+                         final boolean returnRowsAffected,
+                         final List<String> dataNameOrIndex,
+                         @Nullable
+                         final String customReturnType) {
+        super(name, returnType, params, classPropertyMap, statement, packException, annotations, operationCustomize);
         this.customReturnType = customReturnType;
-        this.methodToMapResult = methodToMapResult;
-    }
-
-    public boolean isReturnRowsAffected() {
-        return returnRowsAffected;
-    }
-
-    @Nullable
-    public String getPkNameOrIndex() {
-        return pkNameOrIndex;
+        this.returnRowsAffected = returnRowsAffected;
+        this.dataNameOrIndex = dataNameOrIndex;
     }
 
     @Nullable
@@ -59,21 +47,21 @@ public non-sealed class InsertMethod extends MethodInfo{
         return customReturnType;
     }
 
-    @Nullable
-    public String getMethodToMapResult() {
-        return methodToMapResult;
+    public boolean isReturnRowsAffected() {
+        return returnRowsAffected;
+    }
+
+    public List<String> getDataNameOrIndex() {
+        return dataNameOrIndex;
     }
 
     public static class InsertMethodBuilder extends MethodInfo.MethodInfoBuilder {
 
         @Nullable
+        protected String customReturnType;
+        @Nullable
         private Boolean returnRowsAffected;
-        @Nullable
-        private String pkNameOrIndex;
-        @Nullable
-        private String customReturnType;
-        @Nullable
-        private String methodToMapResult;
+        private final List<String> dataNameOrIndex = new ArrayList<>();
 
         public InsertMethodBuilder(final MethodInfoBuilder baseBuilder) {
             this.name = baseBuilder.name;
@@ -83,16 +71,7 @@ public non-sealed class InsertMethod extends MethodInfo{
             this.statement = baseBuilder.statement;
             this.packException = baseBuilder.packException;
             this.annotations = baseBuilder.annotations;
-        }
-
-        public InsertMethodBuilder withReturnRowsAffected(final boolean returnRowsAffected) {
-            this.returnRowsAffected = returnRowsAffected;
-            return this;
-        }
-
-        public  InsertMethodBuilder withPkNameOrIndex(@Nullable final String pkNameOrIndex) {
-            this.pkNameOrIndex = pkNameOrIndex;
-            return this;
+            this.operationCustomize = baseBuilder.operationCustomize;
         }
 
         public InsertMethodBuilder withCustomReturnType(@Nullable final String customReturnType) {
@@ -100,8 +79,13 @@ public non-sealed class InsertMethod extends MethodInfo{
             return this;
         }
 
-        public InsertMethodBuilder withMethodToMapResult(@Nullable final String methodToMapResult) {
-            this.methodToMapResult = methodToMapResult;
+        public InsertMethodBuilder withReturnRowsAffected(final boolean returnRowsAffected) {
+            this.returnRowsAffected = returnRowsAffected;
+            return this;
+        }
+
+        public InsertMethodBuilder withDataNameOrIndex(final List<String> dataNameOrIndex) {
+            this.dataNameOrIndex.addAll(dataNameOrIndex);
             return this;
         }
 
@@ -114,10 +98,10 @@ public non-sealed class InsertMethod extends MethodInfo{
                     requireNonNull(statement, "statement is required"),
                     requireNonNull(packException, "packException is required"),
                     isNull(annotations) ? Collections.emptyList() : annotations,
+                    operationCustomize,
                     requireNonNull(returnRowsAffected, "returnRowsAffected is required"),
-                    pkNameOrIndex,
-                    customReturnType,
-                    methodToMapResult
+                    dataNameOrIndex,
+                    customReturnType
             );
         }
 

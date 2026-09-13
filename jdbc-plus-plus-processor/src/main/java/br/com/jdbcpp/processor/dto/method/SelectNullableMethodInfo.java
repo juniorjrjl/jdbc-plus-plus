@@ -1,6 +1,7 @@
 package br.com.jdbcpp.processor.dto.method;
 
 import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
+import br.com.jdbcpp.processor.dto.method.customization.OperationCustomize;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
@@ -33,8 +34,10 @@ public non-sealed class SelectNullableMethodInfo extends MethodInfo implements R
                                      final TypeMirror packException,
                                      final List<SelectReturnStrategy<?>> strategies,
                                      final List<? extends AnnotationMirror> annotations,
+                                     @Nullable
+                                     final OperationCustomize operationCustomize,
                                      final ResultBuildStrategyType strategyType) {
-        super(name, returnType, params, classPropertyMap, statement, packException, annotations);
+        super(name, returnType, params, classPropertyMap, statement, packException, annotations, operationCustomize);
         this.strategies = strategies;
         this.strategyType = strategyType;
     }
@@ -82,6 +85,7 @@ public non-sealed class SelectNullableMethodInfo extends MethodInfo implements R
             this.statement = baseBuilder.statement;
             this.packException = baseBuilder.packException;
             this.annotations = baseBuilder.annotations;
+            this.operationCustomize = baseBuilder.operationCustomize;
         }
 
         public SelectNullableMethodInfoBuilder withStrategies(final List<SelectReturnStrategy<?>> strategies) {
@@ -109,6 +113,7 @@ public non-sealed class SelectNullableMethodInfo extends MethodInfo implements R
                     requireNonNull(packException, "packException is required"),
                     strategies,
                     isNull(annotations) ? Collections.emptyList() : annotations,
+                    operationCustomize,
                     requireNonNull(strategyType, "strategyType is required")
             );
         }

@@ -1,6 +1,7 @@
 package br.com.jdbcpp.processor.dto.method;
 
 import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
+import br.com.jdbcpp.processor.dto.method.customization.OperationCustomize;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
@@ -33,10 +34,12 @@ public non-sealed class SelectOptionalMethodInfo extends MethodInfo implements R
                                      final StatementInfo statement,
                                      final TypeMirror packException,
                                      final List<? extends AnnotationMirror> annotations,
+                                     @Nullable
+                                     final OperationCustomize operationCustomize,
                                      final List<SelectReturnStrategy<?>> strategies,
                                      final ResultBuildStrategyType strategyType,
                                      final TypeMirror containerReturnTypeMirror) {
-        super(name, returnType, params, classPropertyMap, statement, packException, annotations);
+        super(name, returnType, params, classPropertyMap, statement, packException, annotations, operationCustomize);
         this.strategies = strategies;
         this.strategyType = strategyType;
         this.containerReturnTypeMirror = containerReturnTypeMirror;
@@ -70,6 +73,7 @@ public non-sealed class SelectOptionalMethodInfo extends MethodInfo implements R
         return (List<SimpleResultStrategy>) (List<?>) strategies;
     }
 
+    @Override
     public TypeMirror getContainerReturnTypeMirror() {
         return containerReturnTypeMirror;
     }
@@ -91,6 +95,7 @@ public non-sealed class SelectOptionalMethodInfo extends MethodInfo implements R
             this.statement = baseBuilder.statement;
             this.packException = baseBuilder.packException;
             this.annotations = baseBuilder.annotations;
+            this.operationCustomize = baseBuilder.operationCustomize;
         }
 
         public SelectOptionalMethodInfoBuilder withStrategies(final List<SelectReturnStrategy<?>> strategies) {
@@ -122,6 +127,7 @@ public non-sealed class SelectOptionalMethodInfo extends MethodInfo implements R
                     requireNonNull(statement, "statement is required"),
                     requireNonNull(packException, "packException is required"),
                     isNull(annotations) ? Collections.emptyList() : annotations,
+                    operationCustomize,
                     strategies,
                     requireNonNull(strategyType, "strategyType is required"),
                     requireNonNull(containerReturnTypeMirror, "containerReturnTypeMirror is required")

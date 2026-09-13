@@ -1,4 +1,4 @@
-package br.com.jdbcpp.processor.service.dao.statement;
+package br.com.jdbcpp.processor.service.dao.statement.param;
 
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import static java.util.Objects.isNull;
 import static java.util.Objects.requireNonNull;
 
-public class ClassParamResolver implements StatementResolver{
+public class ClassParamResolver implements StatementParamResolver {
 
     private final String methodName;
     private final Map<String, List<ParamInfo>> classPropertyMap;

@@ -1,6 +1,7 @@
 package br.com.jdbcpp.processor.dto.method;
 
 import br.com.jdbcpp.api.method.write.CommandType;
+import br.com.jdbcpp.processor.dto.method.customization.OperationCustomize;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.parameter.SimpleParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
@@ -23,6 +24,8 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
     protected final StatementInfo statement;
     protected final TypeMirror packException;
     protected List<? extends AnnotationMirror> annotations;
+    @Nullable
+    protected OperationCustomize operationCustomize;
 
     protected MethodInfo(final String name,
                          final TypeMirror returnType,
@@ -30,7 +33,9 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
                          final Map<String, List<ParamInfo>> classPropertyMap,
                          final StatementInfo statement,
                          final TypeMirror packException,
-                         final List<? extends AnnotationMirror> annotations) {
+                         final List<? extends AnnotationMirror> annotations,
+                         @Nullable
+                         final OperationCustomize operationCustomize) {
         this.name = name;
         this.returnType = returnType;
         this.classPropertyMap = classPropertyMap;
@@ -38,6 +43,7 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
         this.statement = statement;
         this.packException = packException;
         this.annotations = annotations;
+        this.operationCustomize = operationCustomize;
     }
 
     public static MethodInfoBuilder builder() {
@@ -87,6 +93,11 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
         return annotations;
     }
 
+    @Nullable
+    public OperationCustomize getOperationCustomize() {
+        return operationCustomize;
+    }
+
     public static class MethodInfoBuilder {
 
         @Nullable
@@ -101,6 +112,8 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
         protected TypeMirror packException;
         @Nullable
         protected List<? extends AnnotationMirror> annotations;
+        @Nullable
+        protected OperationCustomize operationCustomize;
 
         public MethodInfoBuilder withName(final String name) {
             this.name = name;
@@ -137,6 +150,11 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
             return this;
         }
 
+        public MethodInfoBuilder withOperationCustomize(@Nullable final OperationCustomize operationCustomize) {
+            this.operationCustomize = operationCustomize;
+            return this;
+        }
+
         @SuppressWarnings("unchecked")
         public <T extends MethodInfoBuilder> T asWriteType(final CommandType commandType){
             return (T) switch (commandType){
@@ -146,7 +164,6 @@ public abstract sealed class MethodInfo permits DeleteMethod, InsertMethod, Upda
             };
         }
 
-        @SuppressWarnings("unchecked")
         public <T extends MethodInfoBuilder> T asReadType(final QueryType queryType) {
             return (T) switch (queryType) {
                 case NULLABLE -> new SelectNullableMethodInfo.SelectNullableMethodInfoBuilder(this);

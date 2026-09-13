@@ -89,7 +89,7 @@ class MethodInfoDelegatorTest {
                 .withPackException(packException)
                 .<InsertMethod.InsertMethodBuilder>asWriteType(CommandType.INSERT)
                 .withReturnRowsAffected(false)
-                .withPkNameOrIndex("id")
+                .withDataNameOrIndex("id")
                 .build();
 
         when(parameterInfoDelegator.create(method)).thenReturn(params);
@@ -267,7 +267,7 @@ class MethodInfoDelegatorTest {
                 .withPackException(packException)
                 .<InsertMethod.InsertMethodBuilder>asWriteType(CommandType.INSERT)
                 .withReturnRowsAffected(false)
-                .withPkNameOrIndex("id")
+                .withDataNameOrIndex("id")
                 .build();
 
         when(parameterInfoDelegator.create(method)).thenReturn(params);

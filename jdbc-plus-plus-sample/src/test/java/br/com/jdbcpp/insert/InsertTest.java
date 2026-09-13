@@ -294,4 +294,30 @@ abstract class InsertTest {
         assertThat(inserted.getUpdatedAt()).isNotNull();
     }
 
+    @Test
+    void insertMapUUIDMySQLOracle() throws SQLException {
+        assumeTrue(supportCapability(DatabaseCapability.NEEDS_UUID_CAST));
+
+        final var userIdentifier = UUID.randomUUID();
+        final var firstName = customFaker.name().firstName();
+        final var lastName = customFaker.name().lastName();
+        final var email = customFaker.internet().emailAddress();
+        final var birthDate = customFaker.timeAndDate().birthday();
+
+        final var dto = new UserInsertPKUUIDDTO(userIdentifier, firstName, lastName, email, birthDate);
+
+        insertUserDAO.insertReturnUUIDPKMySQLAndOracle(dto);
+
+        final var inserted = selectUserDAO.findAll().getFirst();
+
+        assertThat(inserted.getId()).isNotNull();
+        assertThat(inserted.getUserIdentifier()).isEqualTo(userIdentifier);
+        assertThat(inserted.getFirstName()).isEqualTo(firstName);
+        assertThat(inserted.getLastName()).isEqualTo(lastName);
+        assertThat(inserted.getEmail()).isEqualTo(email);
+        assertThat(inserted.getBirthDate()).isEqualTo(birthDate);
+        assertThat(inserted.getCreatedAt()).isNotNull();
+        assertThat(inserted.getUpdatedAt()).isNotNull();
+    }
+
 }

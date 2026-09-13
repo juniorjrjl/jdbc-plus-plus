@@ -11,6 +11,7 @@ import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 
 import javax.lang.model.type.TypeMirror;
+import java.util.Collections;
 import java.util.Optional;
 
 import static javax.lang.model.element.Modifier.FINAL;
@@ -76,7 +77,7 @@ public class SelectOptionalMethodGenerator implements MethodGenerator<SelectOpti
                 connectionCall,
                 statementVar,
                 resultSetVar,
-                null
+                Collections.emptyList()
         );
         if (!methodInfo.unParameterizedStatement()) {
             methodBuilder.beginControlFlow("try (final var $N = $N.executeQuery())", resultSetVar, statementVar);

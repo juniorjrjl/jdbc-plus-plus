@@ -1,6 +1,7 @@
 package br.com.jdbcpp.processor.dto.method;
 
 import br.com.jdbcpp.api.method.read.ResultBuildStrategyType;
+import br.com.jdbcpp.processor.dto.method.customization.OperationCustomize;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.result.ConstructorStrategy;
 import br.com.jdbcpp.processor.dto.result.SelectReturnStrategy;
@@ -34,11 +35,13 @@ public non-sealed class SelectCollectionMethodInfo extends MethodInfo implements
                                        final StatementInfo statement,
                                        final TypeMirror packException,
                                        final List<? extends AnnotationMirror> annotations,
+                                       @Nullable
+                                       final OperationCustomize operationCustomize,
                                        final List<SelectReturnStrategy<?>> strategies,
                                        final ResultBuildStrategyType strategyType,
                                        final TypeMirror containerReturnTypeMirror,
                                        final TypeMirror instanceContainer) {
-        super(name, returnType, params, classPropertyMap, statement, packException, annotations);
+        super(name, returnType, params, classPropertyMap, statement, packException, annotations, operationCustomize);
         this.strategies = strategies;
         this.strategyType = strategyType;
         this.containerReturnTypeMirror = containerReturnTypeMirror;
@@ -73,6 +76,7 @@ public non-sealed class SelectCollectionMethodInfo extends MethodInfo implements
         return (List<SimpleResultStrategy>) (List<?>) strategies;
     }
 
+    @Override
     public TypeMirror getContainerReturnTypeMirror() {
         return containerReturnTypeMirror;
     }
@@ -100,6 +104,7 @@ public non-sealed class SelectCollectionMethodInfo extends MethodInfo implements
             this.statement = baseBuilder.statement;
             this.packException = baseBuilder.packException;
             this.annotations = baseBuilder.annotations;
+            this.operationCustomize = baseBuilder.operationCustomize;
         }
 
         @Override
@@ -139,6 +144,7 @@ public non-sealed class SelectCollectionMethodInfo extends MethodInfo implements
                     requireNonNull(statement, "statement is required"),
                     requireNonNull(packException, "packException is required"),
                     isNull(annotations) ? Collections.emptyList() : annotations,
+                    operationCustomize,
                     strategies,
                     requireNonNull(strategyType, "strategyType is required"),
                     requireNonNull(containerReturnTypeMirror, "containerReturnTypeMirror is required"),

@@ -6,5 +6,6 @@ public enum DatabaseCapability {
     PG_TEST_CLASS_GETTER_INSERT,
     RETURN_ID_UUID,
     MAP_DIRECT_UUID,
+    NEEDS_UUID_CAST
 
 }

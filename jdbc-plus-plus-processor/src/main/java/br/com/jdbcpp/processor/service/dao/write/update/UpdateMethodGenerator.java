@@ -2,29 +2,20 @@ package br.com.jdbcpp.processor.service.dao.write.update;
 
 import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.UpdateMethod;
-import br.com.jdbcpp.processor.service.dao.MethodGenerator;
 import br.com.jdbcpp.processor.service.dao.statement.StatementBuilder;
-import com.palantir.javapoet.AnnotationSpec;
-import com.palantir.javapoet.ClassName;
+import br.com.jdbcpp.processor.service.dao.write.WriteMethodGenerator;
 import com.palantir.javapoet.MethodSpec;
-import com.palantir.javapoet.ParameterSpec;
 import com.palantir.javapoet.TypeName;
 
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.util.Collections;
 
-import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PUBLIC;
-
-public class UpdateMethodGenerator implements MethodGenerator<UpdateMethod> {
-
-    private final StatementBuilder statementBuilder;
-    private final TypeName sqlException;
-
+public class UpdateMethodGenerator extends WriteMethodGenerator<UpdateMethod> {
 
     public UpdateMethodGenerator(final StatementBuilder statementBuilder,
                                  final TypeMirror sqlException){
-        this.statementBuilder = statementBuilder;
-        this.sqlException = TypeName.get(sqlException);
+        super(statementBuilder, sqlException);
     }
 
     @Override
@@ -35,73 +26,30 @@ public class UpdateMethodGenerator implements MethodGenerator<UpdateMethod> {
     @Override
     public MethodSpec.Builder build(final UpdateMethod methodInfo,
                                     final String connectionCall) {
-        final var methodBuilder = MethodSpec.methodBuilder(methodInfo.getName())
-                .addModifiers(PUBLIC)
-                .returns(TypeName.get(methodInfo.getReturnType()));
-
         final var receivedException = TypeName.get(methodInfo.getPackException());
-        if (receivedException.equals(sqlException)){
-            methodBuilder.addException(sqlException);
-        }
+        final var methodBuilder = buildMethodSignature(methodInfo, receivedException);
 
-        methodInfo.getAnnotations().stream()
-                .map(AnnotationSpec::get)
-                .forEach(methodBuilder::addAnnotation);
-
-        methodInfo.getParams().forEach(p -> {
-            final var paramBuilder = ParameterSpec.builder(
-                    TypeName.get(p.getType()),
-                    p.getName(),
-                    FINAL
-            );
-
-            p.getAnnotations().stream()
-                    .map(AnnotationSpec::get)
-                    .forEach(paramBuilder::addAnnotation);
-
-            methodBuilder.addParameter(paramBuilder.build());
-        });
-
-        final var statementVar = "stmt";
         statementBuilder.build(
                 methodBuilder,
                 methodInfo,
                 "conn",
                 connectionCall,
-                statementVar,
+                STATEMENT_VAR,
                 "rs",
-                null
+                Collections.emptyList()
         );
         final var statementCommandVar = statementBuilder.getStatementCommandVar();
         final String executeCall = methodInfo.unParameterizedStatement()
                 ? "$N.executeUpdate(" + statementCommandVar + ")"
                 : "$N.executeUpdate()";
 
-        methodInfo.getParams().stream()
-                .filter(p -> p.getType().equals(methodInfo.getReturnType()))
-                .findFirst()
-                .ifPresentOrElse(
-                        p -> {
-                            methodBuilder.addStatement(executeCall, statementVar);
-                            methodBuilder.addStatement("return $N", p.getName());
-                        },
-                        () -> {
-                            if (methodInfo.isReturnRowsAffected()){
-                                if (TypeName.get(methodInfo.getReturnType()).isBoxedPrimitive() &&
-                                        TypeName.get(methodInfo.getReturnType()).equals(ClassName.get(Long.class))){
-                                    methodBuilder.addStatement(
-                                            "return $T.valueOf(" + executeCall + ")",
-                                            Long.class,
-                                            statementVar
-                                    );
-                                } else {
-                                    methodBuilder.addStatement("return " + executeCall, statementVar);
-                                }
-                            } else {
-                                methodBuilder.addStatement(executeCall, statementVar);
-                            }
-                        }
-                );
+        if (methodInfo.isReturnRowsAffected()) {
+            buildReturnRowsAffected(methodInfo, methodBuilder, executeCall);
+        } else if (methodInfo.getReturnType().getKind() == TypeKind.VOID) {
+            methodBuilder.addStatement(executeCall, STATEMENT_VAR);
+        } else {
+            buildReturnPK(methodInfo, methodBuilder, executeCall, methodInfo.getCustomReturnType());
+        }
 
         methodBuilder.nextControlFlow("catch (final $T e)", sqlException);
 

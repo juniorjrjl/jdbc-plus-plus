@@ -4,14 +4,18 @@ import br.com.jdbcpp.processor.dto.method.MethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectCollectionMethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectNullableMethodInfo;
 import br.com.jdbcpp.processor.dto.method.SelectOptionalMethodInfo;
+import br.com.jdbcpp.processor.dto.method.customization.OperationCustomize;
 import br.com.jdbcpp.processor.dto.parameter.ParamInfo;
 import br.com.jdbcpp.processor.dto.statement.StatementInfo;
+import br.com.jdbcpp.processor.service.dao.statement.param.ClassParamResolver;
+import br.com.jdbcpp.processor.service.dao.statement.param.SimpleParamResolver;
+import br.com.jdbcpp.processor.service.dao.statement.param.StatementParamResolver;
 import br.com.jdbcpp.processor.util.JDBCUtil;
 import com.palantir.javapoet.MethodSpec;
 import com.palantir.javapoet.TypeName;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -20,6 +24,15 @@ import static java.util.Objects.requireNonNull;
 public class StatementBuilder {
 
     private static final String STATEMENT_COMMAND_VAR = "statement";
+
+    private final UnparameterizedStatement unparameterizedStatement;
+    private final PrepareStatement prepareStatement;
+
+    public StatementBuilder(final UnparameterizedStatement unparameterizedStatement,
+                            final PrepareStatement prepareStatement) {
+        this.unparameterizedStatement = unparameterizedStatement;
+        this.prepareStatement = prepareStatement;
+    }
 
     public String getStatementCommandVar() {
         return STATEMENT_COMMAND_VAR;
@@ -31,14 +44,13 @@ public class StatementBuilder {
                       final String connectionCall,
                       final String statementVar,
                       final String resultSetVar,
-                      @Nullable
-                      final String pkNameOrIndex) {
+                      final List<String> dataNameOrIndex) {
         final var statement = methodInfo.getStatement();
         final var readMethod = methodInfo instanceof SelectNullableMethodInfo ||
                 methodInfo instanceof SelectCollectionMethodInfo ||
                 methodInfo instanceof SelectOptionalMethodInfo;
         if (methodInfo.unParameterizedStatement()){
-            buildStatement(
+            unparameterizedStatement.build(
                     methodBuilder,
                     statement.getNoSplitFullSQL(),
                     connectionVar,
@@ -50,7 +62,7 @@ public class StatementBuilder {
             return;
         }
 
-        final StatementResolver statementResolver = methodInfo.getClassPropertyMap().isEmpty() ?
+        final StatementParamResolver statementResolver = methodInfo.getClassPropertyMap().isEmpty() ?
                 new SimpleParamResolver(
                         methodInfo.getName(),
                         methodInfo.getSimpleParams(),
@@ -67,127 +79,47 @@ public class StatementBuilder {
                                 .toList()
                 );
 
-        buildPreparedStatement(
+        prepareStatement.build(
                 methodBuilder,
                 statement,
                 statementResolver,
                 connectionVar,
                 connectionCall,
                 statementVar,
-                pkNameOrIndex
+                dataNameOrIndex
         );
-    }
 
-    private void buildStatement(final MethodSpec.Builder methodBuilder,
-                                final String statement,
-                                final String connectionVar,
-                                final String connectionCall,
-                                final String statementVar,
-                                final String resultSetVar,
-                                final boolean readMethod){
-        if (statement.contains("\n")){methodBuilder.addStatement(
-                "final var $N = $L",
-                STATEMENT_COMMAND_VAR,
-                "\"\"\"\n" + statement + "\"\"\""
-        );
-        } else {
-            methodBuilder.addStatement(
-                    "final var $N = $S",
-                    STATEMENT_COMMAND_VAR,
-                    statement
-            );
-        }
-
-        if (readMethod) {
-            methodBuilder.beginControlFlow("""
-                        try(final var $N = $N;
-                        final var $N = $N.createStatement();
-                        final var $N = $N.executeQuery(statement))
-                        """,
-                    connectionVar,
-                    connectionCall,
-                    statementVar,
-                    connectionVar,
-                    resultSetVar,
-                    statementVar
-            );
+        final var operationCustomize = methodInfo.getOperationCustomize();
+        if (isNull(operationCustomize) ||
+                (operationCustomize.hasNoneInputMapRange() && isNull(operationCustomize.inputMap()))) {
+            buildInputParams(methodBuilder, methodInfo, statement, statementResolver, statementVar);
             return;
         }
-        methodBuilder.beginControlFlow("""
-                        try(final var $N = $N;
-                        final var $N = $N.createStatement())
-                        """,
-                connectionVar,
-                connectionCall,
-                statementVar,
-                connectionVar);
+
+        if (nonNull(operationCustomize.inputMap())){
+            buildInputParamFullCustom(methodBuilder, methodInfo.getParams(), operationCustomize, statementVar);
+            return;
+        }
+
+        buildInputParamsWithCustomColumns(methodBuilder, methodInfo.getParams(), operationCustomize, statement, statementResolver, statementVar);
+
     }
 
-    private void buildPreparedStatement(final MethodSpec.Builder methodBuilder,
-                                        final StatementInfo statementInfo,
-                                        final StatementResolver statementResolver,
-                                        final String connectionVar,
-                                        final String connectionCall,
-                                        final String statementVar,
-                                        @Nullable
-                                        final String pkNameOrIndex){
-        if (statementInfo.sqlNotSplit()){
+    private void buildInputParamFullCustom(final MethodSpec.Builder methodBuilder,
+                                           final List<ParamInfo> params,
+                                           final OperationCustomize operationCustomize,
+                                           final String statementVar){
+        final var args = statementVar + ", " + params.stream().map(ParamInfo::getName)
+                .collect(Collectors.joining(", "));
+        methodBuilder.addStatement("$N($L)", operationCustomize.inputMap(), args);
+    }
 
-            if (statementInfo.getNoSplitFullSQL().contains("\n")){methodBuilder.addStatement(
-                    "final var $N = $L",
-                    STATEMENT_COMMAND_VAR,
-                    "\"\"\"\n" + statementInfo.getNoSplitFullSQL() + "\"\"\""
-            );
-            } else {
-                methodBuilder.addStatement(
-                        "final var $N = $S",
-                        STATEMENT_COMMAND_VAR,
-                        statementInfo.getNoSplitFullSQL()
-                );
-            }
-        } else {
-            statementResolver.buildCollectionSizes(methodBuilder, statementInfo.sql());
-            methodBuilder.addStatement("final var $N = preStatement.toString()", STATEMENT_COMMAND_VAR);
-        }
+    private void buildInputParams(final MethodSpec.Builder methodBuilder,
+                                  final MethodInfo methodInfo,
+                                  final StatementInfo statementInfo,
+                                  final StatementParamResolver statementResolver,
+                                  final String statementVar){
 
-        if (nonNull(pkNameOrIndex)){
-            if (pkNameOrIndex.chars().allMatch(Character::isDigit)){
-                methodBuilder.beginControlFlow("""
-                    try (final var $N = $N;
-                    final var $N = $N.prepareStatement($N, new int[] { $L }))
-                    """,
-                        connectionVar,
-                        connectionCall,
-                        statementVar,
-                        connectionVar,
-                        STATEMENT_COMMAND_VAR,
-                        pkNameOrIndex
-                );
-            } else {
-                methodBuilder.beginControlFlow("""
-                    try (final var $N = $N;
-                    final var $N = $N.prepareStatement($N, new String[] { $S }))
-                    """,
-                        connectionVar,
-                        connectionCall,
-                        statementVar,
-                        connectionVar,
-                        STATEMENT_COMMAND_VAR,
-                        pkNameOrIndex
-                );
-            }
-        } else {
-            methodBuilder.beginControlFlow("""
-                    try (final var $N = $N;
-                    final var $N = $N.prepareStatement($N))
-                    """,
-                    connectionVar,
-                    connectionCall,
-                    statementVar,
-                    connectionVar,
-                    STATEMENT_COMMAND_VAR
-            );
-        }
         methodBuilder.addStatement("var paramIndex = 1");
         for(final var param: statementInfo.params()){
             final var leafParam = statementResolver.getParamInfo(param.name());
@@ -215,6 +147,69 @@ public class StatementBuilder {
                 );
                 methodBuilder.addStatement(stmtSetter);
                 methodBuilder.endControlFlow();
+            }
+        }
+    }
+
+    private void buildInputParamsWithCustomColumns(final MethodSpec.Builder methodBuilder,
+                                                   final List<ParamInfo> params,
+                                                   final OperationCustomize operationCustomize,
+                                                   final StatementInfo statementInfo,
+                                                   final StatementParamResolver statementResolver,
+                                                   final String statementVar){
+        methodBuilder.addStatement("var paramIndex = 1");
+        final var inputMapRange = operationCustomize.inputMapRange();
+        var rangeIndex = 0;
+        var currentParamPos = 1;
+        final var sqlParams = statementInfo.params();
+
+        for (int i = 0; i < sqlParams.size(); i++) {
+
+            if (rangeIndex < inputMapRange.size() && currentParamPos == inputMapRange.get(rangeIndex).start()) {
+                final var range = inputMapRange.get(rangeIndex);
+                final var args = statementVar + ", " + params.stream().map(ParamInfo::getName)
+                        .collect(Collectors.joining(", "));
+                methodBuilder.addStatement("$L($L)", range.method(), args);
+
+                int columnsCovered = (range.end() - range.start()) + 1;
+
+                methodBuilder.addStatement("paramIndex += $L", columnsCovered);
+
+                currentParamPos += columnsCovered;
+                rangeIndex++;
+
+                i += (columnsCovered - 1);
+                continue;
+            }
+
+            final var param = sqlParams.get(i);
+            final var leafParam = statementResolver.getParamInfo(param.name());
+            final var path = statementResolver.resolveParamPath(param.name());
+
+            if (isNull(leafParam.getContainerType())) {
+                final var stmtSetter = JDBCUtil.getPrepareStatementSetter(
+                        path,
+                        TypeName.get(leafParam.isCustomEnum() ?
+                                requireNonNull(leafParam.getEnumMethodType()) :
+                                leafParam.getType()),
+                        statementVar,
+                        "paramIndex++"
+                );
+                methodBuilder.addStatement(stmtSetter);
+                currentParamPos++;
+            } else {
+                methodBuilder.beginControlFlow("for (final var x : $N)", path);
+                final var stmtSetter = JDBCUtil.getPrepareStatementSetter(
+                        "x",
+                        TypeName.get(leafParam.isCustomEnum() ?
+                                requireNonNull(leafParam.getEnumMethodType()) :
+                                leafParam.getType()),
+                        statementVar,
+                        "paramIndex++"
+                );
+                methodBuilder.addStatement(stmtSetter);
+                methodBuilder.endControlFlow();
+                currentParamPos++;
             }
         }
     }
