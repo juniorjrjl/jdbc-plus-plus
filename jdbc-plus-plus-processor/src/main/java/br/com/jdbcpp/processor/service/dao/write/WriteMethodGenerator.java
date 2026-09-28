@@ -82,7 +82,7 @@ public abstract class WriteMethodGenerator<T extends MethodInfo> implements Meth
 
         final var operationCustomize = methodInfo.getOperationCustomize();
         if (nonNull(operationCustomize) && nonNull(operationCustomize.resultSetMap())) {
-            methodBuilder.addStatement("return $N($N)", operationCustomize.resultSetMap(), generatedKeys);
+            methodBuilder.addStatement("return $N($N, $L)", operationCustomize.resultSetMap(), generatedKeys, 1);
         } else {
             JDBCUtil.getResultSetGetter(
                     isNull(customReturnTypeName) ? returnType : customReturnTypeName,

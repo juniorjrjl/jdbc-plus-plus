@@ -16,8 +16,8 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 public @interface InputMapRange {
 
     /**
-     * method in DAO called, the method must receive in first {@link java.sql.PreparedStatement}
-     * and same params used in method customized in same order
+     * method in DAO called, the method must receive in first {@link java.sql.PreparedStatement},
+     * same params used in method customized in same order and index to get param
      * */
     String value();
 

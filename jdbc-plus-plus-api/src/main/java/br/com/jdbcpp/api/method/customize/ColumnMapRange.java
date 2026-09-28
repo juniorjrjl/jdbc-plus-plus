@@ -19,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 public @interface ColumnMapRange {
 
     /**
-     * method in DAO called, the method must receive a {@link java.sql.ResultSet} as parameter and return
+     * method in DAO called, the method must receive a {@link java.sql.ResultSet} as parameter and index to get param and return
      * the type expected in position
      * */
     String value();

@@ -13,7 +13,7 @@ import java.util.List;
 
 @ExtendWith(PostgreSQLTestContainerExtension.class)
 @PostgreSQLTest
-public class PGInsertTest extends InsertTest{
+public class PGInsertTest extends InsertInterfaceTest {
 
     @PGContainer
     private static PostgreSQLContainer dbContainer;

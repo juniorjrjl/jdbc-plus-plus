@@ -1,13 +1,14 @@
 package br.com.jdbcpp.insert;
 
-import br.com.jdbcpp.dao.InsertCategoryDAO;
-import br.com.jdbcpp.dao.InsertCategoryDAOImpl;
-import br.com.jdbcpp.dao.InsertUserDAO;
-import br.com.jdbcpp.dao.InsertUserDAOImpl;
-import br.com.jdbcpp.dao.SelectCategoryDAO;
-import br.com.jdbcpp.dao.SelectCategoryDAOImpl;
-import br.com.jdbcpp.dao.SelectUserDAO;
-import br.com.jdbcpp.dao.SelectUserDAOImpl;
+
+import br.com.jdbcpp.dao.abstracts.InsertCategoryDAO;
+import br.com.jdbcpp.dao.abstracts.InsertCategoryDAOImpl;
+import br.com.jdbcpp.dao.abstracts.InsertUserDAO;
+import br.com.jdbcpp.dao.abstracts.InsertUserDAOImpl;
+import br.com.jdbcpp.dao.abstracts.SelectCategoryDAO;
+import br.com.jdbcpp.dao.abstracts.SelectCategoryDAOImpl;
+import br.com.jdbcpp.dao.abstracts.SelectUserDAO;
+import br.com.jdbcpp.dao.abstracts.SelectUserDAOImpl;
 import br.com.jdbcpp.dto.category.CategoryTypeEnum;
 import br.com.jdbcpp.dto.category.insert.CategoryClassDTO;
 import br.com.jdbcpp.dto.category.insert.CategoryClassDTOWithIgnoreProp;
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatNoException;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-abstract class InsertTest {
+abstract class InsertAbstractTest {
 
     private static final CustomFaker customFaker = CustomFaker.getInstance();
 
@@ -306,9 +307,10 @@ abstract class InsertTest {
 
         final var dto = new UserInsertPKUUIDDTO(userIdentifier, firstName, lastName, email, birthDate);
 
-        insertUserDAO.insertReturnUUIDPKMySQLAndOracle(dto);
+        final var id = insertUserDAO.insertReturnUUIDPKMySQLAndOracle(dto);
 
-        final var inserted = selectUserDAO.findAll().getFirst();
+        final var inserted = selectUserDAO.selectOptionalByMappedId(id)
+                .orElseThrow();
 
         assertThat(inserted.getId()).isNotNull();
         assertThat(inserted.getUserIdentifier()).isEqualTo(userIdentifier);

@@ -14,7 +14,7 @@ import java.util.List;
 
 @ExtendWith(SQLServerTestContainerExtension.class)
 @SQLServerTest
-public class SQLServerInsertTest extends InsertTest{
+public class SQLServerInsertTest extends InsertInterfaceTest {
 
     @SQLServerContainer
     private static MSSQLServerContainer dbContainer;

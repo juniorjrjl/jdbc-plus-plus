@@ -14,7 +14,7 @@ import java.util.List;
 
 @ExtendWith(OracleTestContainerExtension.class)
 @OracleTest
-public class OracleInsertTest extends InsertTest{
+public class OracleInsertTest extends InsertInterfaceTest {
 
     @OracleDBContainer
     private static OracleContainer dbContainer;

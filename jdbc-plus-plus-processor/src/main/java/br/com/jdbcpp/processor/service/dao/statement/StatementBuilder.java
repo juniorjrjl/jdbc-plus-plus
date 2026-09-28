@@ -169,9 +169,9 @@ public class StatementBuilder {
                 final var range = inputMapRange.get(rangeIndex);
                 final var args = statementVar + ", " + params.stream().map(ParamInfo::getName)
                         .collect(Collectors.joining(", "));
-                methodBuilder.addStatement("$L($L)", range.method(), args);
+                methodBuilder.addStatement("$L($L,$L)", range.method(), args, i + 1);
 
-                int columnsCovered = (range.end() - range.start()) + 1;
+                var columnsCovered = (range.end() - range.start()) + 1;
 
                 methodBuilder.addStatement("paramIndex += $L", columnsCovered);
 

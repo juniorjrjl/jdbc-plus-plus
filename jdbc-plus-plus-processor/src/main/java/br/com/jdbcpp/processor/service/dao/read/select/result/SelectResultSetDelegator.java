@@ -31,14 +31,16 @@ public final class SelectResultSetDelegator {
                     objectResultName,
                     resultSetInfo.getReturnType(),
                     resultSetVar,
-                    builder
+                    builder,
+                    resultSetInfo.getOperationCustomize()
             );
             case SETTER -> setter.build(
                     resultSetInfo.getSetterStrategies(),
                     objectResultName,
                     resultSetInfo.getReturnType(),
                     resultSetVar,
-                    builder
+                    builder,
+                    resultSetInfo.getOperationCustomize()
             );
             case SIMPLE_RESULT -> {
                 if (isNull(resultSetInfo.getContainerReturnTypeMirror())) {
