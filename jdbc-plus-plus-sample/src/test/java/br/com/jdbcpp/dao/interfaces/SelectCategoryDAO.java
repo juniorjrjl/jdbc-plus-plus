@@ -2,16 +2,22 @@ package br.com.jdbcpp.dao.interfaces;
 
 import br.com.jdbcpp.api.DAO;
 import br.com.jdbcpp.api.method.read.Query;
+import br.com.jdbcpp.api.method.read.ResultBuildStrategy;
 import br.com.jdbcpp.dto.category.select.CategoryInsertedClassDTO;
 import br.com.jdbcpp.dto.category.select.CategoryInsertedClassSetterIndexDTO;
+import br.com.jdbcpp.dto.category.select.CategoryInsertedCustomSetDTO;
 import br.com.jdbcpp.dto.category.select.CategoryInsertedCustomSetterDTO;
 import br.com.jdbcpp.dto.category.select.CategoryInsertedRecordDTO;
 import br.com.jdbcpp.exception.CustomSQLException;
 
 import java.sql.SQLException;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import static br.com.jdbcpp.api.method.read.ResultBuildStrategyType.SETTER;
 
 @DAO
 public interface SelectCategoryDAO {
@@ -25,6 +31,16 @@ public interface SelectCategoryDAO {
     List<CategoryInsertedRecordDTO> selectAll() throws SQLException;
 
     @Query(value = """
+            SELECT id,
+                   name,
+                   created_at,
+                   updated_at
+              FROM categories
+            """)
+    @ResultBuildStrategy(value = SETTER, collectionImplementationResult = LinkedList.class)
+    List<CategoryInsertedClassDTO> selectAllWithCustomImpl() throws SQLException;
+
+    @Query(value = """
             SELECT name,
                    created_at,
                    updated_at
@@ -33,13 +49,24 @@ public interface SelectCategoryDAO {
     List<CategoryInsertedClassSetterIndexDTO> selectAllClassIndex();
 
     @Query(value = """
-            SELECT name,
+            SELECT id,
+                   name,
                    priority,
                    created_at,
                    updated_at
               FROM categories
             """)
-    Set<CategoryInsertedCustomSetterDTO> selectAllWithPriority() throws SQLException;
+    Set<CategoryInsertedCustomSetDTO> selectAllWithPriority() throws SQLException;
+
+    @Query(value = """
+            SELECT id,
+                   name,
+                   created_at,
+                   updated_at
+              FROM categories
+            """)
+    @ResultBuildStrategy(value = SETTER, collectionImplementationResult = LinkedHashSet.class)
+    Set<CategoryInsertedClassDTO> selectAllWithSetCustomImpl() throws SQLException;
 
     @Query(value = """
             SELECT name,

@@ -1,0 +1,38 @@
+package br.com.jdbcpp.update;
+
+import br.com.jdbcpp.util.DatabaseCapability;
+import br.com.jdbcpp.util.extension.postgres.PGContainer;
+import br.com.jdbcpp.util.extension.postgres.PostgreSQLTestContainerExtension;
+import br.com.jdbcpp.util.tag.PostgreSQLTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.postgresql.ds.PGSimpleDataSource;
+import org.testcontainers.postgresql.PostgreSQLContainer;
+
+import javax.sql.DataSource;
+import java.util.List;
+
+@ExtendWith(PostgreSQLTestContainerExtension.class)
+@PostgreSQLTest
+public class PGUpdateTest extends UpdateInterfaceTest {
+
+    @PGContainer
+    private static PostgreSQLContainer dbContainer;
+
+    @Override
+    protected List<DatabaseCapability> capabilities() {
+        return List.of(
+                DatabaseCapability.PG_TEST_CLASS_GETTER_INSERT,
+                DatabaseCapability.RETURN_ID_UUID,
+                DatabaseCapability.MAP_DIRECT_UUID
+        );
+    }
+
+    public DataSource getDataSource(){
+        final var dataSource = new PGSimpleDataSource();
+        dataSource.setUrl(dbContainer.getJdbcUrl());
+        dataSource.setUser(dbContainer.getUsername());
+        dataSource.setPassword(dbContainer.getPassword());
+        return dataSource;
+    }
+
+}
