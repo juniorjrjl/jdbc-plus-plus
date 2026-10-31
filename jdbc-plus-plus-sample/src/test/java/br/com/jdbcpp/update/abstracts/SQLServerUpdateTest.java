@@ -1,4 +1,4 @@
-package br.com.jdbcpp.update;
+package br.com.jdbcpp.update.abstracts;
 
 import br.com.jdbcpp.util.DatabaseCapability;
 import br.com.jdbcpp.util.extension.sqlserver.SQLServerContainer;
@@ -14,7 +14,7 @@ import java.util.List;
 
 @ExtendWith(SQLServerTestContainerExtension.class)
 @SQLServerTest
-public class SQLServerUpdateTest extends UpdateInterfaceTest {
+public class SQLServerUpdateTest extends UpdateAbstractTest {
 
     @SQLServerContainer
     private static MSSQLServerContainer dbContainer;

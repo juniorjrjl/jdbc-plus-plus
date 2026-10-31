@@ -6,7 +6,6 @@ import br.com.jdbcpp.api.method.read.ResultBuildStrategy;
 import br.com.jdbcpp.dto.category.select.CategoryInsertedClassDTO;
 import br.com.jdbcpp.dto.category.select.CategoryInsertedClassSetterIndexDTO;
 import br.com.jdbcpp.dto.category.select.CategoryInsertedCustomSetDTO;
-import br.com.jdbcpp.dto.category.select.CategoryInsertedCustomSetterDTO;
 import br.com.jdbcpp.dto.category.select.CategoryInsertedRecordDTO;
 import br.com.jdbcpp.exception.CustomSQLException;
 

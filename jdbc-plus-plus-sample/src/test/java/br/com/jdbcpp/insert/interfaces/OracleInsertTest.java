@@ -1,4 +1,4 @@
-package br.com.jdbcpp.insert;
+package br.com.jdbcpp.insert.interfaces;
 
 import br.com.jdbcpp.util.DatabaseCapability;
 import br.com.jdbcpp.util.extension.oracle.OracleDBContainer;

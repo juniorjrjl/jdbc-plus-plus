@@ -67,7 +67,7 @@ public interface InsertCategoryDAO {
             INSERT INTO categories (name, created_at, updated_at)
             VALUES (:name:, :createdAt:, :updatedAt:)
             """, returnedDataNameOrIndex = "id")
-    int insertFixDataReturnIdByColumnName(final CategoryDTO dto) throws SQLException;
+    long insertFixDataReturnIdByColumnName(final CategoryDTO dto) throws SQLException;
 
     @Command(value = """
             INSERT INTO categories (name, created_at, updated_at)

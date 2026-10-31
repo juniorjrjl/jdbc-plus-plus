@@ -1,4 +1,4 @@
-package br.com.jdbcpp.update;
+package br.com.jdbcpp.update.interfaces;
 
 import br.com.jdbcpp.util.DatabaseCapability;
 import br.com.jdbcpp.util.extension.oracle.OracleDBContainer;

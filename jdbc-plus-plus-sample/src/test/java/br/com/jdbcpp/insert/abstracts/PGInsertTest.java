@@ -1,4 +1,4 @@
-package br.com.jdbcpp.insert;
+package br.com.jdbcpp.insert.abstracts;
 
 import br.com.jdbcpp.util.DatabaseCapability;
 import br.com.jdbcpp.util.extension.postgres.PGContainer;
@@ -13,7 +13,7 @@ import java.util.List;
 
 @ExtendWith(PostgreSQLTestContainerExtension.class)
 @PostgreSQLTest
-public class PGInsertTest extends InsertInterfaceTest {
+public class PGInsertTest extends InsertAbstractTest {
 
     @PGContainer
     private static PostgreSQLContainer dbContainer;

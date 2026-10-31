@@ -1,4 +1,4 @@
-package br.com.jdbcpp.insert;
+package br.com.jdbcpp.insert.abstracts;
 
 import br.com.jdbcpp.util.DatabaseCapability;
 import br.com.jdbcpp.util.extension.sqlserver.SQLServerContainer;
@@ -14,7 +14,7 @@ import java.util.List;
 
 @ExtendWith(SQLServerTestContainerExtension.class)
 @SQLServerTest
-public class SQLServerInsertTest extends InsertInterfaceTest {
+public class SQLServerInsertTest extends InsertAbstractTest {
 
     @SQLServerContainer
     private static MSSQLServerContainer dbContainer;

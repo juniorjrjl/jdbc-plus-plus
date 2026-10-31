@@ -1,4 +1,4 @@
-package br.com.jdbcpp.insert;
+package br.com.jdbcpp.insert.abstracts;
 
 
 import br.com.jdbcpp.dao.abstracts.InsertCategoryDAO;

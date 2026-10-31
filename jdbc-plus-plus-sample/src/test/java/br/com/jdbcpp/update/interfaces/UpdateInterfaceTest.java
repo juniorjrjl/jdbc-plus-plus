@@ -1,4 +1,4 @@
-package br.com.jdbcpp.update;
+package br.com.jdbcpp.update.interfaces;
 
 import br.com.jdbcpp.dao.interfaces.InsertCategoryDAO;
 import br.com.jdbcpp.dao.interfaces.InsertCategoryDAOImpl;
@@ -7,6 +7,8 @@ import br.com.jdbcpp.dao.interfaces.SelectCategoryDAOImpl;
 import br.com.jdbcpp.dao.interfaces.UpdateCategoryDAO;
 import br.com.jdbcpp.dao.interfaces.UpdateCategoryDAOImpl;
 import br.com.jdbcpp.dto.category.CategoryTypeEnum;
+import br.com.jdbcpp.dto.category.insert.CategoryDTO;
+import br.com.jdbcpp.dto.category.update.CategoryUpdateDTO;
 import br.com.jdbcpp.util.DatabaseCapability;
 import br.com.jdbcpp.util.faker.CustomFaker;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatNoException;
@@ -30,8 +33,6 @@ abstract class UpdateInterfaceTest {
     private UpdateCategoryDAO updateCategoryDAO;
     private InsertCategoryDAO insertCategoryDAO;
     private SelectCategoryDAO selectCategoryDAO;
-
-
 
     protected abstract List<DatabaseCapability> capabilities();
 
@@ -190,7 +191,7 @@ abstract class UpdateInterfaceTest {
     }
 
     @Test
-    void updateEnumCustomMethod() throws SQLException, InterruptedException {
+    void updateEnumCustomMethod() throws SQLException {
         final var categoryEnum = customFaker.options().option(CategoryTypeEnum.class);
 
         assertThatNoException().isThrownBy(() -> insertCategoryDAO.insertInsertEnumCustomMethod(categoryEnum));
@@ -205,6 +206,37 @@ abstract class UpdateInterfaceTest {
         assertThat(categoriesAfterUpdate.size()).isOne();
         final var categoryUpdated = categoriesAfterUpdate.getFirst();
         assertThat(categoryUpdated.name()).isEqualTo(categoryEnum.getEnumNameLowerCase());
+    }
+
+    @Test
+    void updateClassParamsReturnRecord() throws SQLException {
+        final var name = customFaker.lorem().word();
+        final var createdAt = OffsetDateTime.ofInstant(customFaker.timeAndDate().past(), UTC);
+        final var updatedAt = OffsetDateTime.ofInstant(customFaker.timeAndDate().past(), UTC);
+
+        final var dto = new CategoryDTO(name, createdAt, updatedAt);
+        final var id = insertCategoryDAO.insertFixDataReturnIdByColumnName(dto);
+        selectCategoryDAO.findOptionalById(id).orElseThrow();
+
+        final var changedName = customFaker.lorem().word();
+        final var changedCreatedAt = OffsetDateTime.now();
+        final var changedUpdatedAt = OffsetDateTime.now();
+        final var toUpdate = new CategoryUpdateDTO(
+                id,
+                changedName,
+                changedCreatedAt,
+                changedUpdatedAt
+        );
+
+        updateCategoryDAO.updateDTO(toUpdate);
+
+        final var actual = selectCategoryDAO.findOptionalById(toUpdate.id()).orElseThrow();
+
+        assertThat(actual.getName()).isEqualTo(changedName);
+        assertThat(actual.getCreatedAt())
+                .isCloseTo(changedCreatedAt, within(1, ChronoUnit.SECONDS));
+        assertThat(actual.getUpdatedAt())
+                .isCloseTo(changedUpdatedAt, within(1, ChronoUnit.SECONDS));
     }
 
 }

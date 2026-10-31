@@ -4,6 +4,7 @@ import br.com.jdbcpp.api.DAO;
 import br.com.jdbcpp.api.input.InputParam;
 import br.com.jdbcpp.api.method.write.Command;
 import br.com.jdbcpp.dto.category.CategoryTypeEnum;
+import br.com.jdbcpp.dto.category.update.CategoryUpdateDTO;
 
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -64,4 +65,14 @@ public interface UpdateCategoryDAO {
     void updateEnumCustomMethod(@InputParam(statementField = "name", enumMethodValue = "getEnumNameLowerCase")
                                 final CategoryTypeEnum category,
                                 final long id) throws SQLException;
+
+    @Command(value = """
+            UPDATE categories SET
+                   name = :name:,
+                   created_at = :createdAt:,
+                   updated_at = :updatedAt:
+             WHERE id = :id:
+            """, commandType = UPDATE)
+    void updateDTO(final CategoryUpdateDTO dto) throws SQLException;
+
 }

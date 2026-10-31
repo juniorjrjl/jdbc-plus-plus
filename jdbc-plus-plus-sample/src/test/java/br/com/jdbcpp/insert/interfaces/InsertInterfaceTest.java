@@ -1,4 +1,4 @@
-package br.com.jdbcpp.insert;
+package br.com.jdbcpp.insert.interfaces;
 
 import br.com.jdbcpp.dao.interfaces.InsertCategoryDAO;
 import br.com.jdbcpp.dao.interfaces.InsertCategoryDAOImpl;
